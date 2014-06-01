@@ -16,7 +16,10 @@ unsigned int nodes_down(Node *node);
 
 Node *node_remove(Node *node);
 Node *node_match(char *match,Node *where);
+Node *node_recursive_match(char *match,Node *where);
+Node *node_exact_match(char *match,Node *where);
 
 Node *tree_init();
 Node *tree_root();
+int tree_free();
 void node_swap(Node *nodeA,Node *nodeB);

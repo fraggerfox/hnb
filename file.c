@@ -90,6 +90,7 @@ import_byte (byte)
 
 #define bufsize 4096
 
+#ifndef WIN32
 Node *
 import_db (Node * node, char *filename)
 {
@@ -165,6 +166,8 @@ export_db (Node * node, char *filename)
   close (file);
 }
 
+#endif
+
 static void
 ascii_export_node (FILE * file, int level, int flags, char *data)
 {
@@ -185,7 +188,7 @@ Node *
 ascii_import (Node * node, char *filename)
 {
   int level, flags;
-  char data[512];
+  char data[2048];
   FILE *file;
 
   file = fopen (filename, "r");
@@ -195,10 +198,17 @@ ascii_import (Node * node, char *filename)
   npos = node;
   startlevel = nodes_left (node);
 
-  while (fgets (data, 512, file) != NULL)
+  while (fgets (data, 2048, file) != NULL)
     {
       flags = level = 0;
+
+		/*
+			strip newline from string, and if dosmode file,.. also strip
+			the carrier return		
+		*/
       data[strlen (data) - 1] = 0;
+	  if(data[strlen(data)-1]==13)data[strlen (data) - 1] = 0;
+	  
       while (data[level] == '\t')
 	level++;
       import_node (level, flags, &data[level]);

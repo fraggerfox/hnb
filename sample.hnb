@@ -1,11 +1,14 @@
 user instructions for Hiarchical NoteBook (hnb):
 	command line parameters
-		at the time of writing pdb takes only one parameter,
-		the file to edit. if this parameter i omitted, hnb
-		will load the default file, ( in unix this is $HOME/.hnb)
-		
-		hnb will display which file is the default file if you
-		supply it with an -h or --help option
+		usage: hnb [options] [file]
+		 
+		if file is omitted hnb will edit the default database
+		you can find out which file is the default file
+		by using the help option
+		 
+		OPTIONS:
+		  -h, -help    -  display usage and options
+		  -v, -version - display the version of hnb
 	navigating/entering data
 		you navigate among the entries with cursor keys,
 		or by typing the first characthers of the entry data
@@ -27,20 +30,14 @@ user instructions for Hiarchical NoteBook (hnb):
 		escape will cancel editing
 	removing nodes
 		pressing delete or backspace while navigating will remove
-		a node and all it's children,.. be careful
-		I think I must add confirmation if the node contains children
-		or perhaps enforce something like ctrl+delete to do a recursive
-		deletinion
+		a node, if the node has children you must confirm the
+		deletion
 	saving/quitting
-		pressing [esc] will give you the choices to,
-		(s)ave
-		(q)uit without saving
-		(y)save and quit
-		(esc) .. abort action
-	sorting
-		the only nonplaced option,.. at the moment is sort
-		which will sort all the siblings of the current
-		node alphabetically
+		pressing [esc], ctrl+k or ctrl+x will give you the choices to,
+		save
+		quit
+		save and quit,..
+		amongst other options
 
 
 psst if this is your first time using hnb, the two periods
@@ -49,32 +46,6 @@ pressing your right cursor key, will enter the child entries
 to choose among sibling entries use the up/down arrows, and
 to go back to a parent node press the your left cursor key
 
-todo list:
-	"symbolic links"
-		same as moving entries
-		but return makes the symbolic link
-	registry like functions.. for use as a configuration save/load library
-		reg_load("/etc/testrc");
-			loads a registry into memory
-		reg_save("/etc/testrc");
-			saves the loaded registry to a file
-		reg_get("/graphics/resolution/");
-			returns the first child of specified node if it exists else return ""
-			(operates on loaded registry)
-		reg_set("/graphics/resolution/640x480");
-			sets the value of the specified node, removing all siblings
-		reg_load_get("/etc/testrc","/graphics/resolution/");
-			wrapper for:
-			reg_load("/etc/testrc");
-			reg_get("/graphics/resolution/");
-		reg_save_set("/etc/testrc","/graphics/resolution/640x480");
-			wrapper for:
-			reg_load("/etc/testrc");
-			reg_set("/graphics/resolution/640x480");
-			reg_save("/etc/testrc");
-	search-dialog.. (for recursive search),.. perhaps substring match
-known bugs:
-	at the moment, things seem stable
 sample data:
 	books in my bookshelf
 		Aldous Huxley, Brave New World
@@ -124,4 +95,4 @@ sample data:
 		Tarjei Vesaas, Fuglane
 	cd's in my collection
 		none, it was stolen,
-		I surive on mp3's
+		I surive on mp3's at the moment

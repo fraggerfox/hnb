@@ -12,7 +12,7 @@ node_recurse (Node * node)
 {
 
   if (node_right (node))
-    return (node_right (node));
+    return (node_top(node_right (node)));
   if (node_down (node))
     return (node_down (node));
 
@@ -241,6 +241,25 @@ node_match (char *match, Node * where)
 }
 
 Node *
+node_exact_match (char *match, Node * where)
+{
+  Node *node;
+
+  node = node_top (where);
+  if (strlen (match) == 0)
+    return (0);
+
+  while (node != 0)
+    {
+      if (strcmp (node->data, match) == 0)
+	return (node);
+      node = node_down (node);
+    };
+  return (0);
+}
+
+
+Node *
 node_recursive_match (char *match, Node * where)
 {
 /*
@@ -346,6 +365,18 @@ Node *
 tree_root ()
 {
   return (root);
+}
+
+int tree_free(){
+	if(root){
+		while(node_down(tree_root())){
+			node_remove(node_down(root));
+		};
+		node_remove(tree_root());
+		node_free(tree_root());
+		return(1);
+	};
+	return(0);
 }
 
 

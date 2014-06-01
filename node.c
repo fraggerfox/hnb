@@ -15,7 +15,8 @@ node_setdata (Node * node, char *data)
 char *
 node_getdata (Node * node)
 {
-  assert (node);
+  /*assert (node);*/
+  if(node==NULL)return("");
   return node->data;
 }
 

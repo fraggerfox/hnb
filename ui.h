@@ -6,17 +6,20 @@
 #define UI_BOTTOM	406
 #define UI_REMOVE	408
 #define UI_QUIT		409
+#define UI_INSERT       410
 #define UI_ENTER		412
 #define UI_ESCAPE		413
 #define UI_BACKSPACE	414
 #define UI_MARK			415
 #define UI_MENU			416
+#define UI_PDN			417
+#define UI_PUP			418
 #define UI_MODE_NAVIGATE 0
 #define UI_MODE_EDIT	 1
 #define UI_MODE_MARKED	 2
 #define UI_MODE_QUIT	 3
 #define UI_MODE_MENU	 4
-
+#define UI_MODE_CONFIRM  5
 
 void ui_init();
 void ui_draw(Node *node,char *input, int mode);

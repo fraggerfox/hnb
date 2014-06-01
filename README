@@ -1,16 +1,99 @@
-hiarchical notebook 
+hierarchical notebook (hnb) is program to organize, many kinds
+of data in one place,  for example  adresses, todo lists, ideas,
+book "reviews", brainstorming, and probably many more I haven't
+thought of yet..
+	
+HOW TO GET hnb?
+	
+	new releases of hnb will appear on the
+	<a href="http://sourceforge.net/projects/hnb">sourceforge project page</a>
+	
+	
+INSTALLING hnb
+	
+	if you've got a source release you must first compile
+	hnb,.. see further down in this file for instructions.
+	
+	Windows
+		the windows binary distribution, is a .zip file
+		containing the executable, this readme file, 
+		an sample database, and the licence for hnb's use.
+		
+		the binary is standalone, so you can just
+		copy it wherever you'd like it to reside.
+		
+	Linux
+		the linux binary distribution is a .tar.gz file
+		containing the executable, this readme file, a
+		an sample database, and the licence for hnb's use.
+		
+		the binary is dynamically linked against ncurses
+		just place it anywere in your path.. like
+		/usr/bin, /usr/local/bin or /home/user/bin
+		
+COMPILING hnb
+	
+	I've only tried to compile hnb using Slackware 7.1,
+	but I think it should compile on any unix by
+	just typing make.
+	
+	I cross compile the win32 binary using mingw32, and
+	pdcurses,.. to do this might call for some modifications
+	of the makefile, this version have not been tested for a while and might be more buggy than worth experiencing.
+	
+USAGE DOCUMENTATION
+	
+	instructions for the usage of hnb is contained in
+	the sample.hnb database file, invoke hnb like this
+	in the distribution directory to get further documentation
+	
+	hnb sample.hnb
+	
+FOR APPLICATION/GAME DEVELOPERS
+	
+	take a look at registry.h and reg.c, like what you see?
+	please use it in gnu GPL programs
+	
+TODO
+	recursive substring search
+	moving
+		make the selected node, be dragged instead of warped
+	text "overflowing" into help/status area,..
+	the confirm menu.. also changes the current node temporarily,.. 
+		because of input buffer not handled according to drawmode I think,..
+	"symbolic links"
+	buffer limits
+		is now increased to 2048, but is it enough?
+	different collapse modes?
+	keyboard handling
+		tell the user that... key ????? not defined in current mode
+		or perhaps to stderr or something
+	sdl
+	wordwrap
+		if there is only one long word on the line (url),..
+		the wrapping doesn't work like it should
+CHANGELOG
+	0.3b
+		added registry functions, and a small sample programed called reg
+		small bugfix for node_recurse()  (go right, and to top)
+	0.3 15.oct 2000
+		fixed registry
+		implemented node2path
+		first rendition of cgi-bin browser
+		wordwrap
+		resize components when terminal is resized
+		changed display of help at the bottom
+		various interface cleanups,.. (ingoring keys etc..)
+		pageup/pagedown implemented (jumps a predefined 10 nodes by default)
+		changed menu/quit interface,.. there is one big menu now,.
+		which contains most of the thinkable options
+		it is activated by esc/f1/f10/ctrl+k
+	0.4 march 2001
+		fixed tab'ing into children of empty nodes bug
+		fixed first node bug of wordwrap
+		made wordwrap wrap at end instead of end-indent
+	0.5
+		help item's update
+		added insert capability to insert a node below the current
 
-homepage - http://hnb.sourceforge.net/
-author   - Øyvind Kolås <pippin@users.sourceforge.net>
-
-compilation/installation instructions
-
-ok,.. you've untarred it.. in this directory .. type:
-
-make
-./hnb sample.hnb
-
-and read further documentation then.. hopefully
-
-to install,.. place hnb in a binary directory 
-like /usr/local/bin, /usr/bin or $HOME/bin
+pippin@users.sourceforge.net
