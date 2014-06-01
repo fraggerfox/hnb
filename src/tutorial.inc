@@ -1,4 +1,4 @@
-#define i(a,b,c) import_node(&ist,a,c,0,b)
+#define i(a,b,c) do{Node *tnode=node_new();node_set(tnode,TEXT,b);node_setflags(tnode,c);import_node(&ist,a,tnode);}while(0)
 
 i(0,"press right arrow to begin",0);
 	i(1,"Welcome to 'hierarchical notebook'",0);

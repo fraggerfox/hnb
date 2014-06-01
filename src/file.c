@@ -42,8 +42,7 @@ void init_import (import_state_t * is, Node *node)
  *
  * @return the node inserted
  * */
-Node *import_node (import_state_t * is, int level, int flags,
-				  int priority, char *data)
+Node *import_node_text (import_state_t * is, int level, char *data)
 {
 	int node_level;
 
@@ -55,13 +54,35 @@ Node *import_node (import_state_t * is, int level, int flags,
 		is->npos = node_insert_down (is->npos);
 	if (node_level < level)
 		is->npos = node_insert_right (is->npos);
-	node_setflags (is->npos, flags);
-	node_setpriority (is->npos, priority);
-	node_setdata (is->npos, data);
+	node_set (is->npos, TEXT, data);
 	return is->npos;
-/*	node_update_parents_todo(is->npos); commented out due to major slowdown
-when importing */
 }
+
+
+
+/*
+ *
+ * @return the node inserted, no need to free the node afterwards
+ * */
+Node *import_node (import_state_t * is, int level, Node *node)
+{
+	int node_level;
+
+	level += is->startlevel;
+
+	while ((node_level = nodes_left (is->npos)) > level)
+		is->npos = node_left (is->npos);
+	if (node_level == level)
+		is->npos = node_insert_down (is->npos);
+	if (node_level < level)
+		is->npos = node_insert_right (is->npos);
+		node_swap(node,is->npos);
+		node_free(is->npos);
+		is->npos=node;
+	return is->npos;
+}
+
+
 
 /* returns 1 if the first couple of lines of file contains 'xml' */
 int xml_check (char *filename)

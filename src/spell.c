@@ -43,7 +43,7 @@ static void spell_node(Node *node){
 	char corrected[4096];
 	int ui_was_inited=ui_inited;
 	int tempfile=mkstemp(tempfilename);
-	write(tempfile,node_getdata(node),strlen(node_getdata(node)));
+	write(tempfile,fixnullstring(node_get(node,TEXT)),strlen(node_get(node,TEXT)));
 	sprintf(commandline,"%s %s",spell_command,tempfilename);
 	if(ui_was_inited)ui_end();
 	system(commandline);
@@ -52,7 +52,7 @@ static void spell_node(Node *node){
 
 	{int len=read(tempfile,corrected,sizeof(corrected));
 	 corrected[len]=0;
-	 node_setdata(node,corrected);
+	 node_set(node,TEXT,corrected);
 	}
 	
 	close(tempfile);

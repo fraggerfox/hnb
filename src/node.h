@@ -1,4 +1,8 @@
 /**
+	what about creating keys that are used for the data stored in nodes?
+**/
+
+/**
   @file 
   
   definition of node
@@ -9,6 +13,13 @@
 #ifndef NODE_H
 #define NODE_H
 
+typedef struct Node_AttItem {
+	char *name;
+	char *data;
+	struct Node_AttItem *next;
+} Node_AttItem;
+
+
 /** 
   Datastructure for the nodes in the tree is defined in this file.
 
@@ -18,12 +29,17 @@
 
 typedef struct Node {
 	struct Node *up, *down, *left, *right;
-	char *data;
 	unsigned int flags;
-	unsigned char priority;
+	Node_AttItem *attrib;
+
  	int percent_done;
 	int size;
 } Node;
+
+
+char *node_get(Node *node, char *name);
+void node_set(Node *node, char *name, char *data);
+void node_unset(Node *node, char *name);
 
 /* convenience macro for the rest of this header*/
 #define if_node(a,b)		((a)?(b):0)
@@ -77,30 +93,7 @@ typedef struct Node {
 #define node_toggleflag(node,flag) (   node_setflags((node), (node)->flags^(flag) )   &flag)
 
 
-/** sets and gets the data for a node, does neccesary allocating
-    
-	and freeing as well.
-*/
-char *node_setdata (Node *node, const char *data);
-
-/**
-	@returns pointer to data
-*/
-char *node_getdata (Node *node);
-
-
-/* getting of node priority
-	Returns: priority, or 0 if node didn't exist
-*/
-#define node_getpriority(node)		(node?(node->priority):0)
-
-/* sets priority of a node, if it exists
-	Returns: New priority, or 0 if node didn't exist
-*/
-#define node_setpriority(node,new_priority)	(node?(node->priority=new_priority):0)
-
-
-/* getting of node priority
+/* getting of node percentage
 	Returns: priority, or 0 if node didn't exist
 */
 #define node_getpercent_done(node)		(node?(node->percent_done):-1)
@@ -117,6 +110,8 @@ char *node_getdata (Node *node);
 	Returns: new node
 */
 Node *node_new ();
+
+Node *node_duplicate(Node *node);
 
 /* frees a node an it's related variables
 */

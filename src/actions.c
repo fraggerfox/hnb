@@ -35,9 +35,9 @@ static int action_node(Node *node){
 	char *start=NULL;
 	int ui_was_inited=ui_inited;
 
-	if(!strncmp("exec ",node_getdata( node ),5)){
-		sprintf(cmdline,"%s > /dev/null 2>&1 &", node_getdata( node ) +5 );
-	} else if( (start=strstr(node_getdata( node ),"http://") ) ){
+	if(!strncmp("exec ",fixnullstring( node_get( node ,TEXT)) ,5)){
+		sprintf(cmdline,"%s > /dev/null 2>&1 &", fixnullstring( node_get( node, TEXT )) +5 );
+	} else if( (start=strstr( fixnullstring( node_get( node , TEXT) ),"http://") ) ){
 		char url[200];
 		char *dest;
 		dest=url;
@@ -64,12 +64,12 @@ static int action_node(Node *node){
 			cs++;
 		 }
 		}
-	} else if( (start=strchr( node_getdata(node), '@'))){
+	} else if( (start=strchr( fixnullstring( node_get(node, TEXT) ), '@'))){
 		char mail_address[200];
 		char *dest;
 		dest=mail_address;
 
-		while(start>node_getdata(node) && !isspace(*start))
+		while(start>fixnullstring( node_get(node, TEXT)) && !isspace(*start))
 			start--;
 		while(*start && !isspace(*start)){
 			*dest=*start;

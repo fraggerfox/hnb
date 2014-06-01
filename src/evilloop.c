@@ -80,7 +80,8 @@ Node *evilloop (Node *pos)
 				stop=1;
 				break;	
 			case ui_action_command:
-				remove_temp(&pos);
+				if(strcmp(binding->action_param,"edit"))
+					remove_temp(&pos);
 				pos=docmd(pos,binding->action_param);
 				inputbuf[0]=0;
 				break;
@@ -156,7 +157,7 @@ Node *evilloop (Node *pos)
 				if (node_right (pos)) {
 					pos = node_right (pos);
 				} else {
-					if (node_getdata (pos)[0]) {
+					if (fixnullstring(node_get (pos, TEXT))[0]) {
 						node_insert_right (pos);
 						if (node_getflag (pos, F_temp))
 							node_setflag (pos, F_temp, 0);
@@ -169,11 +170,11 @@ Node *evilloop (Node *pos)
 				inputbuf[0] = 0;
 				break;
 			case ui_action_complete:
-				if (strcmp (inputbuf, node_getdata (pos)) == 0) {
+				if (strcmp (inputbuf, fixnullstring(node_get (pos, TEXT))) == 0) {
 					if (node_right (pos)) {
 						pos = node_right (pos);
 					} else {
-						if (node_getdata (pos)[0]) {
+						if (fixnullstring(node_get (pos,TEXT))[0]) {
 							node_insert_right (pos);
 							if (node_getflag (pos, F_temp))
 								node_setflag (pos, F_temp, 0);
@@ -186,7 +187,7 @@ Node *evilloop (Node *pos)
 					}
 					inputbuf[0] = 0;
 				} else {
-					strcpy (inputbuf, node_getdata (pos));
+					strcpy (inputbuf, fixnullstring(node_get (pos,TEXT)));
 				}
 				break;
 			case ui_action_cancel:
@@ -224,17 +225,17 @@ Node *evilloop (Node *pos)
 		
 		if (strlen (inputbuf)) {
 			if (node_getflag (pos, F_temp)) {
-				node_setdata (pos, inputbuf);
+				node_set (pos,TEXT, inputbuf);
 			} else {
 				if (node_match (inputbuf, pos)) {
-					if (strcmp
-						(node_getdata (node_match (inputbuf, pos)),
-						 node_getdata (pos)) != 0)
+					if (!strcmp
+						(fixnullstring(node_get (node_match (inputbuf, pos),TEXT)),
+						 fixnullstring(node_get (pos,TEXT)) ))
 						pos = node_match (inputbuf, pos);
 				} else {
 					pos = node_insert_down (node_bottom (pos));
 					node_setflag (pos, F_temp, 1);
-					node_setdata (pos, inputbuf);
+					node_set (pos, TEXT, inputbuf);
 					if (node_left (pos))
 						if (node_getflag (node_left (pos), F_todo))
 							node_setflag (pos, F_todo, 1);

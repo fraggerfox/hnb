@@ -81,11 +81,11 @@ static int export_help (char *params, void *data)
 
 	tnode = node;
 	lastlevel = 0;
-	fprintf (file, "#define i(a,b,c) import_node(&ist,a,c,0,b)\n\n");
+	fprintf (file, "#define i(a,b,c) do{Node *tnode=node_new();node_set(tnode,TEXT,b);node_setflags(tnode,c);import_node(&ist,a,tnode);}while(0)\n\n");
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
-		cdata = node_getdata (tnode);
+		cdata = fixnullstring(node_get (tnode, TEXT));
 
 		for (cnt = 0; cnt < level; cnt++)
 			fprintf (file, "\t");

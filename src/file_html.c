@@ -102,7 +102,7 @@ static int export_html (char *params, void *data)
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
-		cdata = node_getdata (tnode);
+		cdata = fixnullstring(node_get (tnode, TEXT));
 
 		if (level > lastlevel) {
 			indent (level - 1, "\t");
@@ -157,7 +157,7 @@ static int export_html (char *params, void *data)
 static void htmlcss_export_nodes (FILE * file, Node *node, int level)
 {
 	while (node) {
-		char *data = node_getdata (node);
+		char *data = fixnullstring(node_get (node, TEXT));
 
 		fprintf (file, "\n");
 		indent (level, "\t");

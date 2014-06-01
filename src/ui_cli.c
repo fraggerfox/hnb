@@ -59,7 +59,7 @@ static int add (char *params, void *data)
 	}
 
 	tnode = node_insert_down (node_bottom (pos));
-	node_setdata (tnode, params);
+	node_set (tnode, TEXT, params);
 	return (int) pos;
 }
 
@@ -97,7 +97,7 @@ static int addc (char *params, void *data)
 	}
 
 	tnode = node_insert_right (tnode);
-	node_setdata (tnode, child);
+	node_set (tnode, TEXT, child);
 
 	return (int) pos;
 }
@@ -239,7 +239,7 @@ static int ls (char *params, void *data)
 			}
 		}
 
-		cli_outfun( node_getdata (tnode));
+		cli_outfun( fixnullstring(node_get (tnode, TEXT)));
 
 		if (indicate_sub)
 			if (node_right (tnode)) {

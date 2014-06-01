@@ -74,7 +74,7 @@ static char *xml_quote (const char *in)
 static void opml_export_nodes (FILE * file, Node *node, int level)
 {
 	while (node) {
-		char *data = node_getdata (node);
+		char *data = fixnullstring(node_get (node, TEXT));
 
 		fprintf (file, "\n");
 		indent (level, "\t");
@@ -186,8 +186,6 @@ static int import_opml (char *params, void *data)
 	int in_body = 0;
 	int in_outlineelement =0;
 	int level = -1;
-	int priority = 0;
-	int flags = 0;
 	xml_tok_state *s;
 	import_state_t ist;
 
@@ -210,8 +208,6 @@ static int import_opml (char *params, void *data)
 		}
 		if (in_body) {
 			if (type == t_tag && !strcmp (rdata, "outline")) {
-				priority = 0;
-				flags = 0;
 				level++;
 				in_outlineelement=1;
 				continue;
@@ -219,7 +215,7 @@ static int import_opml (char *params, void *data)
 			if(in_outlineelement && type == t_att && !strcmp(rdata,"text")){
 				xml_tok_get(s,&rdata);
 				xml_unquote(rdata);
-				import_node(&ist,level,flags,priority,rdata);
+				import_node_text(&ist,level,rdata);
 				continue;
 			}
 			if ((type == t_endtag || type == t_closeemptytag) && !strcmp(rdata,"outline") ) {

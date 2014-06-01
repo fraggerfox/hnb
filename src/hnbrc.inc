@@ -40,6 +40,7 @@ format 0\n\
 #\n\
 #   until further features are added, only the multiplier after\n\
 #   indentation actually does something\n\
+#   # indicates node number\n\
 #\n\
 # \n\
 display_format i4- d\n\
@@ -83,7 +84,7 @@ mail_command mutt *\n\
 # the spellchecker used\n\
 #\n\
 #spell_command aspell\n\
-spell_command ispell\n\
+spell_command ispell -x\n\
 \n\
 \n\
 ##########\n\
@@ -187,7 +188,8 @@ context main\n\
 \n\
 	bind  	f2		save\n\
 \n\
-	bind	^X		cut\n\
+	bind	^X		save_state\n\
+	bind	..		cut\n\
 	bind	^C		copy\n\
 	bind	^V		paste\n\
 	bind	..		down\n\
@@ -337,13 +339,13 @@ context user\n\
 \n\
 context user_ispell\n\
 	helptext Language for ispell: | |F1| Br.english  |F2| Am.english  |F3| Norwegian bokmål  |F4| Norwegian nynorsk\n\
-	bind	f1		spell_command ispell -damerican\n\
+	bind	f1		spell_command ispell -x -damerican\n\
 	bind	..		context main\n\
-	bind	f2		spell_command ispell -dbritish\n\
+	bind	f2		spell_command ispell -x -dbritish\n\
 	bind	..		context main\n\
-	bind	f3		spell_command ispell -dbokmål\n\
+	bind	f3		spell_command ispell -x -dbokmål\n\
 	bind	..		context main\n\
-	bind	f4		spell_command ispell -dnynorsk\n\
+	bind	f4		spell_command ispell -x -dnynorsk\n\
 	bind	..		context main\n\
 	bind	esc		context main\n\
 	bind	any		unbound\n\

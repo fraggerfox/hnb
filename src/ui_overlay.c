@@ -156,7 +156,7 @@ void help_draw (int scope)
 
 	move(LINES-1,0);
 	ui_style(ui_style_menuitem);
-	{unsigned char *p=ui_helptext[scope];
+	{unsigned char *p=(unsigned char*)ui_helptext[scope];
 	 int style_is_menuitem=1;
 	 while(*p){
 		switch(*p){

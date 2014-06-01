@@ -228,7 +228,7 @@ end %% close minidict: *this is important*\n\
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
-		cdata = node_getdata (tnode);
+		cdata = fixnullstring(node_get (tnode, TEXT));
 		ps_export_node (file, level, flags, cdata);
 		if(node_up(tnode) && node_up(tnode)==node_backrecurse(tnode))
 			fprintf(file," H\n");

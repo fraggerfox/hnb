@@ -186,6 +186,12 @@ char *node_setdata(Node *node,char *data);
 char *node_getdata(Node *node);
 */
 
-void tree_duplicate(Node *source, Node *target);
+Node *tree_duplicate(Node *source, Node *target);
+
+extern char TEXT[5];
+
+
+#define fixnullstring(str) ((str)?(str):"")
+
 
 #endif /* TREE_H */

@@ -133,7 +133,7 @@ Node *path2node_make (char *path, Node *root)
 			tnode = node_exact_match (token, node);	/* something is amiss here? */
 			if (tnode == 0) {
 				tnode = node_insert_down (node);
-				node_setdata (tnode, token);
+				node_set (tnode, TEXT, token);
 			}
 			node = tnode;
 		}
@@ -151,14 +151,14 @@ Node *path2node_make (char *path, Node *root)
 				tnode = node_exact_match (token, node);
 				if (tnode == 0) {
 					tnode = node_insert_down (node);
-					node_setdata (tnode, token);
+					node_set(tnode, TEXT, token);
 				}
 				node = tnode;
 			}
 		} else {				/* we must create a child */
 			node = node_insert_right (node);
 			if (strcmp (token, "/")) {	/* it is not the lonely / at the end */
-				node_setdata (node, token);
+				node_set (node, TEXT, token);
 			}
 		}
 		token = tokenize ("");
@@ -196,7 +196,7 @@ char *node2path (Node *node)
 		for (cnt2 = 0; cnt2 < cnt; cnt2++)
 			tnode = node_left (tnode);
 
-		strcpy (&path[pos], tnode->data);
+		strcpy (&path[pos], fixnullstring(node_get(tnode,TEXT)));
 		pos = strlen (path);
 		path[pos] = '/';
 		path[++pos] = 0;

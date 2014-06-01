@@ -76,8 +76,7 @@ static void hnb_export_nodes (FILE * file, Node *node, int level)
 {
 	while (node) {
 		int flags = node_getflags (node);
-		char *data = node_getdata (node);
-		int priority = node_getpriority (node);
+		char *data = fixnullstring(node_get (node, TEXT));
 		int percent_done = node_getpercent_done(node);
 		int size=node_getsize(node);
 
@@ -92,8 +91,6 @@ static void hnb_export_nodes (FILE * file, Node *node, int level)
 				fprintf (file, "\"no\"");
 			}
 		}
-		if (priority != 0)
-			fprintf (file, " priority=\"%i\"", priority);
 		if (percent_done != -1)
 			fprintf (file, " percent_done=\"%i\"", percent_done);
 		if (size != -1)
@@ -147,7 +144,7 @@ static int export_hnb (char *params, void *data)
 	<!ELEMENT tree (node*)>\n\
 	<!ELEMENT data (#PCDATA)> <!-- (max 4096 bytes long) -->\n\
 	<!ELEMENT node (data?,node*)>\n\
-	<!ATTLIST node done (yes|no) #IMPLIED priority (1|2|3|4|5|6|7|8|9) #IMPLIED> ]>\n\
+	<!ATTLIST node done (yes|no) #IMPLIED> ]>\n\
 \n\
 <tree>", params,
 			 VERSION);
@@ -172,7 +169,6 @@ static int import_hnb (char *params, void *data)
 	int type;
 	int in_tree = 0;
 	int level = -1;
-	int priority = 0;
 	char nodedata[4096];
 	int nodedatapos = 0;
 	int percent_done = -1;
@@ -201,7 +197,6 @@ static int import_hnb (char *params, void *data)
 		}
 		if (in_tree) {
 			if (type == t_tag && !strcmp (rdata, "node")) {
-				priority = 0;
 				flags = 0;
 				level++;
 				continue;
@@ -218,11 +213,6 @@ static int import_hnb (char *params, void *data)
 			if (type == t_att && !strcmp (rdata, "percent_done")) {
 				xml_tok_get (s, &rdata);
 				percent_done = atoi (rdata);
-				continue;
-			}
-			if (type == t_att && !strcmp (rdata, "priority")) {
-				xml_tok_get (s, &rdata);
-				priority = atoi (rdata);
 				continue;
 			}
 			if (type == t_att && !strcmp (rdata, "size")) {
@@ -271,9 +261,12 @@ static int import_hnb (char *params, void *data)
 				}
 			}
 			if (type == t_closetag && !strcmp (rdata, "data")) {
-				Node *imported=import_node (&ist, level, flags, priority, nodedata);
-				node_setpercent_done(imported,percent_done);
-				node_setsize(imported,size);
+				Node *tnode=node_new();
+				node_set(tnode,TEXT,nodedata);
+				node_setflags(tnode,flags);
+				node_setpercent_done(tnode,percent_done);
+				node_setsize(tnode,size);
+				import_node (&ist, level, tnode);
 				percent_done=-1;	
 				size=-1;
 				in_data = 0;

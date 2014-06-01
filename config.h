@@ -1,4 +1,4 @@
 
 #define PACKAGE "hnb"
-#define VERSION "1.9.10"
+#define VERSION "1.9.12"
 

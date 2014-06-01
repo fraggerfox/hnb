@@ -40,8 +40,8 @@ static int cmp_descdata (Node *a, Node *b)
 
 static int cmp_todo (Node *a, Node *b)
 {
-	if (!(a->flags) && !(b->flags))	/* accessing data directly for speed, */
-		return (strcmp (a->data, b->data));
+	if (!(a->flags) && !(b->flags))	
+		return (strcmp (fixnullstring(node_get(a,TEXT)), fixnullstring(node_get(b,TEXT))));
 
 	if ((a->flags & F_todo) < (b->flags & F_todo))
 		return 1;				/*  all todos at top */
@@ -54,17 +54,9 @@ static int cmp_todo (Node *a, Node *b)
 			if ((a->flags & F_done) < (b->flags & F_done))
 				return -1;
 
-/*
-			if ((a->priority ? a->priority : 3) >
-				(b->priority ? b->priority : 3))
-				return 1;		
-			if ((a->priority ? a->priority : 3) <
-				(b->priority ? b->priority : 3))
-				return -1;
-*/
 		}
 	}
-	return (strcmp (a->data, b->data));
+	return (strcmp (fixnullstring(node_get(a,TEXT)), fixnullstring(node_get(b,TEXT))));
 }
 
 /* this quicksort costs less cputime, but costed a hell of a lot more braintime
@@ -72,7 +64,15 @@ static int cmp_todo (Node *a, Node *b)
 
 /* apparantly mergesort is more effective for a doublelinked list 
  * (which as set of siblings actually is),. I might change it
- * when I get the time,.. but until then it works quite flawlessly */
+ * when I get the time,.. but until then it works quite flawlessly 
+ *
+ * needs even more fixing,.. the swp kludge after updating node_swap,..
+ */
+
+#define swp(a,b) do{\
+	Node *swp_node=a;\
+	b=a;a=swp_node;\
+}while(0)
 
 static Node *quicksort (Node *Top, Node *Bottom,
 						int (*cmp) (Node *a, Node *b))
@@ -84,8 +84,10 @@ static Node *quicksort (Node *Top, Node *Bottom,
 		j = node_up (Bottom);
 
 		if (j == Top) {
-			if (cmp (Top, Bottom) >= 0)
+			if (cmp (Top, Bottom) >= 0){
 				node_swap (Top, Bottom);
+				swp(Top,Bottom);
+			}
 		} else {
 			part = Top;
 			while (part != j) {
@@ -96,9 +98,12 @@ static Node *quicksort (Node *Top, Node *Bottom,
 				if (!j || node_up (part) == j)
 					break;
 				node_swap (part, j);
+				swp(part,j);
 			}
-			if (part != Bottom)
+			if (part != Bottom){
 				node_swap (part, Bottom);
+				swp(part,Bottom);
+			}
 
 			quicksort (Top, node_up (part), cmp);	/* Sort  upper part */
 			if (node_down (part))
@@ -112,13 +117,6 @@ Node *node_sort_siblings (Node *node)
 {
 	return (quicksort (node_top (node), node_bottom (node), cmp_todo));
 }
-
-/*	returns an number between 0 and 1000 showing the completion of this node,
-	computed as follows:
-		all children with todo boxes count as one part
-		if a child is done count+= 1000/parts
-		if a child is not done count+= node_calc_complete(child)/parts	
-*/
 
 /*
 	TODO: should add criteries for ascending/descending,.. 

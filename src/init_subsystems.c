@@ -16,6 +16,7 @@ void init_insertbelow();
 void init_keepstate();
 void init_mem();
 void init_movenode();
+void init_nodetest();
 void init_outdent_indent();
 void init_prefs();
 void init_remove();
@@ -49,6 +50,7 @@ void init_subsystems(){
  init_keepstate();
  init_mem();
  init_movenode();
+ init_nodetest();
  init_outdent_indent();
  init_prefs();
  init_remove();

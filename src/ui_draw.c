@@ -142,7 +142,7 @@ static int draw_textblock(int line_start, int col_start, int width, int cursor_p
 	int cursor_state=0;
 	int cx=0,cy=0; /* coordinates to draw cursor at */
 
-	unsigned char *data=(unsigned char*)node_getdata(node);
+	unsigned char *data=(unsigned char*) fixnullstring( node_get(node, TEXT) );
 
 	col=col_start;
 
@@ -375,6 +375,22 @@ static char *node2no_path (Node *node){
 	return (path);
 }
 
+static int draw_node_no(int line, int col, int width, Node *node,int drawmode){
+	char str[100]="";
+
+	if(width==0)
+		width=4;
+
+	ui_style(ui_style_bullet);
+	move(line,col);
+	snprintf (str, 5, "%4i", node_no(node) );
+	if(drawmode!=drawmode_test){
+		addstr(str);
+	}
+	
+	return width;
+}
+
 
 static int draw_nr(int line, int col, int width, Node *node,int drawmode){
 	char str[100]="";
@@ -391,6 +407,7 @@ static int draw_nr(int line, int col, int width, Node *node,int drawmode){
 	
 	return width;
 }
+
 
 
 static int draw_anr(int line, int col, int width, Node *node,int drawmode){
@@ -469,8 +486,9 @@ enum{
 	col_data,
 	col_debug,
 	col_percentage,
+	col_node_no,
 	col_dummy,
-	col_terminate,
+	col_terminate
 };
 
 
@@ -483,6 +501,7 @@ draw_bullet,
 draw_spacing,
 draw_debug,
 draw_spacing,
+draw_node_no,
 draw_dummy,
 draw_dummy};
 
@@ -552,6 +571,12 @@ int display_format_cmd(char *params, void *data){
 					}
 					break;
 			case '-':type=col_bullet;
+					if(isdigit(*(p+1))){
+						width=atoi(p+1);
+						while(isdigit(*(p+1)))p++;	
+					}
+					break;
+			case '#':type=col_node_no;
 					if(isdigit(*(p+1))){
 						width=atoi(p+1);
 						while(isdigit(*(p+1)))p++;	

@@ -94,7 +94,7 @@ static int stats_cmd(char *params, void *data){
 	
 	while(node){
 		nodes++;
-		words+=count_words(node_getdata(node));
+		words+=count_words(fixnullstring(node_get(node,TEXT)));
 		if(!node_right(node))
 			leaves++;
 

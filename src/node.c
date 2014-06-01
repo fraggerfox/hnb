@@ -22,22 +22,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "node.h"
+#include "assert.h"
 
-char *node_setdata (Node *node, const char *data)
-{
-	free (node->data);
-	node->data = (char *) strdup (data);
-	return (node->data);
-}
-
-char *node_getdata (Node *node)
-{
-	static char empty[2] = "";
-
-	if (node)
-		return node->data;
-	return (empty);
-}
 
 Node *node_new ()
 {
@@ -47,16 +33,152 @@ Node *node_new ()
 	node->down = 0;
 	node->right = 0;
 	node->left = 0;
-	node->data = (char *) strdup ("");
+	node->attrib=NULL;
+
 	node->flags = 0;
-	node->priority = 0;
 	node->percent_done = -1;
 	node->size=-1;	
 	return node;
 }
 
+Node *node_duplicate(Node *node){
+	Node *newnode;
+	Node_AttItem *att;
+
+	assert(node);
+	if(!node)return NULL;
+	newnode= (Node *)malloc (sizeof(Node));
+	if(!newnode)return NULL;
+	memcpy(newnode,node,sizeof(Node));
+	
+	newnode->attrib=NULL;
+	att=node->attrib;
+	while(att){
+		node_set(newnode,att->name,att->data);
+		att=att->next;
+	}
+		
+	return newnode;	
+}
+
 void node_free (Node *node)
 {
-	free (node->data);
+	while(node->attrib){
+		node_unset(node,node->attrib->name);
+	}
 	free (node);
+}
+
+
+/* returns pointer to character data of attribute NULL if it isn't
+   set */
+char *node_get(Node *node, char *name){
+	Node_AttItem *att;
+	
+	att=node->attrib;
+	while(att){
+		if(!strcmp(att->name,name)){
+			return att->data;
+		}
+		att=att->next;
+	}
+	return NULL;
+}
+
+/* sets the named attribute to the value of *data
+*/
+void node_set(Node *node, char *name, char *data){
+	Node_AttItem *att;
+	
+	att=node->attrib;
+	while(att){
+		if(!strcmp(att->name,name)){
+			free(att->data);
+			att->data=strdup(data);
+			return;
+		}
+		att=att->next;
+	}
+	
+	/* did not find the requested att, inserting new one, (stack wise) */
+	
+	att=(Node_AttItem *) malloc (sizeof( Node_AttItem));
+	att->next=node->attrib;
+	att->data=strdup(data);
+	att->name=strdup(name);
+	node->attrib=att;
+
+	return;
+}
+
+void node_unset(Node *node, char *name){
+	Node_AttItem *att;
+	Node_AttItem **prev;
+	
+	
+	prev=&(node->attrib);
+	att=node->attrib;
+	while(att){
+		if(!strcmp(att->name,name)){
+			free(att->data);
+			free(att->name);
+			*prev=att->next;
+			free(att);
+			return;
+		}
+		att=att->next;
+		prev=&(att->next);
+	}
+	
+	/* no such node */
+	return;
+}
+
+#include "cli.h"
+#include <stdio.h>
+
+/*
+!init_nodetest();
+*/
+
+int cmd_att_set(char *params, void *data){
+	char key[40];
+	Node *pos=(Node *)data;
+	cli_split(params, key, &params);
+	node_set(pos,key,params);
+	return (int)pos;
+}
+
+int cmd_att_get(char *params, void *data){
+	Node *pos=(Node *)data;
+	char *cdata=node_get(pos,params);
+	if(cdata)
+		cli_outfun(cdata);
+	return (int)pos;
+}
+
+int cmd_att_clear(char *params, void *data){
+	Node *pos=(Node *)data;
+	node_unset(pos,params);
+	return (int)pos;
+}
+
+int cmd_att_list(char *params, void *data){
+	Node_AttItem *att;
+	Node *pos=(Node *)data;
+	
+	att=pos->attrib;
+	while(att){
+		cli_outfunf("%s: %s",att->name,att->data);
+		att=att->next;
+	}
+	return (int)pos;
+}
+
+
+void init_nodetest(){
+	cli_add_command("att_set",cmd_att_set,"");
+	cli_add_command("att_get",cmd_att_get,"");
+	cli_add_command("att_clear",cmd_att_clear,"");
+	cli_add_command("att_list",cmd_att_list,"");
 }

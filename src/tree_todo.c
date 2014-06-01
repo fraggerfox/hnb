@@ -165,7 +165,7 @@ int done_status (Node *a)
 
 	/* FIXME this is the wrong location for this code,.. must fixup the drawing code */
 	if (!prefs_bullet_empty && completion == -1) {
-		char *data = node_getdata (a);
+		char *data = fixnullstring( node_get (a, TEXT) ); 
 		int j = 0;
 
 		completion = -2;

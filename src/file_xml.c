@@ -73,7 +73,7 @@ static char *xml_quote (const char *in)
 
 /* returns the first occurence of one of the needles, or 0 (termination)
    if not found, return 0*/
-int findchar (char *haystack, char *needles)
+static int findchar (char *haystack, char *needles)
 {
 	int j = 0;
 	int k;
@@ -100,7 +100,7 @@ static void xml_export_nodes (FILE * file, Node *node, int level)
 
 		tag[0] = 0;
 		flags = node_getflags (node);
-		data = node_getdata (node);
+		data = fixnullstring( node_get (node, TEXT) );
 
 		indent (level, "  ");
 
@@ -197,12 +197,12 @@ static Node *xml_cuddle_nodes (Node *node)
 
 	while (tnode) {
 		if (node_right (tnode)) {
-			tdata = node_getdata (node_right (tnode));
+			tdata = fixnullstring( node_get (node_right (tnode), TEXT));
 			if (tdata[0] != '<') {	/* not a child tag */
-				strcpy (data, node_getdata (tnode));
+				strcpy (data, fixnullstring( node_get (tnode,TEXT)));
 				strcat (data, " ");
 				strcat (data, tdata);
-				node_setdata (tnode, data);
+				node_set (tnode, TEXT, data);
 				node_remove (node_right (tnode));
 			}
 		}
@@ -248,23 +248,23 @@ static int import_xml (char *params, void *data)
 		switch (type) {
 			case t_prolog:
 				sprintf (nodedata, "<?%s?>", rdata);
-				import_node (&ist, level, 0, 0, nodedata);
+				import_node_text (&ist, level, nodedata);
 				nodedata[0] = 0;
 				got_data = 0;
 				break;
 			case t_dtd:
 				sprintf (nodedata, "<!%s>", rdata);
-				import_node (&ist, level, 0, 0, nodedata);
+				import_node_text (&ist, level, nodedata);
 				nodedata[0] = 0;
 				got_data = 0;
 				break;
 			case t_comment:
 				sprintf (nodedata, "<!--%s-->", rdata);
-				import_node (&ist, level, 0, 0, nodedata);
+				import_node_text (&ist, level, nodedata);
 				break;
 			case t_tag:
 				if (got_data) {
-					import_node (&ist, level, 0, 0, nodedata);
+					import_node_text (&ist, level, nodedata);
 					got_data = 0;
 					nodedata[0] = 0;
 				}
@@ -289,19 +289,19 @@ static int import_xml (char *params, void *data)
 			case t_endtag:
 				sprintf (&nodedata[strlen (nodedata)], ">");
 
-				import_node (&ist, level, 0, 0, nodedata);
+				import_node_text (&ist, level, nodedata);
 				nodedata[0] = 0;
 				level++;
 				break;
 			case t_closeemptytag:
 				sprintf (&nodedata[strlen (nodedata)], "/>");
 
-				import_node (&ist, level, 0, 0, nodedata);
+				import_node_text (&ist, level, nodedata);
 				nodedata[0] = 0;
 				break;
 			case t_closetag:
 				if (got_data) {
-					import_node (&ist, level, 0, 0, nodedata);
+					import_node_text (&ist, level, nodedata);
 					got_data = 0;
 					nodedata[0] = 0;
 				}

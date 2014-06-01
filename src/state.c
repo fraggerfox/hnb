@@ -43,7 +43,7 @@ static int save_state_cmd (char *params, void *data)
 	i=node_root(pos);
 	j=savedtree;
 	do{
-		tree_duplicate( i, j);
+		j=savedtree=tree_duplicate( i, j);
 		i=node_down(i);
 		j=node_insert_down(j);
 	}while(i!=NULL);

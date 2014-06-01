@@ -33,7 +33,10 @@ static int ui_edit_cmd (char *params, void *data)
 	Tbinding *c;
 	int stop = 0;
 	static int cursor_pos;
-	static char *data_backup;
+/*	static char *data_backup;*/
+	
+	Node *node_backup;
+	
 	int tempscope=ui_current_scope;	
 	static char input[BUFFERLENGTH];
 	Node *pos=(Node *)data;
@@ -50,7 +53,7 @@ static int ui_edit_cmd (char *params, void *data)
 			node_setflag (pos, F_temp, 0);
 		} else {
 			pos = node_insert_down (node_bottom (pos));
-			node_setdata (pos, inputbuf);
+			node_set (pos, TEXT, inputbuf);
 			if (node_getflag (node_left (pos), F_todo)) {
 				node_setflag (pos, F_todo, 1);
 			}
@@ -59,19 +62,17 @@ static int ui_edit_cmd (char *params, void *data)
 		return (int)pos;
 	}
 
-/* FIXME: it shouldn't reference the node structure directly */
-
-	data_backup = pos->data;
-	data_backup = node_getdata (pos);
+	node_backup=node_duplicate(pos);
 	input[0] = 0;
-	strcpy (&input[0], data_backup);
-	pos->data = &input[0];
+	strcpy (&input[0], fixnullstring(node_get(pos,TEXT)));
 	cursor_pos = strlen (input);
+
 	input[cursor_pos] = ' ';
 	input[cursor_pos + 1] = 0;
 	input[cursor_pos + 2] = 0;
 
 	while (!stop) {
+		node_set(pos,TEXT,input);
 		ui_draw (pos, (char *) cursor_pos, 1);
 		c = parsekey (ui_input (), ui_scope_nodeedit);
 		switch (c->action) {
@@ -125,13 +126,13 @@ static int ui_edit_cmd (char *params, void *data)
 				else
 					cursor_pos = strlen (input) - 1;
 				break;
-			 case ui_action_cancel:
-				strcpy (&input[0], data_backup);
-				pos->data = &input[0];
+			 case ui_action_cancel:			 	
+				node_set(pos,TEXT,fixnullstring(node_get(node_backup,TEXT)));
 				stop = 1;
 				break;
 			case ui_action_confirm:
 				input[strlen (input) - 1] = 0;
+				node_set(pos,TEXT,input);
 				stop = 1;
 				break;
 			case ui_action_delete:
@@ -158,10 +159,10 @@ static int ui_edit_cmd (char *params, void *data)
 					input[strlen (input) - 1] = 0;
 					node_insert_down (pos);
 					if (input[cursor_pos] == ' ')
-						node_setdata (node_down (pos),
+						node_set (node_down (pos), TEXT,
 									  &input[cursor_pos + 1]);
 					else
-						node_setdata (node_down (pos), &input[cursor_pos]);
+						node_set (node_down (pos), TEXT, &input[cursor_pos]);
 					input[cursor_pos] = ' ';
 					input[cursor_pos + 1] = 0;
 				break;
@@ -169,7 +170,7 @@ static int ui_edit_cmd (char *params, void *data)
 					if (node_down (pos)) {
 						cursor_pos = strlen (input);
 						strcpy (&input[cursor_pos - 1],
-								node_getdata (node_down (pos)));
+								fixnullstring(node_get (node_down (pos), TEXT)));
 						input[strlen (input)] = ' ';
 						input[strlen (input) + 1] = 0;
 						if (node_right (node_down (pos))) {
@@ -189,17 +190,14 @@ static int ui_edit_cmd (char *params, void *data)
 					memmove (&input[cursor_pos + 1],
 							 &input[cursor_pos],
 							 strlen (input) - cursor_pos + 1);
-					input[cursor_pos++] = c->action;
+					input[cursor_pos++] = c->action;					
 				}  else {
 					undefined_key (ui_scope_names[ui_scope_nodeedit], c->key!=1000?c->key:*((int*)&c->action_param[0]) );
 				}
 				break;
-		}
-	}
-
-
-	pos->data = data_backup;
-	node_setdata (pos, input);
+		}		
+	}		
+	node_free(node_backup);
 	ui_current_scope=tempscope;
 	return (int)data;
 }

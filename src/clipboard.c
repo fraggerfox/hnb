@@ -37,7 +37,7 @@ static int copy_cmd (char *params, void *data)
 	}
 	clipboard=node_new();
 
-	tree_duplicate( pos, clipboard);
+	clipboard=tree_duplicate( pos, clipboard);
 	return (int)pos;
 }
 
@@ -49,7 +49,7 @@ static int cut_cmd (char *params, void *data)
 	}
 	clipboard=node_new();
 
-	tree_duplicate( pos, clipboard);
+	clipboard=tree_duplicate( pos, clipboard);
 	pos=node_remove(pos);
 	return (int)pos;
 }

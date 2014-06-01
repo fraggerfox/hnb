@@ -30,6 +30,8 @@ user) */
 #include <stdlib.h>
 #include "tree.h"
 
+char TEXT[5]="text";
+
 Node *node_recurse (Node *node)
 {
 	if (node_right (node))
@@ -235,7 +237,7 @@ Node *node_match (char *match, Node *where)
 		return 0;
 
 	do {
-		if (strncmp (node->data, match, strlen (match)) == 0)
+		if (strncmp (fixnullstring(node_get(node,TEXT)), match, strlen (match)) == 0)
 			return node;
 	} while ((node = node_down (node)));
 
@@ -251,7 +253,7 @@ Node *node_exact_match (char *match, Node *where)
 		return 0;
 
 	do {
-		if (strcmp (node->data, match) == 0)
+		if (strcmp (fixnullstring(node_get(node,TEXT)), match) == 0)
 			return node;
 	} while ((node = node_down (node)));
 
@@ -317,7 +319,7 @@ Node *node_recursive_match (char *match, Node *where)
 
 	where = node_recurse (where);	/* skip forward */
 	while (where) {
-		if (stristr (where->data, match) != NULL)	/* case insensitive */
+		if (stristr (fixnullstring(node_get(where,TEXT)), match) != NULL)	/* case insensitive */
 			return where;
 		where = node_recurse (where);
 	}
@@ -332,7 +334,7 @@ Node *node_backrecursive_match (char *match, Node *where)
 
 	where = node_backrecurse (where);	/* skip forward */
 	while (where) {
-		if (stristr (where->data, match) != NULL)	/* case insensitive */
+		if (stristr (fixnullstring(node_get(where,TEXT)), match) != NULL)	/* case insensitive */
 			return where;
 		where = node_backrecurse (where);
 	}
@@ -372,61 +374,108 @@ void tree_free (Node *node)
 	return;
 }
 
-#define swp(a,b,t)	t=a;a=b;b=t;
-
-/*  swaps all the data and children of the two specified node structures */
-/*  possible conflicts here:  what if swapping a child with it's parent? (should be prevented) */
-
+/*
+	swaps the positions in the tree of the two specified nodes
+*/
 void node_swap (Node *nodeA, Node *nodeB)
 {
-	Node *tnode;
-	int tint;
-	char *tstr;
+	Node *Aup,*Aleft,*Aright,*Adown;
+	Node *Bup,*Bleft,*Bright,*Bdown;
 
-	swp (nodeA->right, nodeB->right, tnode);
-	swp (nodeA->flags, nodeB->flags, tint);
-	swp (nodeA->percent_done, nodeB->percent_done, tint);
-	swp (nodeA->priority, nodeB->priority, tint);
-	swp (nodeA->data, nodeB->data, tstr);
+	if((!nodeB) || (!nodeA))
+		return;
 
-	tnode = node_right (nodeA);
-	while (tnode) {
-		tnode->left = nodeA;
-		tnode = node_down (tnode);
+	if(nodeB->right==nodeA || nodeA->right==nodeB){
+		return;				/* can't swap parent and child,.. (nor deeper levels actually) */
+	}
+	
+	if( (nodeB->down==nodeA) && (nodeA->up==nodeB )){ /* special case neighbours,.. normalize first */
+		Node *tnode=nodeA;
+		nodeA=nodeB;
+		nodeB=tnode;
 	}
 
-	tnode = node_right (nodeB);
-	while (tnode) {
-		tnode->left = nodeB;
-		tnode = node_down (tnode);
+	Aup=node_up(nodeA);
+	Adown=node_down(nodeA);
+	Aleft=node_left(nodeA);
+	Aright=node_right(nodeA);
+	Bup=node_up(nodeB);
+	Bdown=node_down(nodeB);
+	Bleft=node_left(nodeB);
+	Bright=node_right(nodeB);	
+	
+	if( (nodeA->down==nodeB) && (nodeB->up==nodeA) ){ /* special case, neighbours */
+		if(Aup)
+			Aup->down=nodeB;
+		nodeB->up=Aup;
+		if(Bdown)
+			Bdown->up=nodeA;
+		nodeA->down=Bdown;
+		nodeA->up=nodeB;
+		nodeB->down=nodeA;
+		if(Aleft)
+			if(Aleft->right==nodeA)
+				Aleft->right=nodeB;
+		return;	
+	} 
+	
+	if(Aup)
+		Aup->down=nodeB;
+	nodeB->up=Aup;
+	if(Adown)
+		Adown->up=nodeB;
+	nodeB->down=Adown;
+	if(Aleft){
+		if(Aleft->right==nodeA)
+			Aleft->right=nodeB;
+
 	}
+	nodeB->left=Aleft;
+
+	if(Bup)
+		Bup->down=nodeA;
+	nodeA->up=Bup;
+	if(Bdown)
+		Bdown->up=nodeA;
+	nodeA->down=Bdown;
+
+	if(Bleft){
+		if(Bleft->right==nodeB)
+			Bleft->right=nodeA;
+	}
+	nodeA->left=Bleft;
 }
 
 
 #include "file.h"
 
-void tree_duplicate(Node *source, Node *target){
-	int level, flags, priority, startlevel;
+Node *tree_duplicate(Node *source, Node *target){
+	int level, startlevel;
 	import_state_t ist;	
-	char *data;
-		
-	node_setflags (target, node_getflags (source));
-	node_setpriority(target, node_getpriority(source));
-	node_setdata (target, node_getdata (source));
+	Node *tnode;
+
+	tnode=node_duplicate(source);
+	tnode->up=tnode->down=tnode->left=tnode->right=NULL;
+	node_swap(tnode,target);
+	node_free(target);
+	target=tnode;
 
 	init_import (&ist, target);
-	
+
 	if (node_right (source)) {
 		source = node_right (source);
 		startlevel = nodes_left (source);
-		while ((source != 0) & (nodes_left (source) >= startlevel)) {
-			level = nodes_left (source) - startlevel + 1;
-			flags = node_getflags (source);
-			priority = node_getpriority(source);
-			data = node_getdata (source);
-
-			import_node (&ist, level, flags, priority, data);
+		while ((source ) && (nodes_left (source) >= startlevel)) {
+			Node *tnode;
+			level = nodes_left (source) - startlevel + 1 ;
+			tnode=node_duplicate(source);
+			
+			/* clear out all references to other nodes */
+			tnode->up=tnode->down=tnode->left=tnode->right=NULL;
+			import_node (&ist, level, tnode);
 			source = node_recurse (source);
 		}
 	}
+
+	return target;
 }
