@@ -91,6 +91,53 @@ Node *pos;
 	#define undefined_key(a,c)
 #endif
 
+int key2action(int key, char mode){
+#define ifk(a,b)	if(key==a)return b;
+	ifk(KEY.RIGHT   ,UI_RIGHT);
+	ifk(KEY.LEFT    ,UI_LEFT);
+
+
+	if(mode=='e'){	/*applies only in edit mode*/
+		ifk(KEY.SPLIT   ,UI_SPLIT);
+		ifk(KEY.JOIN    ,UI_JOIN);
+	}
+
+	ifk(KEY.DOWN    ,UI_DOWN);
+	ifk(KEY.UP      ,UI_UP);
+	ifk(KEY.SKIP_UP  ,UI_PUP);
+	ifk(KEY.SKIP_DOWN,UI_PDN);
+	ifk(KEY.TOP     ,UI_TOP);
+	ifk(KEY.BOTTOM  ,UI_BOTTOM);
+/* TOGGLE_VIEWMODE
+PREFS */
+
+	ifk(KEY.FIND     ,UI_FIND);
+
+	ifk(KEY.GRAB    ,UI_MARK);
+	ifk(KEY.CONFIRM   ,UI_ENTER);
+	ifk(KEY.REMOVE  ,UI_REMOVE);
+	ifk(KEY.CANCEL	 ,UI_QUIT);
+	ifk(KEY.INSERT   ,UI_INSERT);
+	ifk(KEY.CHILDIFY ,UI_LOWER);
+	ifk(KEY.PARENTIFY,UI_RAISE);
+	ifk(KEY.SET_PRIORITY,UI_PRIORITY);
+	ifk(KEY.PREFS   ,UI_PREFS);
+	ifk(KEY.ESCAPE  ,UI_ESCAPE);
+	ifk(KEY.BACKSPACE,UI_BACKSPACE);
+	ifk(KEY.HELP    ,UI_HELP);
+	ifk(KEY.QUIT    ,UI_QUIT);
+	ifk(KEY.SAVE    ,UI_SAVE);
+	ifk(KEY.EXPORT  ,UI_EXPORT);
+	ifk(KEY.IMPORT  ,UI_IMPORT);
+	ifk(KEY.SORT    ,UI_SORT);
+	ifk(KEY.TOGGLE_TODO,UI_TOGGLE_TODO);
+	ifk(KEY.TOGGLE_DONE,UI_TOGGLE_DONE);
+	ifk(KEY.DEBUG   ,UI_DEBUG);
+	return key;
+}
+
+
+
 int app_edit (int restricted){
 	int c;
 	int stop = 0;
@@ -111,7 +158,7 @@ int app_edit (int restricted){
 	
 	while (!stop) {
 		ui_draw (pos, (char *) cursor_pos, restricted?UI_MODE_EDITR:UI_MODE_EDIT);
-		c = ui_input ();
+		c = key2action(ui_input (),'e');
 		switch (c) {
 			case UI_RIGHT:
 				if (cursor_pos < (strlen (input) - 1))
@@ -288,7 +335,7 @@ void app_mark (){
 			int c;
 			
 			ui_draw (pos, node_getdata(marked), UI_MODE_MARKED);
-			c = ui_input ();
+			c = key2action(ui_input (),'m');
 			switch (c) {
 				case UI_DEBUG:
 					ui_draw (pos, input, UI_MODE_DEBUG);
@@ -373,7 +420,7 @@ int app_quit (){	/* returns 1 when user says quit */
 	int c;
 	
 	ui_draw (pos, input, UI_MODE_QUIT);
-	c = ui_input ();
+	c = key2action(ui_input (),'q');
 	switch (c) {
 		case 'y':
 		case 'Y':
@@ -433,7 +480,7 @@ void app_search (){
 		int c;
 		
 		ui_draw (pos, (char *) query, UI_MODE_SEARCH);
-		c = ui_input ();
+		c = key2action( ui_input (),'f');
 		switch (c) {
 			case 's':
 			case 'S':
@@ -472,7 +519,7 @@ void app_remove (){
 		int c;
 		
 		ui_draw (pos, "node has children, really remove?", UI_MODE_CONFIRM);
-		c = ui_input ();
+		c = key2action(ui_input (),'r');
 		if ((c == 'y') || (c == 'Y'))
 			pos = node_remove (pos);
 	} else {
@@ -486,7 +533,7 @@ void app_export (){
 	
 	while (!stop) {
 		ui_draw (pos, "", UI_MODE_EXPORT);
-		c = ui_input ();
+		c = key2action(ui_input (),'x');
 		switch (c) {
 			case 'x':case 'X':
 				strcpy ((char *) filename, "File to save hnb xml output in:");
@@ -568,7 +615,7 @@ void app_import (){
 	
 	while (!stop) {
 		ui_draw (pos, "", UI_MODE_IMPORT);
-		c = ui_input ();
+		c = key2action(ui_input (),'i');
 		switch (c) {
 			case 'x':case 'X':
 				strcpy ((char *) filename, "xml file to import:");
@@ -618,15 +665,17 @@ void app_prefs (){
 	Node *tpos=pos; /*store orignal pos in original tree*/
 	int stop = 0;
 	int percent=prefs.showpercent;
+	int collapse=prefs.collapse_mode;
 	pos=load_prefs();
 	prefs.showpercent=0;
 	
 	while (!stop) {
-		int c;
+		int c,action;
 		
 		ui_draw (pos, input, UI_MODE_PREFS);
-		c = ui_input ();
-		switch (c) {
+		action=key2action(ui_input(),'p');
+	
+		switch (action) {
 			case UI_QUIT:case UI_ESCAPE:case UI_PREFS:case 'x':case 'c':case 'X':
 				stop = 1;
 				break;
@@ -634,9 +683,10 @@ void app_prefs (){
 					save_prefs(pos);
 					tree_free(pos);
 					pos=tpos;
+					prefs.showpercent=percent;
+					prefs.collapse_mode=collapse;
 					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 					infof (" saved config in %s", prefs.rc_file);
-					prefs.showpercent=percent;
 					return;
 				break;
 			case 1:	case 'a':case 'A':
@@ -656,8 +706,17 @@ void app_prefs (){
 				if (node_left (pos))
 					pos = node_left (pos);
 				break;
+			case UI_REMOVE:
+				switch node_getpriority(pos){
+					case 4:/*shortcut*/
+						node_setdata(node_right(pos),"-1");
+						ui_draw (pos, input, UI_MODE_PREFS);						
+						infof(" custom keybinding removed",NULL);						
+					break;
+				}
+				break;
 			case UI_RIGHT:
-				if (node_right (pos)){
+				if (node_right (pos) && node_getpriority(pos)!=4){
 					pos = node_right (pos);
 					break;
 				}
@@ -676,12 +735,20 @@ void app_prefs (){
 						break;
 					}
 					case 3: /* editable item */
-						app_edit(1);
+						app_edit(1/*restricted edit*/);
 						break;
-					case 4: /* color */
-						break;
-					case 5: /* shortcut */
-					
+					case 4: /* shortcut */
+						{
+						int t;
+						char data[10];
+						infof(" press the keycombo that should trigger the action",NULL);
+						t=getch();
+						sprintf(data,"%i",t);
+						node_setdata(node_right(pos),data);
+						ui_draw (pos, input, UI_MODE_PREFS);
+						ui_draw (pos, input, UI_MODE_PREFS);						
+						infof(" %s assigned to action",keyname(t));
+						}
 						break;
 					default:
 						if(node_getpriority(node_right(pos))==3){
@@ -696,6 +763,7 @@ void app_prefs (){
 	tree_free(pos);
 	pos=tpos;
 	prefs.showpercent=percent;	
+	prefs.collapse_mode=collapse;	
 }
 
 int hnb_nodes_down;
@@ -715,7 +783,7 @@ void app_navigate (){
 		int c;
 		
 		ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
-		c = ui_input ();
+		c = key2action(ui_input (),'n');
 		switch (c) {
 			case UI_EXPORT:
 				app_export ();
@@ -1192,7 +1260,8 @@ of hnb to gain the ability to set the new preferences please remove it and\n\
 let hnb install a new default one.\n\nNew features:",prefs.rc_file);
 	switch (prefs.rc_rev){
 		case 0:fprintf(stderr," toggle mouse support,");
-		case 1:fprintf(stderr," priority colors");
+		case 1:fprintf(stderr," priority colors,");
+		case 2:case 3:fprintf(stderr," keyboard customization");
 	}
 	fprintf(stderr,"\n");
 	}

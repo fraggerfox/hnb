@@ -7,11 +7,58 @@
 #define FORMAT_HTML		3
 #define FORMAT_LIBXML	4
 
-#define RC_REV 2
+#define RC_REV 4
+
+typedef struct{
+	int 
+		HELP,	
+		CANCEL,
+		CONFIRM,		
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT,
+		TOP,
+		BOTTOM,
+		SKIP_UP,
+		SKIP_DOWN,
+		
+		TOGGLE_VIEWMODE,
+		FIND,
+		PREFS,		
+				
+		GRAB,
+		SORT,
+		INSERT,	
+		REMOVE,	
+		SET_PRIORITY,		
+		TOGGLE_TODO,
+		TOGGLE_DONE,
+		CHILDIFY,
+		PARENTIFY,
+		
+		SAVE,
+		EXPORT,
+		IMPORT,
+		QUIT,
+
+		SPLIT,
+		JOIN,
+
+		ESCAPE,
+		BACKSPACE,
+		DEBUG;
+}TKEY;
+#ifdef PREFS_C
+	TKEY KEY={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1,-1,-1,-1,-1};
+#else
+	extern TKEY KEY;
+#endif
 
 /* global struct used to remeber user preferences
 */
-
 typedef struct{
 	int def_help_level;
 	int help_level;

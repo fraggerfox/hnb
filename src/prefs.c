@@ -208,17 +208,6 @@ void apply_prefs(Node *node){
 	check("/nav/forced do",prefs.forced_down);
 	check("/nav/mouse",prefs.mouse);
 
-/*usertags*/
-	check(	"/edit/usert",prefs.usertag);
-
-	{int j;
-	char str[20];
-	for(j=1;j<27;j++){
-		sprintf(str,"/edit/usert/^%c/",j+64);
-		string(str,prefs.usertags[j]);
-		}
-	}
-
 	radio("/file/default file format/xml",prefs.def_format,FORMAT_XML);
 	radio("/file/default file format/hnb",prefs.def_format,FORMAT_HNB);
 	radio("/file/default file format/asc",prefs.def_format,FORMAT_ASCII);	
@@ -229,6 +218,53 @@ void apply_prefs(Node *node){
 	check("/misc/debug",prefs.debug);
 
 	getint("/misc/rc rev/",prefs.rc_rev);
+
+
+	getint("/int/keyb/gen/help/",KEY.HELP);
+	getint("/int/keyb/gen/cancel/",KEY.CANCEL);
+	getint("/int/keyb/gen/edit/",KEY.CONFIRM);
+
+	getint("/int/keyb/gen/top/",KEY.TOP);
+	getint("/int/keyb/gen/bottom/",KEY.BOTTOM);
+	getint("/int/keyb/gen/left/",KEY.LEFT);
+	getint("/int/keyb/gen/right/",KEY.RIGHT);
+	getint("/int/keyb/gen/up/",KEY.UP);
+	getint("/int/keyb/gen/down/",KEY.DOWN);
+	getint("/int/keyb/gen/skip up/",KEY.SKIP_UP);
+	getint("/int/keyb/gen/skip down/",KEY.SKIP_DOWN);
+	
+	getint("/int/keyb/oth/toggle view/",KEY.TOGGLE_VIEWMODE);
+	getint("/int/keyb/oth/search/",KEY.FIND);
+	getint("/int/keyb/oth/pref/",KEY.PREFS);
+	
+	getint("/int/keyb/node/grab/",KEY.GRAB);
+	getint("/int/keyb/node/sort/",KEY.SORT);
+	getint("/int/keyb/node/inse/",KEY.INSERT);
+	getint("/int/keyb/node/remo/",KEY.REMOVE);
+	getint("/int/keyb/node/set pri/",KEY.SET_PRIORITY);
+	getint("/int/keyb/node/toggle do/",KEY.TOGGLE_DONE);
+	getint("/int/keyb/node/toggle to/",KEY.TOGGLE_TODO);
+	getint("/int/keyb/node/child/",KEY.CHILDIFY);
+	getint("/int/keyb/node/parent/",KEY.PARENTIFY);
+		
+	getint("/int/keyb/file/save/",KEY.SAVE);
+	getint("/int/keyb/file/expo/",KEY.EXPORT);
+	getint("/int/keyb/file/impo/",KEY.IMPORT);
+	getint("/int/keyb/file/quit/",KEY.QUIT);
+	
+	getint("/int/keyb/edit/join/",KEY.JOIN);
+	getint("/int/keyb/edit/split/",KEY.SPLIT);
+
+/*usertags*/
+	check(	"/int/keyb/edit/usert",prefs.usertag);
+
+	{int j;
+	char str[20];
+	for(j=1;j<27;j++){
+		sprintf(str,"/int/keyb/edit/usert/^%c/",j+64);
+		string(str,prefs.usertags[j]);
+		}
+	}
 	
 	prefs.def_help_level=prefs.help_level;
 	prefs.def_collapse_mode=prefs.collapse_mode;

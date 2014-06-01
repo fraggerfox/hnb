@@ -61,7 +61,7 @@
 
 #endif
 
-#define UI_IGNORE 1111
+#define UI_IGNORE -1
 
 /* different display modes of the curses interface */
 

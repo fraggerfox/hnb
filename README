@@ -44,23 +44,21 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
-	1.6.4
+	1.7 6 jul 2001
 		made the tutorial saveable, if opened in place of the default db
-	1.6.3
 		fixed sorting segfault
-		compiles with bsd curses?
-	1.6.2 27 may 2001
+		bsd curses workaround,.. does it work?
 		changed percentage calculation algorithm
 		cleanup of the node drawing code
 		integrated priorities
-		prefs
+		integrated Andrew J. Webers libxml2 import/export filters
+		preferences items
 			mouse
 			bullet mode
 			prefs revision checking
 			priority colors
-	1.6.1 25 may 2001
-		integrated Andrew J. Webers libxml2 import/export filters
-		bold mode colors configurable
+			bold mode colors configurable
+			keyboard redefinition
 	1.6 25 may 2001
 		generic xml import and export filter
 		preferences
