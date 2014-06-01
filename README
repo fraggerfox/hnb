@@ -1,0 +1,16 @@
+hiarchical notebook 
+
+homepage - http://hnb.sourceforge.net/
+author   - Øyvind Kolås <pippin@users.sourceforge.net>
+
+compilation/installation instructions
+
+ok,.. you've untarred it.. in this directory .. type:
+
+make
+./hnb sample.hnb
+
+and read further documentation then.. hopefully
+
+to install,.. place hnb in a binary directory 
+like /usr/local/bin, /usr/bin or $HOME/bin

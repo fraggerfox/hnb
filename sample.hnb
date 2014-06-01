@@ -1,0 +1,127 @@
+user instructions for Hiarchical NoteBook (hnb):
+	command line parameters
+		at the time of writing pdb takes only one parameter,
+		the file to edit. if this parameter i omitted, hnb
+		will load the default file, ( in unix this is $HOME/.hnb)
+		
+		hnb will display which file is the default file if you
+		supply it with an -h or --help option
+	navigating/entering data
+		you navigate among the entries with cursor keys,
+		or by typing the first characthers of the entry data
+		by pressing <tab> the entire current node is "typed" in
+		pressing tab again will enter the child this alllows 
+		rapid searching through the data
+		
+		if the characthers typed in doesn't match an existing node
+		a new node will be created
+		 
+		a menu at the bottom will at all times tell you what keys
+		do what.
+	editing existing data
+		whith a node selected.. (reversed text) you can press
+		return to enter editing mode
+		in editing mode, backspace removes text, cursor keys 
+		navigate left/right in the data, characters typed will
+		be inserted at the current position. return saves the data
+		escape will cancel editing
+	removing nodes
+		pressing delete or backspace while navigating will remove
+		a node and all it's children,.. be careful
+		I think I must add confirmation if the node contains children
+		or perhaps enforce something like ctrl+delete to do a recursive
+		deletinion
+	saving/quitting
+		pressing [esc] will give you the choices to,
+		(s)ave
+		(q)uit without saving
+		(y)save and quit
+		(esc) .. abort action
+	sorting
+		the only nonplaced option,.. at the moment is sort
+		which will sort all the siblings of the current
+		node alphabetically
+
+
+psst if this is your first time using hnb, the two periods
+after the topmost line, indicates that this entry have children
+pressing your right cursor key, will enter the child entries
+to choose among sibling entries use the up/down arrows, and
+to go back to a parent node press the your left cursor key
+
+todo list:
+	"symbolic links"
+		same as moving entries
+		but return makes the symbolic link
+	registry like functions.. for use as a configuration save/load library
+		reg_load("/etc/testrc");
+			loads a registry into memory
+		reg_save("/etc/testrc");
+			saves the loaded registry to a file
+		reg_get("/graphics/resolution/");
+			returns the first child of specified node if it exists else return ""
+			(operates on loaded registry)
+		reg_set("/graphics/resolution/640x480");
+			sets the value of the specified node, removing all siblings
+		reg_load_get("/etc/testrc","/graphics/resolution/");
+			wrapper for:
+			reg_load("/etc/testrc");
+			reg_get("/graphics/resolution/");
+		reg_save_set("/etc/testrc","/graphics/resolution/640x480");
+			wrapper for:
+			reg_load("/etc/testrc");
+			reg_set("/graphics/resolution/640x480");
+			reg_save("/etc/testrc");
+	search-dialog.. (for recursive search),.. perhaps substring match
+known bugs:
+	at the moment, things seem stable
+sample data:
+	books in my bookshelf
+		Aldous Huxley, Brave New World
+		Conan Doyle, The Adventures of Sherlock Holmes
+		Edgar Allan Poe, Selected works
+		Geogre Orwell, Animal Farm
+		Harper Lee, To Kill a Mockingbird
+		J R R Tolkien, The Lord Of The Rings
+			Three Rings for the Eleven-kings under the sky
+			  Seven for the Dwarf-lords in their halls of stone,
+			Nine for Mortal Men doomed to die,
+			  One for the Dark Lord on his dark throne
+			In the Land of Mordor where shadows lie.
+			  One Ring to rule them all, One Ring to find them,
+			  One Ring to bring them all and in the darkness bind them
+			In the Land of Mordor where shadows lie.
+		Jack London, Livsgnisten og andre noveller
+		Knut Hamsun, Pan
+		Language Myths
+		Milton, Paradise Lost
+			Rivers in hell
+				Abhorred Styx, the flood of deadly hate
+				Sad Acheron of sorrow, black and deep;
+				Cocytus , named of lamentation loud
+				Heard on the rueful stream; fierce Phlegethon,
+				Whose waves of torrent fire inflame with rage.
+				Far off from these, a slow and silent stream,
+				Lethe, the river of oblivion, rolls
+				Her watery labyrinth, whereof who drinks
+				Forthwith his former state and being forgets,
+				Forgets both joy and grief, pleasure and pain.
+			"famous quote" (in sandman among others),..
+				The mind is it's own place, and in itself
+				Can make a Heaven of Hell, a Hell of Heaven.
+				What matter where, if I be still the same,
+				And what I should be, all but less than he
+				Whom thunder hath made greater? Here at least
+				We shall be free; the Almighty hath not built
+				Here for his envy, will not drive us hence;
+				Here we may reign secure, and, in my choice,
+				To reign is worth ambition, though in Hell:
+				Better to reign in Hell than serve in Heaven.
+		Oscar Wilde, The Picture of Dorian Gray
+		Philip K. Dick, Do Androids Dream of Electronic Sheep (Bladerunner)
+		Pokus 1
+		Pokus 2
+		Tarjei Vesaas, Fuglane
+	cd's in my collection
+		none, it was stolen,
+		I surive on mp3's
