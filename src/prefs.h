@@ -7,6 +7,8 @@
 #define FORMAT_HTML		3
 #define FORMAT_LIBXML	4
 
+#define RC_REV 2
+
 /* global struct used to remeber user preferences
 */
 
@@ -44,7 +46,15 @@ typedef struct{
 	int bold_nodec;
 	int fg_bullet;
 	int bg_bullet;
+	int fg_priority;
+	int bg_priority;
+	int bold_priority;
 	int bold_bullet;
+	int rc_rev;  /* to keep track of rc revisions */
+	int mouse;	/* allow mouse navigation */
+	int indent;
+	int bulletmode;
+	int showpercent;
 }Tprefs;
 
 extern Tprefs prefs;

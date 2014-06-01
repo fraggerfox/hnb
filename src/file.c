@@ -43,32 +43,36 @@ static xmlDocPtr xmldoc = NULL;
 
 #define bufsize 4096
 
+/*prints a b chars to file */
 #define indent(a,b)	{int j;for(j=0;j<a;j++)fprintf(file,b);}
 
+void init_import(import_state_t *is, Node *node)
+{
+	is->npos = node;
+	is->startlevel = nodes_left (node);
+}
 
-static Node *npos;
-	/* pointer within to keep track of where we are, whilst importing */
-static int startlevel;
-	/* says how deep in the tree we started importing */
-
-void import_node (int level, int flags, unsigned char priority, char *data){
+void import_node (import_state_t *is, int level, int flags, 
+			int priority, char *data){
 	int node_level;
 	
-	level += startlevel;
-	
-	while ((node_level = nodes_left (npos)) > level)
-		npos = node_left (npos);
+	level += is->startlevel;
+
+	while ((node_level = nodes_left (is->npos)) > level)
+		is->npos = node_left (is->npos);
 	if (node_level == level)
-		npos = node_insert_down (npos);
+		is->npos = node_insert_down (is->npos);
 	if (node_level < level)
-		npos = node_insert_right (npos);
-	node_setflags (npos, flags);
-	node_setpriority (npos, priority);	
-	node_setdata (npos, data);
+		is->npos = node_insert_right (is->npos);
+	node_setflags (is->npos, flags);
+	node_setpriority (is->npos, priority);	
+	node_setdata (is->npos, data);
+	node_update_parents_todo(is->npos);
 }
 
 Node *ascii_import (Node *node, char *filename){
 	int level, flags, cnt;
+	import_state_t ist;
 	char data[bufsize];
 	FILE *file;
 	
@@ -76,8 +80,7 @@ Node *ascii_import (Node *node, char *filename){
 	if (file == NULL)
 		return (node);
 	
-	npos = node;
-	startlevel = nodes_left (node);
+	init_import(&ist, node);
 	
 	while (fgets (data, bufsize, file) != NULL) {
 		flags = level = cnt = 0;
@@ -108,7 +111,7 @@ Node *ascii_import (Node *node, char *filename){
 			cnt++;
 		}
 	
-	import_node (level, flags, 0, &data[level + cnt]);
+	import_node (&ist, level, flags, 0, &data[level + cnt]);
 	}
 	
 	fclose (file);
@@ -421,7 +424,7 @@ void help_export (Node *node, char *filename){
 	
 	tnode = node;
 	lastlevel = 0;
-	fprintf (file, "#define i(a,b,c) import_node(a,c,0,b)\n\n");
+	fprintf (file, "#define i(a,b,c) import_node(&ist,a,c,0,b)\n\n");
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
@@ -441,8 +444,11 @@ void help_export (Node *node, char *filename){
 }
 
 Node *help_import (Node *node){
-	npos = node;
-	startlevel = nodes_left (node);
+	import_state_t ist;
+
+	init_import(&ist, node);
+	/*npos = node;*/
+	/*startlevel = nodes_left (node);*/
 #include "tutorial.inc"
 
 if (node_getflag (node, F_temp))
@@ -450,6 +456,7 @@ if (node_getflag (node, F_temp))
 
 return (node);
 }
+
 /* returns the first occurence of one of the needles, or 0 (termination)
    if not found, return 0*/
 int findchar(char *haystack,char *needles){
@@ -640,6 +647,7 @@ Node *xml__import (Node *node, char *filename,int generic){
 	int swallow=0;
 	int flags=0;		/* for usage with hnb's dtd only */
 	int priority=0;
+	import_state_t	ist;
 	
 	int line=0;
 	
@@ -651,8 +659,10 @@ Node *xml__import (Node *node, char *filename,int generic){
 
 
 	data[0]=0;
-	npos = node;
-	startlevel = nodes_left (node);
+
+	/*npos = node;*/
+	/*startlevel = nodes_left (node);*/
+	init_import(&ist, node);
 	
 	while (fgets (buf, bufsize, file) != NULL) {	/* fill buffer */
 		line++;
@@ -682,7 +692,7 @@ reducing 50 bytes, data will be lost !!! \n\n",line);
 							data[dpos++]=buf[cnt];
 							data[dpos]=0;
 						}
-						if(generic)import_node(level,0,0,data);
+						if(generic)import_node(&ist,level,0,0,data);
 						if(data[strlen(data)-2]!='/')
 							level++;
 						data[dpos=got_data=0]=0;
@@ -743,7 +753,7 @@ reducing 50 bytes, data will be lost !!! \n\n",line);
 				}
 				if(!in_spec_tag){
 						if(generic)
-							import_node(level,0,0,data);
+							import_node(&ist,level,0,0,data);
 						data[dpos=got_data=0]=0;
 				}
 			} else if(in_comment) {		/* <!-- in comment --> */
@@ -756,14 +766,14 @@ reducing 50 bytes, data will be lost !!! \n\n",line);
 					cnt+=2;
 					if(prefs.debug)fprintf(stderr,"->");
 					if(generic && got_data)
-						import_node(level,0,0,data);
+						import_node(&ist,level,0,0,data);
 					
 					data[dpos=got_data=0]=0;
 				}
 			} else { 								/* > outside <tags*/
 				if(buf[cnt]=='<'){/*tag start*/
 					if(got_data){
-						import_node (level-(generic?0:3),
+						import_node (&ist,level-(generic?0:3),
 							flags,priority,
 							xml_unquote(data,generic));
 						flags=priority=0;
@@ -936,7 +946,7 @@ void libxml_export(Node * node, char *filename)
     fclose(file);
 }
 
-Node *libxml_populate(xmlNodePtr root, int level)
+Node *libxml_populate(import_state_t *is, xmlNodePtr root, int level)
 {
 	xmlNodePtr cur = root->children;
 	xmlAttrPtr prop;
@@ -958,7 +968,7 @@ Node *libxml_populate(xmlNodePtr root, int level)
 				data = strtok(s, delim);
 				while(data)
 				{
-					import_node (level, flags, 0, data);
+					import_node (is, level, flags, 0, data);
 					data = strtok(NULL,delim);
 				}
 				free(s);
@@ -1024,7 +1034,7 @@ Node *libxml_populate(xmlNodePtr root, int level)
 				{
 					sprintf(s, "%s", data);
 				}
-				import_node (level, flags, 0, s);
+				import_node (is,level, flags, 0, s);
 				free(s);
 				flags = 0;
 			}
@@ -1041,12 +1051,14 @@ Node *libxml_import(Node *node,char *filename)
 	FILE *file;
 	char *data;
 	unsigned int bsize;
+	import_state_t	ist;
 
 	bsize = 6;
 	data = (char *)malloc(bsize+1);
 	sprintf(data,"<hnb>\n");
 	file = fopen(filename, "r");
 	if (file == NULL) { return node; }
+
 
 	while(!feof(file) && !ferror(file) )
 	{
@@ -1061,9 +1073,9 @@ Node *libxml_import(Node *node,char *filename)
 
 	xmldoc = xmlParseMemory(data,bsize);
 
-	npos = node;
-	startlevel = nodes_left (node);
-	libxml_populate(xmldoc->children, 0);
+	init_import(&ist, node);
+
+	libxml_populate(&ist, xmldoc->children, 0);
 	if (node_getflags (node) & F_temp)
 		node = node_remove (node);
 	return (node);

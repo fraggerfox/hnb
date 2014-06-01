@@ -5,6 +5,23 @@
 #define USE_LIBXML
 #endif
 
+/* store node importer state
+*/
+typedef struct
+{
+	Node	*npos;
+	int	startlevel;
+} import_state_t;
+
+/* initialize importer, tree will be attached under *node
+*/
+extern void init_import(import_state_t *is, Node *node);
+
+/* import node into tree
+*/
+extern void import_node (import_state_t *is, int level,
+		int flags, int priority, char *data);
+
 /* imports file *filename below specified node, if tree was empty
    return first node imported.
 */

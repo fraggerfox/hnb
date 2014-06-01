@@ -617,7 +617,9 @@ void app_import (){
 void app_prefs (){
 	Node *tpos=pos; /*store orignal pos in original tree*/
 	int stop = 0;
+	int percent=prefs.showpercent;
 	pos=load_prefs();
+	prefs.showpercent=0;
 	
 	while (!stop) {
 		int c;
@@ -632,12 +634,15 @@ void app_prefs (){
 					save_prefs(pos);
 					tree_free(pos);
 					pos=tpos;
-					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);								
+					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 					infof (" saved config in %s", prefs.rc_file);
+					prefs.showpercent=percent;
 					return;
 				break;
 			case 1:	/* ctrl+A apply */
 					apply_prefs(pos);
+					percent=prefs.showpercent;
+					prefs.showpercent=0;
 				break;
 			case UI_UP:
 				if (node_up (pos))
@@ -690,6 +695,7 @@ void app_prefs (){
 	}
 	tree_free(pos);
 	pos=tpos;
+	prefs.showpercent=percent;	
 }
 
 int hnb_nodes_down;
@@ -779,14 +785,13 @@ void app_navigate (){
 					else if(prefs.forced_down){
 						while(node_left(pos)){
 							if(node_down(pos)){
-								pos=node_down(pos);
 								break;
 							}
 							pos=node_left(pos);
 						}
 					if(node_down(pos))
 						pos=node_down(pos);
-					}					
+					}
 				input[0] = 0;
 				break;
 			case UI_PDN:
@@ -887,11 +892,14 @@ void app_navigate (){
 				break;
 			case UI_PRIORITY: /* ^P priority */
 				if (node_getflag(pos,F_todo))	{
-					sprintf(input,"Current priority [%i], enter new, press return to keep",node_getpriority(pos));
+					if(node_getpriority(pos))
+						sprintf(input,"Current priority [%i], enter new (1-5) press return to keep",node_getpriority(pos));
+					else 
+						sprintf(input,"Current priority [--], enter new (1-5) press return to keep");					
 					ui_draw (pos, input, UI_MODE_GETSTR);
 					if (strlen (input)){
 						int p=atoi(input);
-						if(p>=0 && p<10)
+						if(p>=0 && p<6)
 							node_setpriority(pos,p);
 					}
 					input[0]=0;
@@ -1072,7 +1080,7 @@ int main(int argc,char **argv){
 		} else if(!xml_check(prefs.rc_file)){
 			fprintf(stderr,"%s does not seem to be a xml file, and thus cannot be a valid config file for hnb, please remove it.\n",prefs.rc_file);
 			exit(1);
-		}		
+		}
 	}
 
 	pos=load_prefs();
@@ -1175,6 +1183,17 @@ if this is an old ascii hnb file, you can convert it with:\n\
 		fprintf(stderr,"dbfile: \t\"%s\"\n",prefs.db_file);
 		fprintf(stderr,"rcfile: \t\"%s\"\n",prefs.rc_file);
 		fprintf(stderr,"cmd1:   \t\"%s\"\n",cmdline.cmd);
+	}
+	
+	if(prefs.rc_rev<RC_REV){
+fprintf(stderr,"your preferences file (%s) seems to be from an older version\n\
+of hnb to gain the ability to set the new preferences please remove it and\n\
+let hnb install a new default one.\n\nNew features:",prefs.rc_file);
+	switch (prefs.rc_rev){
+		case 0:fprintf(stderr," toggle mouse support,");
+		case 1:fprintf(stderr," priority colors");
+	}
+	fprintf(stderr,"\n");
 	}
 	
 	return 0;

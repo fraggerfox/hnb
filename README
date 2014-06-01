@@ -44,6 +44,15 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.6.2 27 may 2001
+		changed percentage calculation algorithm
+		cleanup of the node drawing code
+		integrated priorities
+		prefs
+			mouse
+			bullet mode
+			prefs revision checking
+			priority colors
 	1.6.1 25 may 2001
 		integrated Andrew J. Webers libxml2 import/export filters
 		bold mode colors configurable
@@ -183,18 +192,8 @@ TODO
 	purge todo items on lower levels
 	shuffle action
 	curses interface
-		tin like confirm mode
-			display [N] in bold,..
-			pressing Y returns Yes
-			pressing N returns N
-			up toggles Y
-			down toggles N
-			left cancels
-			right says yes
 		"context" menu for mouse mode
 		go away from centerline centric display approach
-		bullet modes
-		indentation level
 	cli interface
 		make '/' inside node names appear correctly in pwd, and prompt
 		maybe avoiding static buffers is even more important here than in the curses version (due to possible scripted input),.. but then I'd have to fix path.c as well.. <g>

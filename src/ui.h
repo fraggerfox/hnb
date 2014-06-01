@@ -97,9 +97,13 @@
 #define UI_COLOR_NODE		3
 #define UI_COLOR_NODEC		4
 #define UI_COLOR_BULLET		5
-#define UI_COLOR_BG			6
+#define UI_COLOR_PRIORITY	6
+#define UI_COLOR_BG			7
 
-
+#define BULLET_NONE			0
+#define BULLET_PLUSMINUS	1
+#define BULLET_STAR			2
+#define BULLET_MINUS		3
 
 /* initializes the curses ui sets keyboard mode etc.
 */

@@ -406,8 +406,8 @@ int cmp_todo(Node *a,Node *b){
 			if((a->flags&F_done) >(b->flags&F_done))return 1;/* not done*/
 			if((a->flags&F_done) <(b->flags&F_done))return -1; 
 			
-			if((a->priority) <(b->priority))return 1;	/*  priority  */
-			if((a->priority) >(b->priority))return -1;	
+			if((a->priority?a->priority:3) >(b->priority?b->priority:3))return 1;	/*  priority  */
+			if((a->priority?a->priority:3) <(b->priority?b->priority:3))return -1;	
 			
 		}
 	}
@@ -458,10 +458,13 @@ Node *node_sort_siblings (Node *node){
 		if a child is not done count+= node_calc_complete(child)/parts	
 */
 
-int node_calc_complete (Node *node){
-	Node *tnode;
-	int count = 0, parts = 0;
-	
+/* a traversal calculation of completion level
+*/
+int node_calc_complete(Node *node){
+	int todo_weight=0;
+	int done_weight=0;
+	int start_level=nodes_left(node);
+
 	if (!(node_getflag (node, F_todo)))
 		return -1;				/* node has no completion status */
 	if (node_getflag (node, F_done))
@@ -469,27 +472,30 @@ int node_calc_complete (Node *node){
 	if (!node_right (node))
 		return 0;			/* no undone children,.. completly undone */
 	
-	tnode = node_right (node);
-	while (tnode) {
-		if (node_getflag (tnode, F_todo))
-			parts++;
-		tnode = node_down (tnode);
-	}
-      if(!parts)
-		return 0;			/* division by zero is fun */
-	tnode = node_right (node);
-	
-	while (tnode) {
-		if (node_getflag (tnode, F_todo)) {
-			if (node_getflag (tnode, F_done)) {
-				count += 1000;
-			} else {
-				count += node_calc_complete (tnode);
-			}
+	node=node_right(node);
+	while(node){
+		if(node_getflag(node,F_todo)){
+			todo_weight+=node_getpriority(node)?6-node_getpriority(node):3;
+			if(node_getflag(node,F_done)){
+				done_weight+=node_getpriority(node)?6-node_getpriority(node):3;
+				while(node_left(node)){
+					if(node_down(node)){
+						break;
+					}
+					node=node_left(node);
+				}
+				node=node_down(node);
+			} else 
+				node=node_recurse(node);
+		} else {
+			node=node_recurse(node);
 		}
-		tnode = node_down (tnode);
+		if(nodes_left(node)<=start_level)node=0;
 	}
-	return count / parts;
+	if(!todo_weight)return 0;
+	
+	return( 1000* done_weight)/todo_weight;
+
 }
 
 Node *node_lower(Node *node){

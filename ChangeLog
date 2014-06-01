@@ -1,3 +1,12 @@
+1.6.2 27 may 2001
+	changed percentage calculation algorithm
+	cleanup of the node drawing code
+	integrated priorities
+	prefs
+		mouse
+		bullet mode
+		prefs revision checking
+		priority colors
 1.6.1 25 may 2001
 	integrated Andrew J. Webers libxml2 import/export filters
 	bold mode colors configurable

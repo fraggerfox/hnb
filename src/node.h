@@ -74,6 +74,7 @@ char *node_setdata(Node *node,char *data);
 */
 char *node_getdata(Node *node);
 
+
 /* getting of node priority
 	Returns: priority, or 0 if node didn't exist
 */
@@ -83,6 +84,7 @@ char *node_getdata(Node *node);
 	Returns: New priority, or 0 if node didn't exist
 */
 #define node_setpriority(node,new_priority)	(node?(node->priority=new_priority):0)
+
 
 /* allocates a new node, seta all data to zero
 

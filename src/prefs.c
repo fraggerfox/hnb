@@ -29,7 +29,6 @@
 #include "prefs.h"
 #include "file.h"
 #include "ctype.h"
-#include "curses.h"	/*for color values*/
 
 Tprefs prefs={
 0,		/*default_help_level;*/
@@ -65,7 +64,15 @@ COLOR_BLACK,	/*bg_nodec */
 0,				/*bold		*/
 COLOR_CYAN,		/*fg_bullet,*/
 COLOR_BLACK,	/*bg_bullet */
-0				/*bold		*/
+COLOR_RED,		/*fg_priority,*/
+COLOR_BLACK,	/*bg_priority */
+0,				/*bold prior*/
+0,				/*bold_bul	*/
+0,				/*rc revision*/
+1,				/*mouse		*/
+4,				/*indent	*/
+BULLET_NONE,	/*bulletmode*/
+1				/*showpercent*/
 };
 
 typedef struct{
@@ -79,7 +86,7 @@ ColornameT colorname[]={
 	{"cya",COLOR_CYAN},
 	{"red",COLOR_RED},
 	{"gre",COLOR_GREEN},
-	{"mad",COLOR_MAGENTA},
+	{"mag",COLOR_MAGENTA},
 	{"yel",COLOR_YELLOW},
 	{"whi",COLOR_WHITE},
 	{"",0}
@@ -155,15 +162,25 @@ void apply_prefs(Node *node){
 	#define check(a,b)		b=(node_getflag( matchpath2node(a,node_root(node)),F_done))?1:0;
 	#define string(a,b)		strcpy(b,node_getdata(matchpath2node(a,node_root(node))));
 	#define string2(a,b)	strcpy(b,node_getdata(node_down(matchpath2node(a,node_root(node)))));
+
+	#define getint(a,b)		b=atoi(node_getdata(matchpath2node(a,node_root(node))));
 	
 	radio("/int/help/spar",prefs.help_level,0);
 	radio("/int/help/full",prefs.help_level,1);
 	radio("/int/help/exper",prefs.help_level,2);	
 
-	radio("/int/tree/def/coll",prefs.collapse_mode,0);
-	radio("/int/tree/def/show c",prefs.collapse_mode,1);
-	radio("/int/tree/def/show w",prefs.collapse_mode,2);	
-	radio("/int/tree/def/show p",prefs.collapse_mode,3);
+	radio("/int/tree/def/coll",prefs.collapse_mode,COLLAPSE_ALL);
+	radio("/int/tree/def/show c",prefs.collapse_mode,COLLAPSE_ALL_BUT_CHILD);
+	radio("/int/tree/def/show w",prefs.collapse_mode,COLLAPSE_NONE);
+	radio("/int/tree/def/show p",prefs.collapse_mode,COLLAPSE_PATH);
+
+	radio("/int/tree/bull/none",prefs.bulletmode,BULLET_NONE);
+	radio("/int/tree/bull/+",prefs.bulletmode,BULLET_PLUSMINUS);
+	radio("/int/tree/bull/*",prefs.bulletmode,BULLET_STAR);
+	radio("/int/tree/bull/-",prefs.bulletmode,BULLET_MINUS);
+	
+	check("/int/tree/bull/show",prefs.showpercent);
+	getint("/int/tree/indent/",prefs.indent);	
 
 /* colors */	
 	string( "/int/col/back/",color);prefs.bg=name2color(color);
@@ -182,9 +199,14 @@ void apply_prefs(Node *node){
 	string( "/int/col/bull/",color);prefs.fg_bullet=name2color(color);
 	string2("/int/col/bull/",color);prefs.bg_bullet=name2color(color);
 	check("/int/col/bull/bold",prefs.bold_bullet);
+	string( "/int/col/pri/",color);prefs.fg_priority=name2color(color);
+	string2("/int/col/pri/",color);prefs.bg_priority=name2color(color);
+	check("/int/col/bull/bold",prefs.bold_priority);
+
 
 	check("/nav/forced up",prefs.forced_up);
 	check("/nav/forced do",prefs.forced_down);
+	check("/nav/mouse",prefs.mouse);
 
 /*usertags*/
 	check(	"/edit/usert",prefs.usertag);
@@ -205,6 +227,8 @@ void apply_prefs(Node *node){
 	check("/file/xml/cudd",prefs.xml_cuddle);
 
 	check("/misc/debug",prefs.debug);
+
+	getint("/misc/rc rev/",prefs.rc_rev);
 	
 	prefs.def_help_level=prefs.help_level;
 	prefs.def_collapse_mode=prefs.collapse_mode;

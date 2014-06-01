@@ -1,6 +1,6 @@
 AC_INIT(src/hnb.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(hnb,1.6.1)
+AM_INIT_AUTOMAKE(hnb,1.6.2)
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -8,7 +8,7 @@ AC_PROG_INSTALL
 dnl Checks for libraries.
 dnl Replace `main' with a function in -lcurses:
 AC_CHECK_LIB(curses, move)
-AC_HAVE_LIBRARY(xml2)
+AC_CHECK_LIB(xml2)
 
 
 dnl Checks for header files.
