@@ -1,8 +1,8 @@
 #define F_hidden	1
 #define F_readonly	2
 #define F_temp		4
-#define F_8			8
-#define F_16		16
+#define F_todo		8
+#define F_done		16
 #define F_32		32
 #define F_64		64
 #define F_128		128

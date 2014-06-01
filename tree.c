@@ -1,5 +1,12 @@
+/*
+there is one a little bit strange thing about
+this tree, it have the root at the top but
+at the left.. (like the model presented to the 
+user) */
+
 #include <stdio.h>
 #include <assert.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include "node.h"
@@ -159,10 +166,9 @@ nodes_right (Node * node)
 Node *
 node_remove (Node * node)
 {
-  Node *tup, *tdown, tnode;
+  Node *tup, *tdown;
 
   assert (node);
-  tnode = *node;
 
   if (node == root)
     {
@@ -181,10 +187,7 @@ node_remove (Node * node)
   tup = node->up;
   tdown = node->down;
 
-/* FIXME: 
-	multiple places where node_free is called,
-	tnode is not used (much)
-*/
+/*#warning    multiple places where node_free is called*/
 
   if (tup)
     {
@@ -202,10 +205,10 @@ node_remove (Node * node)
 	  else if (tdown)
 	    node->left->right = tdown;
 	  else
-	    {
+	    {Node *tnode=node_left(node);
 	      node->left->right = 0;
 	      node_free (node);
-	      return (tnode.left);
+	      return (tnode);
 	    }
 	};
     };
@@ -258,94 +261,77 @@ node_exact_match (char *match, Node * where)
   return (0);
 }
 
+/* this is a commodity funciton, and I didn't want to code it myself,.. I
+searched the fine web, found, cut'd, 'n', pasted.. 
+ url: http://www.brokersys.com/snippets/STRISTR.C
+*/
+
+/*
+** Designation:  StriStr
+**
+** Call syntax:  char *stristr(char *String, char *Pattern)
+**
+** Description:  This function is an ANSI version of strstr() with
+**               case insensitivity.
+**
+** Return item:  char *pointer if Pattern is found in String, else
+**               pointer to 0
+**
+** Rev History:  07/04/95  Bob Stout  ANSI-fy
+**               02/03/94  Fred Cole  Original
+**
+** Hereby donated to public domain.
+*/
+
+char *stristr(const char *String, const char *Pattern)
+{
+      char *pptr, *sptr, *start;
+      int  slen, plen;       for (start = (char *)String,
+           pptr  = (char *)Pattern,
+           slen  = strlen(String),
+           plen  = strlen(Pattern);            /* while string length not shorter than pattern length */            slen >= plen;            start++, slen--)
+      {
+            /* find start of pattern in string */
+            while (toupper(*start) != toupper(*Pattern))
+            {
+                  start++;
+                  slen--;                   /* if pattern longer than string */                   if (slen < plen)
+                        return(NULL);
+            }             sptr = start;
+            pptr = (char *)Pattern;             while (toupper(*sptr) == toupper(*pptr))
+            {
+                  sptr++;
+                  pptr++;                   /* if end of pattern then pattern was found */                   if ('\0' == *pptr)
+                        return (start);
+            }
+      }
+      return(NULL);
+} 
+
+
+/*
+  returns the next recursive node having match as a substring, or 0 if not found.
+  starting from where.
+*/
 
 Node *
 node_recursive_match (char *match, Node * where)
 {
-/*
-	Implemented as: the node at *where starts with *match -> return node
-*/
-  int startlevel = nodes_left (where);
+  Node *tnode;
 
-  Node *node;
-
-  node = node_top (where);
+  tnode=where;
   if (strlen (match) == 0)
     return (0);
 
-  while (node != 0)
+  tnode=node_recurse(tnode);  /* skip forward*/
+  while (tnode != 0)
     {
-      if (strncmp (node->data, match, strlen (match)) == 0)
-	return (node);
-      node = node_recurse (node);
-      if (nodes_left (node) < startlevel)
-	node = 0;
+      if (stristr (tnode->data, match ) != NULL)      /* case insensitive */
+	return (tnode);
+      tnode = node_recurse (tnode);
     };
   return (0);
 }
-
-
-Node *
-tree_match (char *match, Node * where)
-{
-/*
-	translate match into a node,.. should also
-	be used for links..
-	
-	/ = parent/child seperator and root identifier
-	\ = escape (for escaping \ and / )
-
-	if start = /, .. where=root
-		strip first char store rest,
-				
-while rest contains /
-		
-	head = up to first /, store rest
-	head = head - "/"
-	
-	if head != legal match 
-		if match="" where=match("")
-			else
-				go bottom, insert_down, where=bottom
-		setdata where=head
-			
-	if not nodes_right 
-		insert right
-	where=right
-	
-next while
-
-	head=rest
-
-	if head != legal match 
-	if match="" where=match("")
-		else
-			go bottom, insert_down, where=bottom
-	setdata where=head
-
-	highlight matching chars
-		
-*/
-  Node *node;
-
-  if (match[0] == '/')
-    {
-      memcpy (&match[0], &match[1], 99);
-      return (root);
-    };
-
-  node = node_top (where);
-
-  while (node != 0)
-    {
-      if (strncmp (node->data, match, strlen (match)) == 0)
-	return (node);
-      node = node_down (node);
-    };
-
-  return (0);
-}
-
 
 Node *
 tree_init ()
@@ -379,6 +365,7 @@ int tree_free(){
 	return(0);
 }
 
+#define look into node_swap and wether it can be done easilier
 
 #define swp(a,b,t)	t=a;a=b;b=t;
 

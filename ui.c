@@ -14,6 +14,7 @@ ui_init ()
 {
   initscr ();
   clear ();
+  intrflush(stdscr,TRUE);
   keypad (stdscr, TRUE);
   nonl ();
   cbreak ();
@@ -21,7 +22,7 @@ ui_init ()
   middle_line = LINES / 3;
   /* COLS ? */
   nodes_above = middle_line;
-  nodes_below = (LINES *2 / 3)-1; 
+  nodes_below = LINES-middle_line; 
 }
 
 /*
@@ -54,8 +55,6 @@ down (Node * node)
     }
   else
     {
-/*		while( !node_down(node_left(node)) | node_left(node)  )
-			node=node_left(node);*/
       while (node != 0)
 	{
 	  node = node_left (node);
@@ -70,73 +69,128 @@ down (Node * node)
 void help_draw(int mode, char *message){
 int pos;
 int line;
-#define i(KEY,TEXT) {move(line, pos * (COLS/6)  );attrset(A_REVERSE);addstr(KEY);attrset(A_NORMAL);addstr(" ");addstr(TEXT);pos++;}
+#define clr {int c;move(line,0);for(c=0;c<COLS;c++)addch(' ');};
+#define clrc(a) {int c;move(line,0);for(c=0;c<COLS;c++)addch(a);};
+#define i(KEY,TEXT) {move(line, pos * (COLS/6)  );attrset(A_REVERSE);addstr(KEY);attrset(A_NORMAL);addstr(TEXT);pos++;}
 
   switch(mode){
   	case UI_MODE_CONFIRM:
-		line=LINES-2;pos=0;i(message,"");
-		line=LINES-1;pos=0;i("yY","yes");i("other","no");
+		line=LINES-1;pos=0;clr;i(message,"");
+		line=LINES-2;pos=0;clr;i("","");i("","");i("","");i(" Y "," yes");i(" other"," no");
 		break;
-	case UI_MODE_NAVIGATE:
-		line=LINES-2;pos=0;
-		i("return","edit");
-		i("abc..","entry/search");
-		i("tab","complete");
-		
-		i("arrows","navigate");
-		
+	case UI_MODE_HELP0:
+		break;
+	case UI_MODE_HELP1:
+		line=LINES-1;pos=0;clr;
+		i(" F1 "," help");
+		i("arrows"," move");
+		i("return"," edit");
+		i("ins"," insert");
+		i("del"," remove");
+		i("^X"," quit");
+		break;
+	case UI_MODE_HELP2:
+		line=LINES-5;pos=0;clr;
+		i("hnb",VERSION);
+		i("","");
+		i("","");
 
-		line=LINES-1;pos=0;
 
-		i("^space","move");
-		i("del","remove");
-		i("ins","insert");
+		line=LINES-4;pos=0;clr;
+		i("(c)"," Øyvind Kolås 2000/2001");
+		i("","");
+		i("","");
+		i("^F"," search");		
+		i("^B"," parentify");
+		i("^N"," childify");		
+		line=LINES-3;pos=0;clr;
+		i("","");
+		i("","");
+		i("","");
+		i("^O"," sort");		
+		i("^T"," todo toggle");
+		i("^D"," done toggle");		
 
-		
-		i("Esc,F1","menu");
+		line=LINES-2;pos=0;clr;		
 
+		i("  F1  "," help");
+		i("arrows"," move");
+		i("ins"," insert");
+		i("^X"," quit");
+		i("abc.."," match");
+		line=LINES-1;pos=0;clr;
 
+		i("return"," edit");
+		i(" ^X S "," save");		
+		i("del"," remove");
+
+		i("^space"," move");
+		i(" TAB "," complete match");		
 		break;
 	case UI_MODE_EDIT:
-		line=LINES-2;pos=0;
-		i("return","confirm");
-		i("abc..","entry");
-		i("esc","cancel");
-		i("left/right","move");
+		line=LINES-2;pos=0;clr;
+		i("abc.. "," entry");
+		i("","");
+		i(" esc  "," cancel editing");
+		i("","");				
+		i("left/right"," move cursor");
+		line=LINES-1;pos=0;clr;		
+		i("return"," confirm");
+		i("","");
+		i("bs/del"," remove char");
+		i("","");				
+		i(" home/end "," warp cursor");
+
+		
 		break;
 	case UI_MODE_QUIT:
-		line=LINES-2;pos=0;	
-		i("Really QUIT?","");
-		line=LINES-1;pos=0;	
-		i("Y","save/quit");
-		i("Q","don't save/quit");
-		i("S","save/don't quit");
-		i("Esc","cancel");
-		break;
-	case UI_MODE_MENU:
-		line=LINES-2;pos=0;	
-		i("SD","save");
-		i("Q","quit");
-		i("O","sort");
-		i("hnb",VERSION);
-		line=LINES-1;pos=0;	
-		i("Esc","cancel");		
-		i("X","save/quit");
+		line=LINES-2;pos=0;clr;
 		i("","");
-		i("   ","(c) Øyvind Kolås 2000/2001");
+		i("","");
+		i(" Y,X "," Save and Quit");
+		i("","");
+		i("  Q  "," Discard changes/Quit");
+		i("","");
+		line=LINES-1;pos=0;clr;
+		i(" QUIT menu ","");
+		i("","");
+		i("  S  "," Save without quit");
+		i("","");		
+		i("Esc,C"," Cancel");
+		i("","");		
 		break;
 	case UI_MODE_MARKED:
-		line=LINES-2;pos=0;	
-		line=LINES-1;pos=0;	
-		i("arrows","move");
-		i("space","drop");
-		i("Esc","cancel");		
+		line=LINES-2;pos=0;clr;
+		i("","");i("","");i("","");
+		i("arrows"," move");
+		i("space"," drop");
+		i("Esc,C"," cancel");
+		line=LINES-1;pos=0;clr;			
+		i("","node grabbed, move to destianation and drop node");
+		break;
+	case UI_MODE_ERROR:
+	    line=LINES-1;pos=0;clr;
+		i("Error:",message);
+	    break;
+	case UI_MODE_GETSTR:
+	    line=LINES-1;pos=0;clr;
+		i(message," ");		
+	    break;
+	case UI_MODE_SEARCH:
+		line=LINES-2;pos=0;clr;
+		i("Searching for:","");i("","");i("","");
+		i("Enter,S"," stop");
+		i("N,space"," next");
+		i("Esc,C"," cancel");
+		line=LINES-1;pos=0;clr;			
+		i("","");
+		i("",message);
 		break;
   };
 }
 
 #define indentstart 1
-#define indentspace 4
+#define indentspace 5
 
 int startlevel = 0;
 
@@ -152,7 +206,7 @@ int startlevel = 0;
 #define D_M_WRAP	2
 #define D_M_TEST	4
 
-int draw_node(int line_start, int col_start, char *data, int draw_mode){
+int draw_node(int line_start, int col_start, char *data, int draw_mode, int flags){
     int lines_used=0;
 	int col_end= COLS; /* -col_start-1; */
 	move(line_start, col_start);
@@ -164,6 +218,19 @@ int draw_node(int line_start, int col_start, char *data, int draw_mode){
 		 char word[100];
 		 word[0]=0;	 
 
+
+	move(line_start,col);
+
+  if(flags&F_todo){
+  	  col=col_start=col_start+4;
+  	  if( ! (draw_mode & D_M_TEST))	  
+	    {if(flags&F_done)
+ 		     addstr("[X] ");
+		  else 
+		     addstr("[ ] ");
+		}
+  }  
+
 		 for(pos=0;pos<=strlen(data);pos++)
 		    switch(data[pos]){
 				case 0:
@@ -171,6 +238,11 @@ int draw_node(int line_start, int col_start, char *data, int draw_mode){
 					if(col+strlen(word)+1 >= col_end){
 						col=col_start;
 						lines_used++;
+
+			      if (LINES <= lines_used+line_start)
+					return lines_used+1;  /* avoid overflow whilst
+											line breaking*/
+						
 					};
 						move(line_start+lines_used,col);
 						if( ! (draw_mode & D_M_TEST)){
@@ -213,8 +285,8 @@ ui_draw (Node * node, char *input, int mode)
   Node *tnode = up (node);
   while (tnode != 0)
     {
-      draw_node( line -=  draw_node(0,indentlevel(tnode), node_getdata(tnode), D_M_TEST+D_M_WRAP+(node_right(tnode)?D_M_CHILD:0))
-	  	, indentlevel(tnode), node_getdata(tnode), D_M_WRAP+(node_right(tnode)?D_M_CHILD:0));
+      draw_node( line -=  draw_node(0,indentlevel(tnode), node_getdata(tnode), D_M_TEST+D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_getflags(tnode))
+	  	, indentlevel(tnode), node_getdata(tnode), D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_getflags(tnode));
 	
       tnode = up (tnode);
       if (middle_line - nodes_above >= line)
@@ -224,9 +296,13 @@ ui_draw (Node * node, char *input, int mode)
 
 {						    /* draw the selected node.. */
   attrset (A_REVERSE);
-  lines=draw_node(middle_line, indentlevel(node), node_getdata(node),D_M_WRAP+(node_right(node)?D_M_CHILD:0));
+  lines=draw_node(middle_line, indentlevel(node), node_getdata(node),D_M_WRAP+(node_right(node)?D_M_CHILD:0),node_getflags(node));
   attrset (A_BOLD);
-  draw_node(middle_line, indentlevel(node), input,D_M_WRAP);
+  if( mode != UI_MODE_CONFIRM   ) 
+	  if( mode != UI_MODE_ERROR   )   
+		  if( mode != UI_MODE_GETSTR   ) 
+			  if( mode != UI_MODE_SEARCH   )
+  draw_node(middle_line, indentlevel(node), input,D_M_WRAP,node_getflags(node));
   attrset (A_NORMAL);  
 }
 
@@ -240,7 +316,7 @@ ui_draw (Node * node, char *input, int mode)
 
   while (tnode != 0)
     {
-      line+=draw_node(line, indentlevel(tnode), node_getdata(tnode),D_M_WRAP+(node_right(tnode)?D_M_CHILD:0));
+      line+=draw_node(line, indentlevel(tnode), node_getdata(tnode),D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_getflags(tnode));
     
       tnode = down (tnode);
       if (middle_line + nodes_below <= line)
@@ -251,8 +327,15 @@ ui_draw (Node * node, char *input, int mode)
 	help_draw(mode,input);
 	
 	move(LINES-1,COLS-1);
-
+	
   refresh ();
+
+	if(mode==UI_MODE_GETSTR){
+		move(LINES-1,strlen(input)+1);
+		echo();
+		getstr(&input[0]);
+		noecho();
+	};
 }
 
 void
@@ -267,73 +350,17 @@ int
 ui_input ()
 {
   int c;
-  c = getch ();
-  switch (c)
-    {
-    case KEY_UP:
-      return (UI_UP);
-      break;
-    case KEY_DOWN:
-      return (UI_DOWN);
-      break;
-    case KEY_LEFT:
-      return (UI_LEFT);
-      break;
-    case KEY_RIGHT:
-      return (UI_RIGHT);
-      break;
-    case KEY_HOME:
-	case KEY_FIND:
-      return (UI_TOP);  /* doesn't work in my rxvt,.. dunno why */
-      break;
-    case KEY_END:
-	case KEY_SELECT:	
-      return (UI_BOTTOM);
-      break;
-    case KEY_NPAGE:
-      return (UI_PDN);
-      break;
-    case KEY_PPAGE:
-      return (UI_PUP);
-      break;
-    case KEY_DC:
-      return (UI_REMOVE);
-      break;
-    case KEY_RESIZE:
-	  middle_line = LINES / 3;
-	  nodes_above = middle_line;
-	  nodes_below = (middle_line * 2) - 1;
-      return(0);
-      break;
-    case 13:
-      return (UI_ENTER);
-      break;
-	case KEY_F(10):
-	case KEY_F(1):	
-	case KEY_F(9):		
-	case KEY_F(12):			
-	case 11:/* ctrl+k */
-	  return (UI_MENU);
-	  break;
-    case 27:
-	case 5:
-	case 24:/* ctrl+x */
-      return (UI_ESCAPE);
-      break;
-    case 127:
-    case KEY_BACKSPACE:
-	case 8:
-      return (UI_BACKSPACE);
-      break;
-    case 331: /* insert */
-      return (UI_INSERT);
-      break;
-    case 0: /* ctrl+space */
-	case 22: /* ctrl+v */
-      return (UI_MARK);
-    default:
-      return (c);
-      break;
-    };
-  return (0);
+  c=getch();
+  switch(c){
+  	case KEY_RESIZE:
+    middle_line = LINES / 3;
+    nodes_above = middle_line;
+    nodes_below = LINES-middle_line;
+	c=getch();
+	
+    return UI_IGNORE;
+	break;	
+  }
+  
+  return(c);
 }

@@ -7,8 +7,8 @@ user instructions for Hiarchical NoteBook (hnb):
 		by using the help option
 		 
 		OPTIONS:
-		  -h, -help    -  display usage and options
-		  -v, -version - display the version of hnb
+		  -h, --help    - display usage and options
+		  -v, --version - display the version of hnb
 	navigating/entering data
 		you navigate among the entries with cursor keys,
 		or by typing the first characthers of the entry data
@@ -20,7 +20,7 @@ user instructions for Hiarchical NoteBook (hnb):
 		a new node will be created
 		 
 		a menu at the bottom will at all times tell you what keys
-		do what.
+		do what, pressing F1 in plain navigation mode will alternate between, standard, extended and no help mode.
 	editing existing data
 		whith a node selected.. (reversed text) you can press
 		return to enter editing mode
@@ -33,12 +33,11 @@ user instructions for Hiarchical NoteBook (hnb):
 		a node, if the node has children you must confirm the
 		deletion
 	saving/quitting
-		pressing [esc], ctrl+k or ctrl+x will give you the choices to,
+		pressing [esc] or ctrl+x will give you the choices to,
 		save
 		quit
 		save and quit,..
 		amongst other options
-
 
 psst if this is your first time using hnb, the two periods
 after the topmost line, indicates that this entry have children
@@ -96,3 +95,12 @@ sample data:
 	cd's in my collection
 		none, it was stolen,
 		I surive on mp3's at the moment
+	[ ]things to pack
+		[X]clothes
+			[X]4x underwear
+			[X]extra trousers
+			[X]3 shirts
+		[ ]stuff
+			[ ]music
+			[ ]reading material
+			[ ]money

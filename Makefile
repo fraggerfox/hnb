@@ -45,11 +45,11 @@ all: strip hnb.exe reg
 run: hnb
 	./hnb
 dist-src: clean
-	( cd .. ; tar -cvozf dist/hnb-`cat hnb/VERSION`-src.tar.gz hnb ;)
+	( cd .. ; tar -cvoyf dist/hnb-`cat hnb/VERSION`-src.tar.bz2 hnb ;)
 dist-win: hnb.exe
 	( cd .. ; zip dist/hnb-`cat hnb/VERSION`-win32.zip $(WINFILES);)
 dist-bin: hnb
-	( cd .. ; tar -cvozf dist/hnb-`cat hnb/VERSION`-i386.tar.gz $(BINFILES);)
+	( cd .. ; tar -cvoyf dist/hnb-`cat hnb/VERSION`-i386.tar.bz2 $(BINFILES);)
 dist: dist-win dist-bin dist-src
 hnb.exe: ui.c hnb.c node.c tree.c file.c version.h tree.h node.h ui.h file.h tokenizer.c tokenizer.h path.c path.h
 	(export PATH=$(MINGW_PATH):$(PATH);\

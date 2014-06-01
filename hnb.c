@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <assert.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include "node.h"
@@ -23,19 +23,19 @@ usage (const char *av0)
   fprintf (stderr, "\nusage: %s [options] [file] \n", av0);
   fprintf (stderr, "\n\
 Hierarchical NoteBook by Øyvind Kolås <pippin@users.sourceforge.net>\n\
-file, (if no file is specified, it loads %s)\n\
+It is distributed under the GNU General Public License\n\
 \n\
-hierarchical notebook is distributed under the GNU General Public License\n\
+if no file is specified, the file '%s' is loaded/created\n\
 \n\
 Options include:\n\
 \n\
-        -h  or -help        this message\n\
-        -v  or -version     prints the version\n\
+\t-h  or --help\t\tthis message\n\
+\t-v  or --version\tprints the version\n\
 \n\n", db_file);
 }
 
-#define BUFFERLENGTH 2048
-#warning BUFFERLENGTH is currently set to 2048,.. should be removed and replaced by rigid code
+#define BUFFERLENGTH 4096
+#warning BUFFERLENGTH is currently set to 4096,.. should be removed and replaced by rigid code
 
 char input[BUFFERLENGTH];
 Node *pos;
@@ -57,7 +57,7 @@ app_edit ()
   input[cursor_pos] = '_';
   input[cursor_pos + 1] = 0;
   input[cursor_pos + 2] = 0;
-  c = UI_RIGHT;
+  c = 0;
 
   while (!stop)
     {
@@ -117,6 +117,8 @@ app_edit ()
 	  stop = 1;
 	  break;
 	case UI_BACKSPACE:
+	case UI_BACKSPACE2:	
+	case UI_BACKSPACE3:		
 	  if (cursor_pos)
 	    {
 	      memmove (&input[cursor_pos], &input[cursor_pos + 1],
@@ -126,16 +128,24 @@ app_edit ()
 	    };
 	  break;
 	  /*ignored keypresses..*/
-	case UI_MENU:
 	case UI_INSERT:
 	  break;	  
-	default:	  
+    default:
+	  if( c>31 && c<255){   /*  input for buffer */
 	  memmove (&input[cursor_pos + 1], &input[cursor_pos],
 		   strlen (input) - cursor_pos+1);
 	  input[cursor_pos] = c;
 
 	  cursor_pos++;
-	  break;
+	  } else {              /* undefined keycode */
+	    char msg[50];
+  	    sprintf(msg," No action assigned to '%s'(%id) in edit-mode",keyname(c),c);
+	    ui_draw(pos, msg, UI_MODE_ERROR);
+		sleep(1);
+	  }
+	  break;	  
+	  
+	  
 	};
     };
 
@@ -198,6 +208,7 @@ app_mark ()  /* add visual cue in this one? */
 		};			
 	    break;
 	  case ' ':
+	  case UI_ENTER:
 	    if(!(node_getflags(pos)&F_temp)){
 	    pos = node_insert_down (pos);
 		};
@@ -205,9 +216,19 @@ app_mark ()  /* add visual cue in this one? */
 	    node_remove (marked);
 	    stop = 1;
 	    break;
+      case UI_ESCAPE:
+	  case 'c':
+	  case 'C':
+	    stop = 1;
+	  break;
 	  default:
-	    stop=1;
-	    break;
+	{   /* undefined keycode */
+	    char msg[50];
+  	    sprintf(msg," No action assigned to '%s'(%id) in mark-mode",keyname(c),c);
+	    ui_draw(pos, msg, UI_MODE_ERROR);
+		sleep(1);
+	  }
+	  break;
 	  };
       };
     stop = 0;
@@ -216,7 +237,7 @@ app_mark ()  /* add visual cue in this one? */
 
 char db_file[100];
 
-int
+int				/* queries user wether to quit or not, returns 1 when quitting*/
 app_quit ()
 {
   int c;
@@ -226,6 +247,9 @@ app_quit ()
     {
     case 'y':
     case 'Y':
+	case 'x':
+	case 'X':
+	case UI_QUIT:
       ascii_export ( tree_root(), db_file);
       return (1);
       break;
@@ -237,11 +261,22 @@ app_quit ()
 		ascii_export ( tree_root(), db_file);
 		return(0);
 		break;
+	case 'C':case 'c':
+	case UI_ESCAPE:
+		return(0);
     default:
+		{/* undefined keycode */
+	    char msg[50];
+  	    sprintf(msg," No action assigned to '%s'(%id) in quit-mode",keyname(c),c);
+	    ui_draw(pos, msg, UI_MODE_ERROR);
+		sleep(1);
+	    }
+	
       return (0);
     };
 }
-
+/* bubble sorts the siblings of the current node, returns the same node as the 
+prior */
 
 Node *node_sort_siblings(Node *node){
 	Node *pos;
@@ -258,6 +293,12 @@ Node *node_sort_siblings(Node *node){
 		while(item<passes-pass){
 			item++;
 			if(strcmp(node_getdata(pos),node_getdata(node_down(pos)))>0){
+			    if(pos==node){
+				  node=node_down(pos);
+				} else {
+				  if(node_down(pos)==node)
+				     node=pos;
+				}  
 				node_swap(pos,node_down(pos));
 				changes++;
 			};
@@ -265,46 +306,55 @@ Node *node_sort_siblings(Node *node){
 		};
 		if(!changes)return(node);
 	};
-
 	return(node);
 }
 
-int
-app_menu ()
-{
-  int c;
-  ui_draw (pos, input, UI_MODE_MENU);
-  c = ui_input ();
-  switch (c)
-    {
-    case 's':
-    case 'S':
-    case 'd':
-    case 'D':	
-      ascii_export ( tree_root(), db_file);	
-      break;
-	case 'q':
-	case 'Q':
-      return (1);
-      break;
-	case 'x':
-	case 'X':
-      ascii_export ( tree_root(), db_file);		
-      return (1);
-      break;
-	case 'o':
-	case 'O':
-		pos=node_sort_siblings(pos);
-		return(0);
-		break;
-	case 't':		
-	  ui_draw(pos, node2path(pos), UI_MODE_CONFIRM);
-	  c=ui_input();
-    default:
-      return (0);
-    };
-	
-	return 0;
+void app_search(){
+  char *query[100];  
+#warning somehow I must input this, but it kinda works now, yahoo!  
+  Node *query_start=pos;
+  int query_start_level=nodes_left(pos);
+  strcpy((char *)query,"Find: ");
+  ui_draw(pos,(char *)query,UI_MODE_GETSTR);  /* query user for search term */
+  
+  pos=node_recursive_match((char *)query,pos);
+  
+  while( pos!=0 && (nodes_left(pos)>=query_start_level))
+    { int c;
+      ui_draw( pos, (char *)query, UI_MODE_SEARCH);
+      c=ui_input();
+      switch(c){
+        case 's':
+        case 'S':
+		case UI_ENTER:
+          {
+            return;
+          }
+          break;
+        case 'c':
+        case 'C':
+		case UI_ESCAPE:
+         {
+          pos=query_start;
+          return;
+         }
+         break;
+        case 'n':
+        case 'N':
+		case ' ':		
+		  pos=node_recursive_match((char *)query,pos);		
+         break;
+        default:
+		{/* undefined keycode */
+	    char msg[50];
+  	    sprintf(msg," No action assigned to '%s'(%id) in search-mode",keyname(c),c);
+	    ui_draw(pos, msg, UI_MODE_ERROR);
+		sleep(1);
+	    }
+        break;
+      };       
+  };
+  pos=query_start;
 }
 
 void app_remove(){
@@ -322,14 +372,95 @@ void app_remove(){
 void
 app_navigate ()
 {
+  int help_level=1;
   int stop = 0;
   while (!stop)
     {
       int c;
-      ui_draw (pos, input, UI_MODE_NAVIGATE);
+      ui_draw (pos, input, UI_MODE_HELP0+help_level);
       c = ui_input ();
       switch (c)
 	{
+	case UI_HELP:
+	   help_level++;
+	   if(help_level>=3)help_level=0;
+	   break;
+	case UI_QUIT:
+	   stop=app_quit();
+  	   break;
+    case UI_FIND:
+       app_search();      
+      break;
+	case UI_TOGGLE_TODO:
+	  if(node_getflags(pos) & F_todo){
+	     node_setflags(pos,node_getflags(pos)-F_todo);
+	  }else{
+	     node_setflags(pos,node_getflags(pos)+F_todo);
+	  }
+	  break;
+	case UI_TOGGLE_DONE:
+	  if(node_getflags(pos) & F_done){
+	     node_setflags(pos,node_getflags(pos)-F_done);		  
+		 if(node_left(pos) && (node_getflags(node_left(pos)) & F_done)){
+		 	Node *tnode=node_left(pos);
+		     node_setflags( tnode,node_getflags(tnode)-F_done);		  		 
+		 }
+	  }else{
+	     node_setflags(pos,node_getflags(pos)+F_done);
+		 if(node_left(pos) && !(node_getflags(node_left(pos)) & F_done)){
+		 	Node *tnode=node_top(pos);
+			int all_done=1;
+			while(tnode!=0){
+				if(!(node_getflags(tnode)&F_done))all_done=0;
+				tnode=node_down(tnode);
+			};
+			if(all_done){
+		 	Node *tnode=node_left(pos);
+		       node_setflags( tnode,node_getflags(tnode)+F_done);
+			}
+		 }
+	  }
+	  break;
+	case UI_SORT:
+		pos=node_sort_siblings(pos);
+	  break;
+    case UI_LOWER:
+        if(node_left(pos) ){
+          Node *tnode;
+          
+          while(nodes_down(pos)){
+            tnode=node_insert_down(node_left(pos));
+            node_swap(tnode,node_bottom(pos));
+            node_remove(node_bottom(pos));
+          };
+            tnode=node_insert_down(node_left(pos));
+            node_swap(tnode,node_bottom(pos));
+            node_remove(node_bottom(pos));
+          pos=tnode;
+        };
+     break;  
+    case UI_RAISE:
+       if(node_up(pos)){    
+         Node *tnode, *first_moved;
+         pos=node_up(pos);                  /* go up  */             
+             
+         if(!(tnode=node_right(pos))){     /* must install a child */            
+           tnode=node_insert_right(pos);
+         } else {
+           tnode=node_insert_down(node_bottom(tnode));
+         }
+         node_swap(node_down(pos),tnode);
+         node_remove(node_down(pos));
+         first_moved=tnode;
+
+         while(node_down(pos)){
+           tnode=node_insert_down(node_bottom(node_right(pos)));
+           node_swap(node_down(pos),tnode);
+           node_remove(node_down(pos));          
+         };
+         pos=first_moved;
+       };
+      break;
 	case UI_TOP:
 	  input[0] = 0;
 	  pos = tree_root ();
@@ -378,9 +509,10 @@ app_navigate ()
 	    {
 	      if (input[0] | (!(node_getflags (pos) & F_temp)))
 		{
-		  node_setflags (pos, 0);
 		  pos = node_insert_right (pos);
 		  node_setflags (pos, F_temp);
+		  if(node_getflags( node_left(pos)) & F_todo)
+		  	node_setflags(pos,F_temp+F_todo);
 		};
 	    };
 	  input[0] = 0;
@@ -388,7 +520,7 @@ app_navigate ()
 	case UI_REMOVE:
 	    app_remove();
 	  break;
-	case '\t':
+	case UI_COMPLETE:
 	  if (strcmp (input, node_getdata (pos)) == 0){
 	  		if (node_right (pos)) {
 		      pos = node_right (pos);
@@ -408,7 +540,8 @@ app_navigate ()
 	  if (node_getflags (pos) & F_temp) {
 	      pos = node_remove (pos);
 	  } else {
-	    stop = app_menu ();
+	      stop=app_quit();
+		/* other purpose for escape?? quit perhaps? */
 	  };
 	  input[0] = 0;
 	  break;
@@ -418,7 +551,7 @@ app_navigate ()
 	  } else {
 	      if (node_getflags (pos) & F_temp)
 		{
-		  node_setflags (pos, 0);
+		  node_setflags (pos, node_getflags (pos)- F_temp );
 		}
 	      else
 		{
@@ -429,6 +562,8 @@ app_navigate ()
 	    };
 	  break;
 	case UI_BACKSPACE:
+	case UI_BACKSPACE2:	
+	case UI_BACKSPACE3:
 	  if (!strlen (input))
 	    {
 		  app_remove();
@@ -443,17 +578,33 @@ app_navigate ()
 	  break;
 	case UI_INSERT:
 	    pos = node_insert_down(pos);
+	      if(node_left(pos))
+		  if(node_getflags( node_left(pos)) & F_todo)
+		  	node_setflags(pos,F_todo);
+			
+		 if(node_left(pos) && (node_getflags(node_left(pos)) & F_done)){
+		 	Node *tnode=node_left(pos);
+		     node_setflags( tnode,node_getflags(tnode)-F_done);		  		 
+		 }  /* unset parental node */
+			
+		
 	    app_edit();
 	  break;
 	case UI_MARK:
 	  app_mark ();
 	  break;
-	case UI_MENU:
-	  stop=app_menu ();
-	  break;
-	default:
-	  input[strlen (input) + 1] = 0;
-	  input[strlen (input)] = c;
+	case UI_IGNORE:
+	 break;
+    default:
+	  if( c>31 && c<255){   /*  input for buffer */
+		  input[strlen (input) + 1] = 0;
+		  input[strlen (input)] = c;
+	  } else {              /* undefined keycode */
+	    char msg[50];
+  	    sprintf(msg," No action assigned to '%s'(%id) in navigation mode",keyname(c),c);
+	    ui_draw(pos, msg, UI_MODE_ERROR);
+		sleep(1);
+	  }
 	  break;
 	};
 
@@ -477,6 +628,15 @@ app_navigate ()
 		  pos = node_insert_down (node_bottom (pos));
 		  node_setflags (pos, F_temp);
 		  node_setdata (pos, input);
+	      if(node_left(pos))
+			  if(node_getflags( node_left(pos)) & F_todo)
+			  	node_setflags(pos,F_todo+F_temp);
+		 if(node_left(pos) && (node_getflags(node_left(pos)) & F_done)){
+		 	Node *tnode=node_left(pos);
+		     node_setflags( tnode,node_getflags(tnode)-F_done);		  		 
+		 }  /* unset parental node */				
+		  
+		  
 		};
 	    };
 	};
@@ -496,12 +656,12 @@ main (int argc, char **argv)
       const char *sw = argv[i];
       if (sw[0] == '-' && sw[1] == '-')
 	sw++;
-      if (!strcmp (sw, "-h") || !strcmp (argv[i], "-help"))
+      if (!strcmp (sw, "-h") || !strcmp (argv[i], "--help"))
 	{
 	  usage (argv[0]);
 	  exit (0);
 	}
-	  else if (!strcmp (sw, "-v") || !strcmp (argv[i], "-version"))
+	  else if (!strcmp (sw, "-v") || !strcmp (argv[i], "--version"))
 	{
 	  printf("%s\n",VERSION);
 	  exit (0);

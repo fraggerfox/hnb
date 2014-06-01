@@ -1,13 +1,17 @@
+HIERARCHICAL NOTEBOOK
+ 
 hierarchical notebook (hnb) is program to organize, many kinds
-of data in one place,  for example  adresses, todo lists, ideas,
-book "reviews", brainstorming, and probably many more I haven't
-thought of yet..
+of data in one place, for example adresses, todo lists, ideas,
+book "reviews", brainstorming, organizing a speech, making a 
+structured packing list random notes, and probably many more I 
+haven't thought of yet..
 	
+ 
 HOW TO GET hnb?
 	
 	new releases of hnb will appear on the
-	<a href="http://sourceforge.net/projects/hnb">sourceforge project page</a>
-	
+	sourceforge project page
+		http://sourceforge.net/projects/hnb
 	
 INSTALLING hnb
 	
@@ -33,45 +37,39 @@ INSTALLING hnb
 		
 COMPILING hnb
 	
-	I've only tried to compile hnb using Slackware 7.1,
-	but I think it should compile on any unix by
-	just typing make.
+	I've only tried to compile hnb using linux, the only dependencies are
+	ncurses so it should compile on most any unix by just typing make.
 	
-	I cross compile the win32 binary using mingw32, and
-	pdcurses,.. to do this might call for some modifications
-	of the makefile, this version have not been tested for a while and might be more buggy than worth experiencing.
+	I cross compile the win32 binary using mingw32, the Makefile is
+	probably a mess by most standards, but it works for me (tm), and
+	will be replaced by something more appropriate at some other time.
 	
 USAGE DOCUMENTATION
 	
-	instructions for the usage of hnb is contained in
-	the sample.hnb database file, invoke hnb like this
-	in the distribution directory to get further documentation
+	hopefully hnb is quite selfdocumenting, but the file sample.hnb
+	contains some explaination of concepts and ideas behind hnb
+	invoke hnb like this to look at the file.
 	
 	hnb sample.hnb
 	
-FOR APPLICATION/GAME DEVELOPERS
-	
-	take a look at registry.h and reg.c, like what you see?
-	please use it in gnu GPL programs
-	
 TODO
-	recursive substring search
-	moving
-		make the selected node, be dragged instead of warped
-	text "overflowing" into help/status area,..
-	the confirm menu.. also changes the current node temporarily,.. 
-		because of input buffer not handled according to drawmode I think,..
-	"symbolic links"
-	buffer limits
+	[ ]moving
+		[ ]make the selected node, be dragged instead of warped
+	[ ]buffer limits
 		is now increased to 2048, but is it enough?
-	different collapse modes?
-	keyboard handling
-		tell the user that... key ????? not defined in current mode
-		or perhaps to stderr or something
-	sdl
-	wordwrap
-		if there is only one long word on the line (url),..
-		the wrapping doesn't work like it should
+	[ ]different collapse modes?
+	[ ]gtk 2.0
+		there is a new interface to bind things so I can use my own codestructue :))
+	[ ]curses interface
+		[ ]in editing mode, use reverse video as cursor instead of _ hack
+		[ ]copy node and substree
+	[ ]todo
+		[X]the autochecking of parental nodes kinda works for one level now,.. must create either an recursive maintainance routine,.. or something ingenious
+		[ ]the recurisive auto done tag matcher,..
+			if there is a parent
+				check wether all todo boxes in this level is checked
+				if they are. check parent, else uncheck parent
+					repeat until there is no parent
 CHANGELOG
 	0.3b
 		added registry functions, and a small sample programed called reg
@@ -95,5 +93,31 @@ CHANGELOG
 	0.5
 		help item's update
 		added insert capability to insert a node below the current
+	0.5a
+		the guadec hacked fixes on strics computer
+		
+		added search functionality, still not added real keyboard bindings, nor input of needle for the search, but the callbacks are in place
+		fixed the display of confirm mode in curses ui.
+		implemented reparenting
+		cleaned up node_remove
+	0.6b 11 april 2001
+		something went wrong in the versioning,.. but what the heck..
+		 
+		added load,save and display of todo in standard file format
+		should be foolproof, and still keeps the file human readable
+		when adding a child by navigating,.. the parents node were reset to 0 for no apparent reason.
+		changed to bz2 format on distribution file
+	0.6c
+		rearranged input structures
+		added todo checkboxes
+		added error mode to display modes
+		rewamped the helpline system
+	0.6d
+		fixed resizing
+		added input of search term in find
+		made search case insensitive
+		refined search control interface
+		made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
+	0.7 13 april 2001
 
 pippin@users.sourceforge.net

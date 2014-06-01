@@ -7,6 +7,9 @@
 #include "node.h"
 #include "tree.h"
 
+#define bufsize 4096
+
+
 static Node *npos;
 static int startlevel;
 
@@ -87,8 +90,6 @@ import_byte (byte)
       break;
     };
 }
-
-#define bufsize 4096
 
 #ifndef WIN32
 Node *
@@ -178,8 +179,18 @@ ascii_export_node (FILE * file, int level, int flags, char *data)
     {
       fprintf (file, "\t");
     };
-/*FIXME ascii_export_node, doesn't export flags
-  and reading has limitations on size/content*/
+
+/*FIXME reading has limitations on size/content (newlines)*/
+  
+  if(flags&F_todo){  /* print the flags of the current node */
+	if(flags&F_done)
+		fprintf (file, "[X]");
+	else 
+		fprintf (file, "[ ]");
+  } else { /* check wether we must escape the first char of the string */
+    if(data[0]=='[')fprintf (file, "[]");
+  };
+
   fprintf (file, "%s\n", data);
 
 }
@@ -187,8 +198,8 @@ ascii_export_node (FILE * file, int level, int flags, char *data)
 Node *
 ascii_import (Node * node, char *filename)
 {
-  int level, flags;
-  char data[2048];
+  int level, flags,cnt;
+  char data[bufsize];
   FILE *file;
 
   file = fopen (filename, "r");
@@ -198,9 +209,9 @@ ascii_import (Node * node, char *filename)
   npos = node;
   startlevel = nodes_left (node);
 
-  while (fgets (data, 2048, file) != NULL)
+  while (fgets (data, bufsize, file) != NULL)
     {
-      flags = level = 0;
+      flags = level = cnt = 0;
 
 		/*
 			strip newline from string, and if dosmode file,.. also strip
@@ -210,8 +221,27 @@ ascii_import (Node * node, char *filename)
 	  if(data[strlen(data)-1]==13)data[strlen (data) - 1] = 0;
 	  
       while (data[level] == '\t')
-	level++;
-      import_node (level, flags, &data[level]);
+	    level++;
+	  if(data[level]=='['){ /* start reading the flags */
+		while(data[level+cnt] != ']'){
+		  cnt++;
+		  switch(data[level+cnt]){
+		    case ' ':
+			  flags=flags+F_todo;
+			  break;
+			case 'x':
+			case 'X':
+			case '*':
+			  flags=flags+F_todo+F_done;
+			default:
+			  break;
+		  };
+		};		
+		cnt++;
+	  };
+
+	
+      import_node (level, flags, &data[level+cnt]);
     };
 
   fclose (file);
