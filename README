@@ -43,6 +43,14 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.9.17
+		bug fix, when saving hnb DTD, I also saved the text attribute
+		removed the format names from prefs.c,.. now the string specified is used instead, (makes extending easier)
+		improved the tokenizer for libcli, it now acts almost exactly as bash, even the hooks for understanding $variable_expansion is included in the code, uses a single malloc
+		various bug fixes
+		cleanups and merging of commands, e.g. go_root, go_recurse, and go_backrecurse are now go <root|backrecurse|recurse|up|down|left|right>
+		search now is a single command taking direction and query as arguments.
+		changed escape to be the key used to bring up the menu,.. and remapped ^Q to be quit (again)
 	1.9.16
 		attempts to fix the compile on OSX
 			renaming mergesort to node_mergesort due to nameclash

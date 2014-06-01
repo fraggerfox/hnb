@@ -25,7 +25,7 @@
 #include "ui.h"
 #include <cli.h>
 
-char query[100];
+static char query[100];
 
 static int getquery_cmd (int argc, char **argv, void *data)
 {

@@ -1,5 +1,5 @@
 Name: hnb
-Version: 1.9.16
+Version: 1.9.17
 Release: 1
 Summary: HNB - Hierarchical Notebook
 License: GPL

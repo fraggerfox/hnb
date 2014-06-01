@@ -126,7 +126,7 @@ int xml_getpos (char *filename)
 			fclose (file);
 			return 0;
 		}
-		if ((s = strstr (buf, "<!--pos:"))) {
+		if ((s = strstr (buf, "<?pos=\""))) {
 			fclose (file);
 
 			return atoi (&s[8]);
@@ -158,13 +158,11 @@ static int cmd_save (int argc,char **argv, void *data)
 		{
 			char buf[4096];
 
-			if (prefs.format == format_hnb || prefs.format == format_opml) {
-				sprintf (buf, "export_%s %s %i",
-						 format_name[prefs.format], prefs.db_file,
+			if (!strcmp(prefs.format,"hnb") || !strcmp(prefs.format,"opml")) {
+				sprintf (buf, "export_%s %s %i", prefs.format, prefs.db_file,
 						 node_no (pos) - 1);
 			} else {
-				sprintf (buf, "export_%s %s",
-						 format_name[prefs.format], prefs.db_file);
+				sprintf (buf, "export_%s %s", prefs.format, prefs.db_file);
 			}
 			docmd (node_root (pos), buf);
 		}
@@ -180,8 +178,7 @@ static int cmd_revert (int argc,char **argv, void *data)
 		{
 			char buf[4096];
 
-			sprintf (buf, "import_%s %s",
-				 format_name[prefs.format], prefs.db_file);
+			sprintf (buf, "import_%s %s", prefs.format, prefs.db_file);
 			node_free(pos);
 			pos=tree_new();
 			

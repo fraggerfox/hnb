@@ -23,8 +23,8 @@
 #include "cli.h"
 #include "cli_tokenize.h"
 
-#define HIDE_NULL_HELP
-
+/*#define HIDE_NULL_HELP
+*/
 /* TODO:
 
 	allow removal of commands/variables
@@ -38,7 +38,7 @@
 	wordwrapping outputting function
 */
 static void default_output(char *data){
-	#define COLS 72
+	#define COLS 78
 	char *tbuf=malloc(COLS+1);
 	char *word=malloc(COLS+1);
 	char *bp=tbuf,
@@ -193,10 +193,6 @@ void cli_add_help(char *name, char *helptext){
 
 static int help (int argc,char **argv, void *data);
 static int vars (int argc,char **argv, void *data);
-static int nop (int argc,char **argv, void *data)
-{
-	return (int)data;
-}
 
 static int inited = 0;
 
@@ -221,7 +217,6 @@ void cli_cleanup(void){
 
 static void init_cli (void)
 {
-/*	cli_add_command ("quit", nop, "quits the application");*/
 	cli_add_command ("?", help, "? - this listing");
 	cli_add_command ("show_vars", vars, "show all variables");
 	inited = 1;
@@ -231,7 +226,7 @@ int cli_calllevel=0;
 
 int cli_docmd (char *commandline, void *data)
 {
-	int largc;
+	int largc=0;
 	char **largv;
 	
 	ItemT *titem = items;
@@ -247,10 +242,11 @@ int cli_docmd (char *commandline, void *data)
 		inited = 1;
 	}
 
-	largv=cli_tokenize(commandline,&largc);
+	largv=argv_tokenize(commandline);
+	if(largv)largc=argc_of_argv(largv);
 
-	if(!largc){
-		cli_free_tokenlist(largv);
+	if((!largc) || largv[0][0]=='\0' ){
+		free(largv);
 		return ret;
 	}
 	
@@ -263,8 +259,8 @@ int cli_docmd (char *commandline, void *data)
 				if (cli_postcmd)
 					cli_postcmd (commandline);
 				cli_calllevel--;
-				
-				cli_free_tokenlist(largv);
+
+				free(largv);
 				return ret;
 			} else if (is_variable (titem)) {
 				if (largc==1) {
@@ -288,8 +284,8 @@ int cli_docmd (char *commandline, void *data)
 				if (cli_postcmd)
 					cli_postcmd (commandline);
 				cli_calllevel--;
-				
-				cli_free_tokenlist(largv);
+
+				free(largv);				
 				return ret;
 			}
 		}
@@ -301,7 +297,7 @@ int cli_docmd (char *commandline, void *data)
 		cli_postcmd (commandline);
 	cli_calllevel--;
 	
-	cli_free_tokenlist(largv);
+	free(largv);
 	return ret;
 }
 
@@ -453,24 +449,21 @@ static int vars (int argc, char **argv, void *data)
 	return(int)data;
 }
 
-
-void cli_split(char *orig, char *head, char **tail)				
-	{												
-		int j=0;									
-		if(orig){									
-			strncpy(head,orig,40);					
-			head[39]=0;								
-			while( head[j] != ' ' && head[j] != '\t' && head[j] != 0)	
-				j++;								
-			head[j]=0;								
-			*tail=&orig[j+1];
-			if(strlen( head) == strlen (orig) )		
-				*tail="";							
-		} else {
-			head[0]=0;
-			*tail="";
+char *cli_getstring(char *variable){
+		ItemT *titem = items;
+		while (titem) {
+			if (is_variable (titem)) {
+				if (!strcmp (variable, titem->name)) {
+					if(titem->string)
+						return(titem->string);
+					if(titem->integer)
+						return NULL; /* FIXME: use a static buffer perhaps */
+				}
+			}
+			titem = titem->next;
 		}
-	}
+		return "";
+}
 
 #include <stdio.h>
 
@@ -494,5 +487,6 @@ int cli_load_file(char *filename){
 		}
 	}
 	fclose(file);
+
 	return 0;
 }

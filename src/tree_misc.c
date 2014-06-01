@@ -75,38 +75,51 @@ void init_movenode ()
 	cli_add_command ("movenode", cmd_movenode, "<up|left|right|down>");
 }
 
-static int cmd_go_root (int argc, char **argv, void *data)
-{
-	if (node_backrecurse ((Node *) data))
-		return (int) node_root ((Node *) data);
-	return (int) data;
-}
+static int cmd_go(int argc, char **argv, void *data){
+	Node *pos=(Node *)data;
+	
+	if(argc!=2){
+		cli_outfunf("usage: %s <up|down|left|right|recurse|backrecurse|root|top|bottom>");
+		return (int)pos;
+	}
+	
+	if(!strcmp(argv[1],"up")){
+		if(node_up(pos))
+			pos=node_up(pos);
+	} else if(!strcmp(argv[1],"down")){
+		if(node_down(pos))
+			pos=node_down(pos);
+	} else if(!strcmp(argv[1],"left")){
+		if(node_left(pos))
+			pos=node_left(pos);
+	} else if(!strcmp(argv[1],"right")){
+		if(node_right(pos))
+			pos=node_right(pos);
+	} else if(!strcmp(argv[1],"recurse")){
+		if(node_recurse(pos))
+			pos=node_recurse(pos);
+	} else if(!strcmp(argv[1],"backrecurse")){
+		if(node_backrecurse(pos))
+			pos=node_backrecurse(pos);
+	} else if(!strcmp(argv[1],"root")){
+		pos=node_root(pos);
+	} else if(!strcmp(argv[1],"top")){
+		pos=node_top(pos);
+	} else if(!strcmp(argv[1],"bottom")){
+		pos=node_bottom(pos);
+	}
 
-static int cmd_go_recurse (int argc, char **argv, void *data)
-{
-	if (node_recurse ((Node *) data))
-		return (int) node_recurse ((Node *) data);
-	return (int) data;
+	
+	return (int)pos;
 }
-
-static int cmd_go_backrecurse (int argc, char **argv, void *data)
-{
-	return (int) node_backrecurse ((Node *) data);
-}
-
 
 /*
-!init_go_root();
+!init_go();
 */
-void init_go_root ()
+void init_go ()
 {
-	cli_add_command ("go_root", cmd_go_root, "");
-	cli_add_help ("go_root", "skip to the root of the tree");
-	cli_add_command ("go_recurse", cmd_go_recurse, "");
-	cli_add_help ("go_recurse", "go to the next node recursively");
-	cli_add_command ("go_backrecurse", cmd_go_backrecurse, "");
-	cli_add_help ("go_backrecurse", "go to the previous node recursively");
-
+	cli_add_command ("go", cmd_go, "<up|down|left|right|recurse|backrecurse|root|top|bottom>");
+	cli_add_help ("go", "change current position in the tree");
 }
 
 #include "evilloop.h"
@@ -257,7 +270,7 @@ static int commandline_cmd (int argc, char **argv, void *data)
 
 		if (commandline[0])
 			pos = docmd (pos, commandline);
-	} while (commandline[0]);
+	} while (commandline[0] && strcmp(commandline,"q") && strcmp(commandline,"quit"));
 	return (int) pos;
 }
 

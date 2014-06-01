@@ -410,7 +410,7 @@ void init_ui_binding ()
 				  "Changes context, context may be one of 'main', 'lineedit', 'nodeedit', 'confirm' or any other userdefined context.");
 
 /* dummy commands to show the 'builtins' */
-	cli_add_command ("backspace", dummy_cmd, "");
+/*	cli_add_command ("backspace", dummy_cmd, "");
 	cli_add_help ("backspace", "erase the preceding character");
 	cli_add_command ("delete", dummy_cmd, "");
 	cli_add_help ("delete", "erase the following character");
@@ -477,4 +477,5 @@ void init_ui_binding ()
 	cli_add_command ("unbound", dummy_cmd, "");
 	cli_add_help ("unbound",
 				  "give a message indicating that the pressed key is not bound in the current context");
+*/
 }

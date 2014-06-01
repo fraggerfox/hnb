@@ -81,6 +81,10 @@ void ui_init ()
 	define_key ("\033[7~", KEY_HOME);
 	define_key ("\033[8~", KEY_END);
 
+	define_key ("\033[OH", KEY_HOME);
+	define_key ("\033[OF", KEY_END);
+
+
 	define_key ("\033O2A", KEY_SPREVIOUS);
 	define_key ("\033[a", KEY_SPREVIOUS);
 	define_key ("\033O2B", KEY_SNEXT);

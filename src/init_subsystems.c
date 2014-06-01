@@ -14,7 +14,7 @@ void init_file_html();
 void init_file_opml();
 void init_file_ps();
 void init_file_xml();
-void init_go_root();
+void init_go();
 void init_insertbelow();
 void init_keepstate();
 void init_mem();
@@ -54,7 +54,7 @@ void init_subsystems(){
  init_file_opml();
  init_file_ps();
  init_file_xml();
- init_go_root();
+ init_go();
  init_insertbelow();
  init_keepstate();
  init_mem();

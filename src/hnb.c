@@ -90,7 +90,7 @@ int main (int argc, char **argv)
 		int version;
 		int usage;
 		int def_db;
-		int format;
+		char format[64];
 		int ui;
 		int tutorial;
 		char *dbfile;
@@ -100,7 +100,7 @@ int main (int argc, char **argv)
 		0,						/* version */
 			0,					/* usage */
 			1,					/* load default db */
-			-1,					/*format to load by default */
+			"",					/*format to load by default */
 			1,					/* ui */
 			0,					/* tutorial */
 	NULL, NULL, NULL};
@@ -117,23 +117,23 @@ int main (int argc, char **argv)
 				cmdline.tutorial = 1;
 			} else if (!strcmp (argv[argno], "-a")
 					   || !strcmp (argv[argno], "--ascii")) {
-				cmdline.format = format_ascii;
+				strcpy(cmdline.format,"ascii");
 			} else if (!strcmp (argv[argno], "-hnb")
 					   || !strcmp (argv[argno], "--hnb")) {
-				cmdline.format = format_hnb;
+				strcpy(cmdline.format,"hnb");
 			} else if (!strcmp (argv[argno], "-o")
 					   || !strcmp (argv[argno], "-opml")
 					   || !strcmp (argv[argno], "--opml")) {
-				cmdline.format = format_opml;
+				strcpy(cmdline.format,"opml");
 			} else if (!strcmp (argv[argno], "-x")
 					   || !strcmp (argv[argno], "-gx")
 					   || !strcmp (argv[argno], "--xml")) {
-				cmdline.format = format_xml;
+				strcpy(cmdline.format,"xml");
 #ifdef USE_LIBXML
 			} else if (!strcmp (argv[argno], "-s")
 					   || !strcmp (argv[argno], "-sx")
 					   || !strcmp (argv[argno], "--stylized")) {
-				cmdline.format = format_sxml;
+				strcpy(cmdline.format,"sxml");
 #endif
 			} else if (!strcmp (argv[argno], "-ui")) {
 				if (!strcmp (argv[++argno], "curses")) {
@@ -207,8 +207,8 @@ int main (int argc, char **argv)
 	/* ovveride the prefs with commandline specified options */
 	if (cmdline.tutorial)
 		prefs.tutorial = 1;
-	if (cmdline.format != -1) {	/* format specified */
-		prefs.format = cmdline.format;
+	if (cmdline.format[0] ) {	/* format specified */
+		strcpy(prefs.format, cmdline.format);
 	}
 
 	if (cmdline.def_db) {
@@ -224,8 +224,10 @@ int main (int argc, char **argv)
 	if (!prefs.tutorial) {
 		int oldpos = -1;
 
-		if (prefs.format == format_hnb || prefs.format == format_xml
-			|| prefs.format == format_opml) {
+		if (!strcmp(prefs.format,"hnb") || 
+		!strcmp(prefs.format,"opml") ||
+		!strcmp(prefs.format,"xml") 
+		) {
 
 			if (!xml_check (prefs.db_file)) {
 				fprintf (stderr,
@@ -239,18 +241,20 @@ int main (int argc, char **argv)
 				oldpos = xml_getpos (prefs.db_file);
 		}
 
+
 		{
 			char buf[4096];
 
-			sprintf (buf, "import_%s %s", format_name[prefs.format],
-					 prefs.db_file);
+			sprintf (buf, "import_%s %s", prefs.format,  prefs.db_file);
 			pos = docmd (pos, buf);
 		}
+
 		if (oldpos != -1) {
 			while (oldpos--)
 				pos = node_recurse (pos);
 		}
 	}
+
 
 	if (prefs.tutorial) {
 		if (prefs.tutorial != 2)
@@ -259,6 +263,7 @@ int main (int argc, char **argv)
 		pos = docmd (pos, "status ''");
 		pos = docmd (pos, "status 'navigate the documentation with your cursor keys'");
 	}
+
 
 	switch (cmdline.ui) {
 		case 1:

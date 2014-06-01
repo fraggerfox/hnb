@@ -51,8 +51,6 @@ static int export_help (int argc, char **argv, void *data)
 	char *cdata;
 	FILE *file;
 
-	if (!strcmp (filename, "*"))
-		filename = query;
 	file = fopen (filename, "w");
 	if (!file) {
 		cli_outfunf ("help export, unable to open \"%s\"", filename);

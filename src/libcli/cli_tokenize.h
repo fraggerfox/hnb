@@ -1,2 +1,2 @@
-char **cli_tokenize(char *input, int *argc);
-void cli_free_tokenlist(char **argv);
+char **argv_tokenize(char *input_string);
+int argc_of_argv(char **argv);

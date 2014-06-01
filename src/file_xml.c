@@ -153,8 +153,6 @@ static int export_xml (int argc, char **argv, void *data)
 	char *filename = argc==2?argv[1]:"";
 	FILE *file;
 
-	if (!strcmp (filename, "*"))
-		filename = query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -220,8 +218,6 @@ static int import_xml (int argc, char **argv, void *data)
 
 	nodedata[0] = 0;
 
-	if (!strcmp (filename, "*"))
-		filename = query;
 	file = fopen (filename, "r");
 	if (!file) {
 		cli_outfunf ("xml import, unable to open \"%s\"", filename);

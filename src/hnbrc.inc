@@ -9,16 +9,16 @@
 ##### bullets\n\
 	# what kind of bullets are displayed before each item\n\
 	##### samples\n\
-		#bullet_parent \"  -\"\n\
-		#bullet_parent \"  *\"\n\
-		#bullet_parent \"  ·\"\n\
+		#bullet_parent          \"  -\"\n\
+		#bullet_parent          \"  *\"\n\
+		#bullet_parent          \"  ·\"\n\
 		#bullet_parent_expanded \"  +\"\n\
 		#bullet_parent_expanded \"  *\"\n\
 		#bullet_parent_expanded \"  ·\"\n\
-		#bullet_leaf \"  *\"\n\
-		#bullet_leaf \"  -\"\n\
-	bullet_leaf \"  ·\"\n\
-	bullet_parent \"  +\"\n\
+		#bullet_leaf            \"  *\"\n\
+		#bullet_leaf            \"  -\"\n\
+	bullet_leaf            \"  ·\"\n\
+	bullet_parent          \"  +\"\n\
 	bullet_parent_expanded \"  -\"\n\
 	\n\
 ##### user interface\n\
@@ -94,11 +94,8 @@
 	\n\
 ##### file formats\n\
 	##### Default Format\n\
-		# 0 - XML using hnb DTD\n\
-		# 1 - tab indented ASCII\n\
-		# 2 - XML using no DTD (working as XML editor)\n\
-		# 3 - XML using OPML DTD\n\
-		format \"0\"\n\
+		# hnb, opml, xml, ascii  are amongst the available formats\n\
+		format \"hnb\"\n\
 		\n\
 	##### Remember current position in tree\n\
 		# wheter hnb remembers the current position in a file, (currently\n\
@@ -110,7 +107,7 @@
 		##### XML Cuddling\n\
 			# When loading xml files, should data be allowed on \n\
 			# the same line as tags?\n\
-			xml_cuddle \"1\"\n\
+			xml_cuddle \"0\"\n\
 			\n\
 		\n\
 	\n\
@@ -141,16 +138,16 @@
 	##################################################\n\
 	\n\
 	context main\n\
-		helptext \"<ESC>| exit || |F2| save || |F5| commandline || |return| edit || F9 | menu\n\
-		\n\
+		helptext \"ESC| menu || |F2| save || |F5| commandline || |return| edit |\n\
 		bind f1 'status \"Take a look at ~/.hnbrc to check out the configuration\"'\n\
 		bind .. 'status \"there you will also find details about the available keybindings.\"'\n\
 		bind .. 'status \"please feel free to contribute more useful keybindings and helptexts...\"'\n\
 		\n\
-		bind esc 'context quitsave'\n\
+		bind esc menu\n\
+		bind ^Q 'context quitsave'\n\
 		\n\
 		bind f5 'commandline'\n\
-		bind .. 'status_clear'\n\
+		bind .. 'status --clear'\n\
 		\n\
 		bind f6 'macro m_spellcheck'\n\
 			macro define m_spellcheck\n\
@@ -166,7 +163,7 @@
 				context search\n\
 				save_state\n\
 				getquery \"enter keyword to search for\"\n\
-				next_match\n\
+				search -f \"$query\"\n\
 			end\n\
 		\n\
 		bind f9  menu\n\
@@ -176,14 +173,14 @@
 		bind .. 'save_state'\n\
 		\n\
 		bind ^A 'action'\n\
-		\n\
 		bind up    up\n\
 		bind down  down\n\
 		bind left  left\n\
 		bind right right\n\
 		bind npage pagedown\n\
 		bind ppage pageup\n\
-		bind home  go_root\n\
+		bind home  \"go root\"\n\
+		\n\
 		\n\
 		bind return edit\n\
 		bind del    remove\n\
@@ -298,13 +295,13 @@
 	context spellcheck\n\
 		helptext \"Spellchecking |   |Space| next node |ESC| cancel |F6,Return| confirm changes\"\n\
 		\n\
-		bind space go_recurse\n\
+		bind space \"go recurse\"\n\
 		bind ..    spell\n\
 		\n\
-		bind down go_recurse\n\
+		bind down \"go recurse\"\n\
 		bind ..   spell\n\
 		\n\
-		bind up   go_backrecurse\n\
+		bind up   \"go backrecurse\"\n\
 		bind ..   spell\n\
 		\n\
 		bind return \"context main\"\n\
@@ -329,37 +326,41 @@
 		helptext \"Export |  | A |scii || | H |tml  html| C |ss  | P |ostscript  | O |PML  |ESC| cancel \"\n\
 			macro define m_export_ascii\n\
 				save_state\n\
-				go_root\n\
+				go root\n\
 				getquery 'what file should I save the ASCII output in?'\n\
-				export_ascii *\n\
+				export_ascii $query\n\
 				restore_state\n\
 				context main\n\
 			end\n\
 			macro define m_export_html\n\
 				save_state\n\
+				go root\n\
 				getquery 'what file should I save the HTML output in?'\n\
-				export_html *\n\
+				export_html $query\n\
 				context main\n\
 				restore_state\n\
 			end\n\
 			macro define m_export_htmlcss\n\
 				save_state\n\
+				go root\n\
 				getquery 'what file should I save the HTML/CSS output in?'\n\
-				export_htmlcss *\n\
+				export_htmlcss $query\n\
 				context main\n\
 				restore_state\n\
 			end\n\
 			macro define m_export_opml\n\
 				save_state\n\
+				go root\n\
 				getquery 'what file should I save the OPML output in?'\n\
-				export_opml *\n\
+				export_opml $query\n\
 				context main\n\
 				restore_state\n\
 			end\n\
 			macro define m_export_ps\n\
 				save_state\n\
+				go root\n\
 				getquery 'what file should I save the PostScript output in?'\n\
-				export_ps *\n\
+				export_ps $query\n\
 				context main\n\
 				restore_state\n\
 			end\n\
@@ -382,38 +383,38 @@
 			bind .. \"context main\"\n\
 		bind A ..\n\
 			bind .. 'getquery \"what file should I import ASCII from?\"'\n\
-			bind .. 'import_ascii *'\n\
+			bind .. 'import_ascii \"$query\"'\n\
 			bind .. 'context main'\n\
 		bind a ..\n\
 			bind .. 'getquery \"what file should I import ASCII from?\"'\n\
-			bind .. 'import_ascii *'\n\
+			bind .. 'import_ascii \"$query\"'\n\
 			bind .. 'context main'\n\
 		bind O ..\n\
 			bind .. 'getquery \"what file should I import OPML from?\"'\n\
-			bind .. 'import_opml *'\n\
+			bind .. 'import_opml \"$query\"'\n\
 			bind .. 'context main'\n\
 		bind o ..\n\
 			bind .. 'getquery \"what file should I import OPML from?\"'\n\
-			bind .. 'import_opml *'\n\
+			bind .. 'import_opml \"$query\"'\n\
 			bind .. 'context main'\n\
 		bind H ..\n\
 			bind .. 'getquery \"what file should I import HNB data from?\"'\n\
-			bind .. 'import_hnb *'\n\
+			bind .. 'import_hnb \"$query\"'\n\
 			bind .. 'context main'\n\
 		bind h ..\n\
 			bind .. 'getquery \"what file should I import HNB data from?\"'\n\
-			bind .. 'import_hnb *'\n\
+			bind .. 'import_hnb \"$query\"'\n\
 			bind .. 'context main'\n\
 		\n\
 		bind any unbound\n\
 	context search\n\
 		helptext \"Searching |  |ESC| cancel || | n |ext || | p |revious || |space|/|return| go\"\n\
-		bind down   next_match	\n\
-		bind up     prev_match		\n\
-		bind P      prev_match\n\
-		bind p      prev_match\n\
-		bind n      next_match\n\
-		bind N      next_match\n\
+		bind down   'search -f \"$query\"'\n\
+		bind up     'search -b \"$query\"'\n\
+		bind P      'search -b \"$query\"'\n\
+		bind p      'search -b \"$query\"'\n\
+		bind n      'search -f \"$query\"'\n\
+		bind N      'search -f \"$query\"'\n\
 		\n\
 		bind return \"context main\"\n\
 		\n\
@@ -427,10 +428,10 @@
 		\n\
 		bind f1  \"context user_ispell\"\n\
 		bind f2  \"context user_browser\"\n\
-		bind f3  \"expand_all\"\n\
+		bind f3  \"expand --all\"\n\
 		bind ..  \"context main\"\n\
 		\n\
-		bind f4  \"collapse_all\"\n\
+		bind f4  \"collapse --all\"\n\
 		bind ..  \"context main\"\n\
 		\n\
 		bind any \"unbound\"\n\
@@ -468,11 +469,9 @@
 		\n\
 		bind esc 'context main'\n\
 		bind any unbound\n\
-	\n\
 		\n\
-			\n\
-			\n\
-	##### keyrelated options\n\
+				\n\
+	##### key related options\n\
 		##### escdelay\n\
 			# how long the program should wait before accepting that ESC(27d) is the\n\
 			# ESC key and not the start of an escape sequence\n\
@@ -484,16 +483,30 @@
 	##### file\n\
 		menu \"File\" \"------------\" \"\"\n\
 		menu \"File\" \"save      F2\" \"save\"\n\
-		menu \"File\" \"revert   \" \"revert\"\n\
-		menu \"File\" \"quit      ^Q\" \"context quitsave\"\n\
+		menu \"File\" \"save as..   \" \"macro saveas\"\n\
+			macro define saveas\n\
+				getquery db_file 'fila to save'\n\
+				save_state\n\
+				go root\n\
+				export_$format $db_file\n\
+				restore_state\n\
+			end\n\
+		menu \"File\" \"revert   \" \"revert\"		\n\
 		menu \"File\" \"------------\" \"\"\n\
 		menu \"File\" \"export    ^E\" \"context export\"\n\
 		menu \"File\" \"import    ^L\" \"context import\"\n\
 		menu \"File\" \"------------\" \"\"\n\
 		menu \"File\" \"spell chk F6\" \"macro m_spellcheck\"\n\
-		menu \"File\" \"expand all\"	    \"expand_all\"\n\
-		menu \"File\" \"collapse all\"      \"collapse_all\"\n\
-		menu \"File\" \"statistics\"	\"stats\"\n\
+		menu \"File\" \"expand all\"	    \"expand --all\"\n\
+		menu \"File\" \"collapse all\"      \"collapse --all\"\n\
+		menu \"File\" \"statistics\"	\"macro stats\"\n\
+			macro define stats\n\
+				status \"file: \\\"$db_file\\\" format:$format\"\n\
+				mem\n\
+				stats			\n\
+			end\n\
+		menu \"File\" \"------------\" \"\"\n\
+		menu \"File\" \"exit      ^Q\" \"context quitsave\"\n\
 	##### edit\n\
 		menu \"Edit\" \"---------\" \"\"\n\
 		menu \"Edit\" \"copy   ^C\" \"copy\"\n\
@@ -514,9 +527,10 @@
 		menu \"Entry\" \"expand      +\" \"expand\"\n\
 		menu \"Entry\" \"collapse    -\" \"collapse\"\n\
 	##### level\n\
-		menu \"Level\" \"----------\" \"\"\n\
-		menu \"Level\" \"sort    ^S\" \"sort\"\n\
-		menu \"Level\" \"shuffle   \" \"shuffle\"\n\
+		menu \"Level\" \"------------\" \"\"\n\
+		menu \"Level\" \"sort      ^S\" \"sort -a\"\n\
+		menu \"Level\" \"sort (desc.)\" \"sort -d\"\n\
+		menu \"Level\" \"shuffle     \" \"sort -r\"\n\
 #####\n\
 	context main\n\
 	macro define m_about\n\

@@ -1,26 +1,13 @@
 #ifndef PREFS_H
 #define PREFS_H
 
-enum {
-	format_hnb = 0,
-	format_ascii,
-	format_xml,
-	format_opml,
-	format_sxml,
-	format_html,
-	format_slides,
-	format_help,
-	format_terminator
-};
-
-extern const char *format_name[format_terminator];
 
 #define RC_REV 8
 
 /* global struct used to remeber user preferences
 */
 typedef struct {
-	int format;
+	char format[128];
 	int tutorial;
 	char rc_file[100];
 	char db_file[100];

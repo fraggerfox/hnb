@@ -30,13 +30,9 @@
 #include "ui_cli.h"
 #include "file.h"
 
-const char *format_name[format_terminator] = {
-	"hnb", "ascii", "xml", "opml", "sxml", "html", "slides", "help"
-};
-
 
 Tprefs prefs = {
-	format_hnb,					/*format; */
+	"hnb",					/*format; */
 	0,							/*tutorial; */
 	"",							/*rc_file[100]; */
 	"",							/*db_file[100]; */
@@ -64,9 +60,8 @@ void init_prefs ()
 	sprintf (prefs.rc_file, "C:\\hnb.rc");
 	sprintf (prefs.default_db_file, "C:\\hnb_data");
 #endif
-
-/*str*/ cli_add_int ("format", &prefs.format,
-						 "the format of the current file");
+	
+	cli_add_string ("format", prefs.format, "the format of the current file");
 
 	cli_add_string ("rc_file", prefs.rc_file, "");
 	cli_add_string ("db_file", prefs.db_file, "");

@@ -56,7 +56,7 @@ static void draw_menu(Node *pos, int cur_col, int cur_row){
 }
 
 static Node *menu_do(Node *pos){
-	int row=0,col=0;
+	static int row=0,col=0;
 	int stop=0;
 	Tbinding *c;
 
@@ -84,10 +84,16 @@ static Node *menu_do(Node *pos){
 			case ui_action_up:
 				if(row>1)
 					row--;
+				else
+					while(menu[col][row+1].label)
+						row++;
 				break;
 			case ui_action_down:
 				if(menu[col][row+1].label)
 					row++;
+				else
+					while(row>1)
+						row--;				
 				break;
 			case ui_action_cancel:
 				stop=1;

@@ -30,6 +30,8 @@
 
 #include <stdarg.h>
 
+void argv_sanity(void);
+
 void cli_split(char *orig, char *head, char **tail);	
 
 void cli_add_help(char *name,char *helptext);

@@ -30,61 +30,49 @@
 static int cmd_expand (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
-
-
-	if(inputbuf[0] && isprint(lastbinding->key)){ /* evil workaround */
-		if (lastbinding->key > 31 && lastbinding->key < 255) {	/*  input for buffer */
-			inputbuf[strlen (inputbuf) + 1] = 0;
-			inputbuf[strlen (inputbuf)] = lastbinding->key;
+	if(argc==1){
+		if(inputbuf[0] && isprint(lastbinding->key)){ /* evil workaround */
+			if (lastbinding->key > 31 && lastbinding->key < 255) {	/*  input for buffer */
+				inputbuf[strlen (inputbuf) + 1] = 0;
+				inputbuf[strlen (inputbuf)] = lastbinding->key;
+			}
+			return (int)pos;
 		}
-		return (int)pos;
+		node_setflag(pos,F_expanded,1);
+	} else if((!strcmp(argv[1],"-a"))||(!strcmp(argv[1],"--all"))){
+		Node *tnode = node_root (pos);
+
+		while (tnode) {
+			node_setflag(tnode,F_expanded,1);
+			tnode = node_recurse (tnode);
+		}
+		cli_outfun ("expanded all nodes");
 	}
-
-
-	node_setflag(pos,F_expanded,1);
 	return (int) pos;
 }
 
 static int cmd_collapse (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
+	if(argc==1){
+		if(inputbuf[0] && isprint(lastbinding->key)){ /* evil workaround */
+			if (lastbinding->key > 31 && lastbinding->key < 255) {	/*  input for buffer */
+				inputbuf[strlen (inputbuf) + 1] = 0;
+				inputbuf[strlen (inputbuf)] = lastbinding->key;
+			}		
+			return (int)pos;
+		}
+		node_setflag(pos,F_expanded,0);
+	} else if((!strcmp(argv[1],"-a"))||(!strcmp(argv[1],"--all"))){
+		Node *tnode = node_root (pos);
 
-	if(inputbuf[0] && isprint(lastbinding->key)){ /* evil workaround */
-		if (lastbinding->key > 31 && lastbinding->key < 255) {	/*  input for buffer */
-			inputbuf[strlen (inputbuf) + 1] = 0;
-			inputbuf[strlen (inputbuf)] = lastbinding->key;
-		}		
-		return (int)pos;
+		while (tnode) {
+			node_setflag(tnode,F_expanded,0);
+			tnode = node_recurse (tnode);
+		}
+		cli_outfun ("collapsed all nodes");
 	}
-
-
-	node_setflag(pos,F_expanded,0);
-	return (int) pos;
-}
-
-static int cmd_expand_all (int argc,char **argv, void *data)
-{
-	Node *pos = (Node *) data;
-	Node *tnode = node_root (pos);
-
-	while (tnode) {
-		node_setflag(tnode,F_expanded,1);
-		tnode = node_recurse (tnode);
-	}
-	cli_outfun ("expanded all nodes");
-	return (int) pos;
-}
-
-static int cmd_collapse_all (int argc,char **argv, void *data)
-{
-	Node *pos = (Node *) data;
-	Node *tnode = node_root (pos);
-
-	while (tnode) {
-		node_setflag(tnode,F_expanded,0);
-		tnode = node_recurse (tnode);
-	}
-	cli_outfun ("collapsed all nodes");
+	
 	return (int) pos;
 }
 
@@ -93,14 +81,12 @@ static int cmd_collapse_all (int argc,char **argv, void *data)
 */
 void init_expanded ()
 {
-	cli_add_command ("expand", cmd_expand, "");
+	cli_add_command ("expand", cmd_expand, "[--all|-a]");
 	cli_add_help ("expand",
-				  "expand the current node, thus showing it's subnodes");
+				  "expand the current entry, thus showing it's subentries, if the\
+parameter -a is given, all nodes in the tree will be expaned");
 	cli_add_command ("collapse", cmd_collapse, "");
-	cli_add_help ("collapse", "collapse the current node's subnodes");
-
-	cli_add_command ("expand_all", cmd_expand_all, "");
-	cli_add_help ("expand_all", "expand all expandable nodes in the tree");
-	cli_add_command ("collapse_all", cmd_collapse_all, "");
-	cli_add_help ("collapse_all", "collapses all expanded nodes in the tree");
+	cli_add_help ("collapse",
+				  "collapse the current entrys subentries, if the\
+parameter -a is given, all nodes in the tree will be expaned");
 }

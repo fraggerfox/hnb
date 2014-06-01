@@ -131,16 +131,16 @@ void set_status (char *message)
 
 static int ui_status_cmd (int argc, char **argv, void *data)
 {
-	if(argc>1)set_status (argv[1]);
+	if(argc==2 && (!strcmp(argv[1],"-c") || !strcmp(argv[1],"--clear"))){
+		status_ttl=0;
+	} else if(argc>1){ /* FIXME: should handle more than one string on commandline */
+		set_status (argv[1]);
+		if(!ui_inited)
+		cli_outfun(argv[1]);
+	}
 	return (int) data;
 }
 
-
-static int ui_status_clear_cmd (int argc, char **argv, void *data)
-{
-	status_ttl = 0;
-	return (int) data;
-}
 
 void status_draw (void)
 {
@@ -211,8 +211,10 @@ void init_ui_overlay ()
 	cli_add_command ("helptext", ui_helptext_cmd, "<help for context>");
 	cli_add_help ("helptext",
 				  "Defines the helptext for the current context, the character | alternates between the menuitem and the menutext styles, || is the escape sequence for a single pipe.");
-	cli_add_command ("status", ui_status_cmd, "<message>");
-	cli_add_help ("status", "Adds 'message' as the newest status line.");
-	cli_add_command ("status_clear", ui_status_clear_cmd, "");
-	cli_add_help ("status", "Clears all status messages off screen.");
+	cli_add_command ("status", ui_status_cmd, "<-c|--clear|message>");
+	cli_add_command ("echo", ui_status_cmd, "<-c|--clear|message>");
+	cli_add_help ("status", "Adds 'message' as the newest status line, if -c or --clear\
+ is specified, all pending status messages will be cleared off the screen");
+	cli_add_help("echo","alias for status");
+
 }

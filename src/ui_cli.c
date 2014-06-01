@@ -151,11 +151,44 @@ static void pre_command (char *commandline)
 	}
 }
 
-static int eCho (int argc, char **argv, void *data)
+static int ls (int argc, char **argv, void *data)
 {
-	if(argc>1)
-		cli_outfun (argv[1]);
-	return (int) data;
+	Node *pos = (Node *) data;
+
+	Node *tnode;
+	int recurse = 0;
+	int indicate_sub = 1;
+	int startlevel;
+
+	tnode = node_top (pos);
+
+	startlevel = nodes_left (tnode);
+	while (tnode) {
+
+		if (recurse) {
+			int j;
+
+			for (j = nodes_left (tnode); j > startlevel; j--) {
+				printf ("\t");
+			}
+		}
+
+		cli_outfunf( "%s %s %s",fixnullstring(node_get (tnode, TEXT)),
+		indicate_sub?
+		node_right(tnode)?"(..)":""
+		:"", tnode==pos?"<":""
+		
+		);
+
+		if (recurse) {
+			tnode = node_recurse (tnode);
+			if (nodes_left (tnode) < startlevel)
+				tnode = 0;
+		} else {
+			tnode = node_down (tnode);
+		}
+	}
+	return (int) pos;
 }
 
 /*
@@ -169,11 +202,14 @@ void init_ui_cli (void)
 		inited = 1;
 		cli_precmd = pre_command;
 		cli_add_command ("add", add, "<string>");
+		cli_add_command ("ls", ls, "");
+
+		cli_add_help("add","inserts an new entry at the current position");
 		cli_add_command ("addc", addc, "<parent> <string>");
+		cli_add_help("addc","inserts a new entry under the node named parent, with the text og string");
 		cli_add_command ("cd", cd, "<path>");
 		cli_add_command ("pwd", pwd, "");
 		cli_add_help ("pwd", "echoes the current path");
-		cli_add_command ("q", eCho, "see the entry for 'quit'");
 	}
 }
 
@@ -201,6 +237,8 @@ Node *docmdf (Node *pos,char *format, ...){
 }
 
 
+extern int quit_hnb; /* from evilloop. */
+
 Node *cli (Node *pos)
 {
 	char commandline[4096];
@@ -216,6 +254,6 @@ Node *cli (Node *pos)
 		fgets (commandline, 4096, stdin);
 		commandline[strlen (commandline) - 1] = 0;
 		pos = (Node *) cli_docmd (commandline, pos);
-	} while (strcmp (commandline, "quit") && strcmp (commandline, "q"));
+	} while (!quit_hnb);
 	return pos;
 }

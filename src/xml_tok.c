@@ -97,7 +97,7 @@ typedef struct {
 
 #define max_entries 20
 
-state_entry state_table[s_error][max_entries];
+static state_entry state_table[s_error][max_entries];
 
 static void a (int state, char *chars, unsigned char r_start,
 			   unsigned char r_end, int charhandling, int next_state)

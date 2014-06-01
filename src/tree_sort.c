@@ -25,24 +25,6 @@
 #include "tree.h"
 #include "cli.h"
 
-
-/*
- FIXME: need to add options for the sort function,.. ascending/descending
- with todo/without todo,.. case sensitive/insensitive,.
-
-*/
-#if 0
-static int cmp_ascdata (Node *a, Node *b)
-{
-	return (strcmp (a->data, b->data));
-}
-
-static int cmp_descdata (Node *a, Node *b)
-{
-	return (strcmp (b->data, a->data));
-}
-#endif
-
 static int cmp_random (Node *b, Node *a)
 {
 	return (random () % 3) - 1;
@@ -155,21 +137,22 @@ static Node *node_mergesort (Node *head, int size, int (*cmp) (Node *a, Node *b)
 	}
 }
 
+static int cmp_descending(Node *a,Node *b){
+	return cmp_todo(b,a);
+}
+
 static int sort_cmd (int argc, char **argv, void *data)
 {
 	Node *pos = (Node *) data;
+	int (*cmp) (Node *a, Node *b)=cmp_todo;
 
-	node_mergesort (node_top (pos), nodes_down (node_top (pos)) + 1, cmp_todo);
-	if (node_left (pos))
-		node_left (pos)->right = node_top (pos);
-	return (int) pos;
-}
+	if(argc>1){
+		if(!strcmp(argv[1],"-a"))cmp=cmp_todo;
+		else if(!strcmp(argv[1],"-d"))cmp=cmp_descending;
+		else if(!strcmp(argv[1],"-r"))cmp=cmp_random;
+	}
 
-static int shuffle_cmd (int argc, char **argv, void *data)
-{
-	Node *pos = (Node *) data;
-
-	node_mergesort (node_top (pos), nodes_down (node_top (pos)) + 1, cmp_random);
+	node_mergesort (node_top (pos), nodes_down (node_top (pos)) + 1, cmp);
 	if (node_left (pos))
 		node_left (pos)->right = node_top (pos);
 	return (int) pos;
@@ -180,11 +163,7 @@ static int shuffle_cmd (int argc, char **argv, void *data)
 */
 void init_sort ()
 {
-	cli_add_command ("sort", sort_cmd, "");
+	cli_add_command ("sort", sort_cmd, "[-r|-a|-d]");
 	cli_add_help ("sort",
-				  "Sorts the siblings of the currently selected node");
-	cli_add_command ("shuffle", shuffle_cmd, "");
-	cli_add_help ("shuffle",
-				  "Randomizes the order of the siblings at the current level");
-
+				  "Sorts the siblings of the currently selected node, the way the nodes is sorted can be specified -a=ascending -d=descending -r=random(shuffle");
 }

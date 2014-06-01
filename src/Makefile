@@ -1,5 +1,5 @@
 LIBS=-lncurses libcli/libcli.a
-CFLAGS=-I.. -Ilibcli -DHAVE_CONFIG_H -Wall -pedantic
+CFLAGS=-I.. -Ilibcli -DHAVE_CONFIG_H -Wall -pedantic -g
 
 CFILES=$(wildcard *.c)
 OBJS=$(patsubst %.c,%.o,$(CFILES))
@@ -9,7 +9,7 @@ OBJS=$(patsubst %.c,%.o,$(CFILES))
 
 hnb: libcli/libcli.a Makefile $(OBJS) init_subsystems.c *.h *.inc
 	$(CC) -o hnb $(OBJS) $(LIBS) $(CFLAGS)
-	strip hnb
+#	strip hnb
 libcli/libcli.a: libcli/*.c
 	(cd libcli;make libcli.a)
 libcli/libcli_p.a: libcli/*.c

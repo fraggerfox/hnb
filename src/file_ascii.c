@@ -43,10 +43,6 @@ static int import_ascii (int argc, char **argv, void *data)
 	char cdata[bufsize];
 	FILE *file;
 
-
-	if (!strcmp (filename, "*"))
-		filename = query;
-
 	file = fopen (filename, "r");
 	if (file == NULL) {
 		cli_outfunf ("ascii import, unable to open \"%s\"", filename);
@@ -107,9 +103,6 @@ static int export_ascii (int argc, char **argv, void *data)
 	int level, flags, startlevel;
 	char *cdata;
 	FILE *file;
-
-	if (!strcmp (filename, "*"))
-		filename = query;
 
 	if (!strcmp (filename, "-"))
 		file = stdout;

@@ -69,8 +69,6 @@ static int export_ps (int argc, char **argv, void *data)
 	char *cdata;
 	FILE *file;
 
-	if (!strcmp (filename, "*"))
-		filename = query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else

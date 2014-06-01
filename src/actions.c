@@ -27,8 +27,23 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+/*static char url[1024]="";
+static char address[1024]="";*/
 static char web_command[255] = "galeon -n *";
 static char mail_command[255] = "rxvt -rv +sb -e mutt *";
+
+static int cmd_system(int argc, char **argv, void *data){
+	Node *pos=(Node *)data;
+	int ui_was_inited = ui_inited;
+	if (argc>1) {
+		if (ui_was_inited)
+			ui_end ();			
+		system (argv[1]);
+		if (ui_was_inited)
+			ui_init ();
+	}
+	return (int)pos;
+}
 
 static int action_node (Node *node)
 {
@@ -121,7 +136,7 @@ static int action_node (Node *node)
  * url/email address substring,.. and launches an app based on that?
  *
  */
-static int action_cmd (int argc, char **argv, void *data)
+static int cmd_action (int argc, char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 	Node *node = node_right (pos);
@@ -147,7 +162,9 @@ static int action_cmd (int argc, char **argv, void *data)
 */
 void init_exec_cmd ()
 {
-	cli_add_command ("action", action_cmd, "");
+	cli_add_command ("system", cmd_system, "<commandline>");
+
+	cli_add_command ("action", cmd_action, "");
 	cli_add_help ("action",
 				  "executes an external shell according to node content, it first checks the direct children \
 then the current node. If it contains an http:// url, the command described in browser_command is executed, if it \
@@ -158,4 +175,6 @@ and if the data starts with 'exec' the rest of the data is executed verbatim.");
 					"Command executed when opening url's * is subsituted with the url");
 	cli_add_string ("mail_command", mail_command,
 					"Command executed when sending mail to a mailaddress * is substituted with the address");
-}
+/*	cli_add_string("url",url,"url used as parameter for webcommand");
+	cli_add_string("address",address,"email address used as parameter for mail_command);
+*/}

@@ -51,6 +51,43 @@ const char *collapse_names[] = {
 	""
 };
 
+static Node *node_forced_up ( Node *node)
+{
+	if (node_up (node) && node_getflag( node_up (node), F_expanded)) {
+		node = node_up (node);
+		while (node_right (node) && node_getflag(node,F_expanded)) {
+			node = node_right (node);
+			node = node_bottom (node);
+		}
+		return (node);
+	} else {
+		if (node_up (node))
+			return (node_up (node));
+		else
+			return (node_left (node));
+	}
+	return node_left (node);
+}
+
+static Node *node_forced_down ( Node *node)
+{
+	if (node_getflag(node,F_expanded)) {
+		return node_recurse (node);
+	} else {
+		if (node_down (node)) {
+			return (node_down (node));
+		} else {
+			while (node != 0) {
+				node = node_left (node);
+				if (node_down (node))
+					return (node_down (node));
+			}
+		}
+	}
+	return NULL;
+}
+
+
 /*  removes *pos if it is a temporary node, then returns 1
  *  otherwize returns 0
  */
@@ -83,7 +120,7 @@ static char *keep_inputbuf[]={
 	NULL
 };
 
-static int quit_hnb=0;
+int quit_hnb=0;
 
 static int cmd_quit(int argc,char **argv,void *data){
 	Node *pos=(Node *)data;
@@ -96,6 +133,9 @@ static int cmd_quit(int argc,char **argv,void *data){
 */
 void init_quit(){
 	cli_add_command("quit",cmd_quit,"");
+	cli_add_help("quit","quits hnb, no questions asked");
+	cli_add_command("q",cmd_quit,"");
+	cli_add_help("q","quits hnb, no questions asked");
 }
 
 Node *evilloop (Node *pos)
@@ -133,29 +173,27 @@ Node *evilloop (Node *pos)
 					break;
 				case ui_action_up:
 					if (!remove_temp (&pos)) {
-						if (node_up (pos))
-							pos = node_up (pos);
-						else if (forced_up) {
-							if (node_left (pos))
-								pos = node_left (pos);
+						if(forced_up){
+							if (node_forced_up (pos)){
+								pos = node_forced_up (pos);
+							}
+						} else {
+							if (node_up (pos)){
+								pos = node_up (pos);
+							}
 						}
 					}
 					inputbuf[0] = 0;
 					break;
 				case ui_action_down:
 					if (!remove_temp (&pos)) {
-						if (node_down (pos)) {
-							pos = node_down (pos);
-						} else if (forced_down) {
-							while (node_left (pos)) {
-								if (node_down (pos)) {
-									break;
-								}
-								pos = node_left (pos);
-							}
-							if (node_down (pos))
+						if(forced_down){
+							if(node_forced_down(pos))
+								pos = node_forced_down (pos);
+						} else {
+							if(node_down(pos))
 								pos = node_down (pos);
-						}
+						}							
 						inputbuf[0] = 0;
 						break;
 					}

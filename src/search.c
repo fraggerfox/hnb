@@ -28,31 +28,38 @@
 
 /************** search ************************/
 
-static int next_match_cmd (int argc, char **argv, void *data)
-{
-	Node *pos = (Node *) data;
-
-	pos = node_recursive_match ((char *) query, pos);
-
-	if (pos == NULL) {
-		docmdf (pos, "status 'reached bottom of tree and \\'%s\\' not found'",
-				query);
-		return (int) data;
-	}
-	return (int) pos;
-}
-
-static int prev_match_cmd (int argc, char **argv, void *data)
-{
-	Node *pos = (Node *) data;
-
-	pos = node_backrecursive_match ((char *) query, pos);
-
-	if (pos == NULL) {
-		docmdf (pos, "status 'reached top of tree and \\'%s\\' not found'", query);
-		return (int) data;
-	}
-	return (int) pos;
+static int search(int argc,char **argv,void *data){
+	Node *pos=(Node *)data;
+	
+	if(argc==2){
+		if(strcmp(argv[1],"-b")||strcmp(argv[1],"-f")){
+			pos=node_recursive_match( argv[1],pos);
+			if (pos == NULL) {
+				docmdf (pos, "status 'reached bottom of tree and \\'%s\\' not found'",
+						argv[1]);
+				return (int) data;
+			}			
+		}
+	} else if(argc>2){
+		if(!strcmp(argv[1],"-b")){
+			pos=node_backrecursive_match( argv[2],pos);
+			if (pos == NULL) {
+				docmdf (pos, "status 'reached top of tree and \\'%s\\' not found'",
+						argv[2]);
+				return (int) data;
+			}			
+		} else if(!strcmp(argv[1],"-f")){
+			pos=node_recursive_match( argv[2],pos);
+			if (pos == NULL) {
+				docmdf (pos, "status 'reached bottom of tree and \\'%s\\' not found'",
+						argv[2]);
+				return (int) data;
+			}
+		}
+		return (int)pos;
+	} 
+	cli_outfunf("usage: %s [-b|-f] <string>",argv[0]);
+	return (int)pos;
 }
 
 /*
@@ -60,10 +67,6 @@ static int prev_match_cmd (int argc, char **argv, void *data)
 */
 void init_search ()
 {
-	cli_add_command ("prev_match", prev_match_cmd, "");
-	cli_add_help ("prev_match",
-				  "Moves backwards in the tree to the prior match");
-	cli_add_command ("next_match", next_match_cmd, "");
-	cli_add_help ("next_match",
-				  "Moves forward in the tree to the next match");
+	cli_add_command ("search",search,"[-b|-f] <string>");
+	cli_add_help("search","searches either -b(ackwards) or -f(orwards) in the tree for the next entry with a substring matching the specified string");
 }
