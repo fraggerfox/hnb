@@ -77,8 +77,6 @@ int cmd_movenode(char *params,void *data){
 int cmd_save(char *params,void *data){
 	Node *pos=(Node *)data;
 					if (prefs.db_file[0] != (char) 255) {
-					int error = 0;	/* FIXME: get status,. */
-
 					{
 						char buf[4096];
 
@@ -92,12 +90,6 @@ int cmd_save(char *params,void *data){
 									 prefs.db_file);
 						}
 						docmd (node_root (pos), buf);
-					}
-
-					if (!error) {
-						docmdf (pos,"status wrote stuff to '%s'", prefs.db_file);
-					} else {
-						docmdf (pos,"status failed to open '%s' for writing",   prefs.db_file);
 					}
 				}
 	return (int)pos;
@@ -192,9 +184,11 @@ int remove_cmd(char *params,int data){
 	Node *pos=(Node *)data;
 	if (node_right (pos)) {
 		Tbinding *c;
-
+		int tempscope=ui_current_scope;
+		ui_current_scope=ui_scope_confirm;
 		docmdf (pos, "status node has children, really remove?");
-		ui_draw(pos,pos,"",0 );		
+		ui_draw(pos,pos,"",0 );
+		ui_current_scope=tempscope;
 		c = parsekey (ui_input (), ui_scope_confirm);
 		if (c->action == ui_action_confirm )
 			pos = node_remove (pos);
@@ -248,36 +242,13 @@ int insert_below_cmd (char *params, void *data)
 
 /************** search ************************
 
-!cli cli_add_command ("pushd", pushd_cmd, "");
-!cli cli_add_command ("popd", popd_cmd, "");
 !cli cli_add_command ("prev_match", prev_match_cmd, "");
 !cli cli_add_command ("getquery", getquery_cmd, "");
 !cli cli_add_command ("next_match", next_match_cmd, "");
 !clid int next_match_cmd ();
 !clid int prev_match_cmd ();
-!clid int pushd_cmd ();
-!clid int popd_cmd ();
 !clid int getquery_cmd ();
 */
-
-
-/*FIXME: implement real stack*/
-static Node *stack_saved=NULL;
-
-int pushd_cmd(char *params,int data){
-	Node *pos=(Node *)data;
-	stack_saved=pos;
-	return (int)pos;
-}
-
-int popd_cmd(char *params,int data){
-	Node *pos=(Node *)data;
-	if(stack_saved != NULL){
-		pos=stack_saved;
-		stack_saved=NULL;
-	}
-	return (int)pos;
-}
 
 
 int next_match_cmd(char *params,int data){
@@ -399,6 +370,60 @@ int paste_cmd (char *params, void *data)
 	return (int)pos;
 }
 
+/*********** one level of undo,.. for some things ****/
+
+/*
+!cli cli_add_command ("save_state", save_state_cmd, "");
+!cli cli_add_command ("restore_state", restore_state_cmd, "");
+!clid int save_state_cmd ();
+!clid int restore_state_cmd ();
+*/
+
+static Node *savedtree=NULL;
+
+int save_state_cmd (char *params, void *data)
+{
+	Node *pos=(Node *)data;
+	Node *i;
+	Node *j;
+	
+	if(savedtree!=NULL){
+		tree_free(savedtree);
+	}
+	savedtree=node_new();
+
+	i=node_root(pos);
+	j=savedtree;
+	do{
+		clipboard_duplicate_tree( i, j);
+		i=node_down(i);
+		j=node_insert_down(j);
+	}while(i!=NULL);
+	j=node_remove(j);
+
+	{int no;
+	 no=node_no(pos);
+	 savedtree=node_root(savedtree);
+	 while(--no)savedtree=node_recurse(savedtree);
+	}
+	
+
+	return (int)pos;
+}
+
+int restore_state_cmd (char *params, void *data)
+{
+	Node *pos=(Node *)data;
+	if(savedtree!=NULL){
+		Node *temp;
+		temp=pos;
+		pos=savedtree;
+		savedtree=temp;
+		node_free(savedtree);
+		savedtree=NULL;		
+	}
+	return (int)pos;
+}
 
 
 

@@ -22,6 +22,9 @@
 /*
 !cli cli_add_command ("export_html", export_html, "<filename>");
 !clid int export_html ();
+!cli cli_add_command ("export_htmlcss", export_htmlcss, "<filename>");
+!clid int export_htmlcss ();
+
 */
 
 
@@ -56,6 +59,7 @@ static char *html_quote (const char *in)
 	while (in[inpos]) {
 		switch (in[inpos]) {
 				transform ('&', "&amp;");
+				transform ('\'', "&#39;");
 				transform ('<', "&lt;");
 				transform ('>', "&gt;");
 				transform ('ø', "&oslash;");
@@ -83,13 +87,12 @@ int export_html (char *params, void *data)
 	char *cdata;
 	FILE *file;
 
-	file_error[0] = 0;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
 		file = fopen (filename, "w");
 	if (!file) {
-		sprintf (file_error, "export html unable to open \"%s\"", filename);
+		cli_outfunf ("html export, unable to open \"%s\"", filename);
 		return (int) node;
 	}
 
@@ -155,73 +158,73 @@ int export_html (char *params, void *data)
 	if (file != stdout)
 		fclose (file);
 
+	cli_outfunf ("html export, saved output in \"%s\"", filename);
 	return (int) node;
 }
 
-#if 0
-static int export_table (char *params, void *data)
+static void htmlcss_export_nodes (FILE * file, Node *node, int level)
+{
+	while (node) {
+		char *data = node_getdata (node);
+
+		fprintf (file, "\n");
+		indent (level, "\t");
+		fprintf (file, "<div>");	
+		fprintf (file, "%s", html_quote (data));/* FIXME: use iconv to really create UTF-8 */
+
+		if (node_right (node)) {
+			htmlcss_export_nodes (file, node_right (node), level + 1);
+			fprintf (file, "\n");
+			indent (level, "\t");
+			fprintf (file, "</div>");
+		} else {
+			fprintf (file, "</div>");
+		}
+
+		node = node_down (node);
+	}
+}
+
+
+int export_htmlcss (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
-	Node *tnode;
-	int level, flags, startlevel, lastlevel, cnt;
-	char *cdata;
-	char tfilename[500];
 	FILE *file;
 
-	file_error[0] = 0;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
 		file = fopen (filename, "w");
 	if (!file) {
-		sprintf (file_error, "export html unable to open \"%s\"", filename);
+		cli_outfunf ("html export, unable to open \"%s\"", filename);
 		return (int) node;
 	}
 
-	startlevel = nodes_left (node);
+	fprintf (file,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \
+\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n\
+<html><head>\n\
+<meta http-equiv=\"Content-type\" content=\"text/html; charset=UTF-8\" />\n\
+<title>tree exported from hnb</title>\n\
+<style type=\"text/css\" id=\"internalStyle\">\n\
+div {\n\
+	padding-top: 0.5em;\n\
+	font-family: verdana, arial, helvetica, sans-serif; position:relative;\n\
+	font-size:   10pt;\n\
+	left:        2em;\n\
+	padding-right: 2em;\n\
+}\n\
+</style>\n\
+</head>\n\
+<body xmlns=\"http://www.w3.org/1999/xhtml\">\n");
 
-	tnode = node;
-	lastlevel = 0;
-	fprintf (file, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n\
-<HTML>\n\
-<HEAD>\n\
-	<TITLE>tree exported from hnb</TITLE>\n\
-</HEAD>\n\
-<BODY><table border='1'>\n");
-	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
-		level = nodes_left (tnode) - startlevel;
-		flags = node_getflags (tnode);
-		cdata = node_getdata (tnode);
+htmlcss_export_nodes(file,node,0);
 
-
-		switch (level) {
-			case 0:
-/*				fprintf(file,"<tr><td colspan='4'><h1>%s</h1></td></tr>\n",cdata);*/
-				break;
-			case 1:
-				tfilename[0] = 0;
-/*				fprintf(file,"<tr><td colspan='4'><h2>%s</h2></td></tr>\n",cdata);*/
-				strcpy (tfilename, cdata);
-				break;
-			case 2:
-				strcpy (&tfilename[3], cdata);
-				break;
-			case 3:
-				fprintf (file,
-						 "<td>%s.avi</td><td><img src='thumbs/%s.avi.jpg' width='80' height='60'></td><td valign='top' width='90%%'>%s</td></tr>\n",
-						 tfilename, tfilename, cdata);
-				break;
-			default:
-				break;
-		}
-		tnode = node_recurse (tnode);
-	}
-	fprintf (file, "\n</table></BODY></HTML>");
+fprintf (file, "\n</body></html>\n");
 	if (file != stdout)
 		fclose (file);
 
+	cli_outfunf ("html export, saved output in \"%s\"", filename);
 	return (int) node;
 }
-
-#endif

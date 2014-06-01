@@ -53,7 +53,7 @@ int ui_helptext_cmd(char *params,void *data){
 	return (int)data;
 }
 
-#define MAX_STATUS_LINES 21
+#define MAX_STATUS_LINES 12
 
 static char status_line[MAX_STATUS_LINES][128]={""};
 
@@ -111,13 +111,38 @@ void status_draw(void)
 		status_ttl--;
 }
 
-void help_draw (void)
+void help_draw (int scope)
 {
 	status_draw();
 
 	move(LINES-1,0);
 	ui_style(ui_style_menuitem);
-	addstr(ui_helptext[ui_current_scope]);	
+	{unsigned char *p=ui_helptext[scope];
+	 int style_is_menuitem=1;
+ 	 while(*p){
+	 	switch(*p){
+			case '|':
+				if(*(p+1)=='|'){
+					addch('|');
+					p++;
+				} else {					
+					if(style_is_menuitem){
+						ui_style(ui_style_menutext);
+					} else {
+						ui_style(ui_style_menuitem);
+					}
+					style_is_menuitem=!style_is_menuitem;					
+				}
+				break;
+			default:
+				addch(*p);
+				break;
+		}
+		p++;
+	 }
+	}	
+
+
 	clrtoeol();
 	ui_style(ui_style_background);
 	

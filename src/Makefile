@@ -5,7 +5,7 @@ OBJS= ui_cli.o hnb.o node.o path.o prefs.o tokenizer.o tree.o tree_sort.o tree_t
 	ui.o ui_binding.o ui_draw.o ui_overlay.o evilloop.o ui_edit.o \
 	ui_style.o tree_misc.o\
 	file.o xml_tok.o \
-	file_hnb.o file_xml.o file_html.o  file_ascii.o file_help.o\
+	file_hnb.o file_xml.o file_html.o  file_ascii.o file_help.o file_ps.o\
 # 	file_libxml.o file_dot.o file_slides.o \
 
 

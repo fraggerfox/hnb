@@ -49,10 +49,9 @@ int import_ascii (char *params, void *data)
 	char cdata[bufsize];
 	FILE *file;
 
-	file_error[0] = 0;
 	file = fopen (filename, "r");
 	if (file == NULL) {
-		sprintf (file_error, "ascii import, unable to open \"%s\"", filename);
+		cli_outfunf ("ascii import, unable to open \"%s\"", filename);
 		return (int) (node);
 	}
 
@@ -95,6 +94,10 @@ int import_ascii (char *params, void *data)
 
 	if (node_getflag (node, F_temp))
 		node = node_remove (node);	/* remove temporary node, if tree was empty */
+
+	cli_outfunf ("ascii import, imported \"%s\"", filename);
+
+
 	return (int) (node);
 }
 
@@ -125,14 +128,12 @@ int export_ascii (char *params, void *data)
 	char *cdata;
 	FILE *file;
 
-	file_error[0] = 0;
-
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
 		file = fopen (filename, "w");
 	if (!file) {
-		sprintf (file_error, "ascii export, unable to open \"%s\"", filename);
+		cli_outfunf ("ascii export, unable to open \"%s\"", filename);
 		return (int) node;
 	}
 	startlevel = nodes_left (node);
@@ -150,5 +151,8 @@ int export_ascii (char *params, void *data)
 
 	if (file != stdout)
 		fclose (file);
+
+	cli_outfunf ("ascii export, wrote output to \"%s\"", filename);
+
 	return (int) node;
 }

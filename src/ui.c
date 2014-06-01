@@ -52,9 +52,13 @@ void ui_init ()
 		
 		define_key("\x7f",KEY_BACKSPACE);
 		define_key("\033[11~",KEY_F(1));
+
 		define_key("\033[28-",KEY_F(1));
 		define_key("\033OP",KEY_F(1));
 		define_key("\033[OP",KEY_F(1));
+
+		define_key("\033[12~",KEY_F(2));
+		define_key("\033[13~",KEY_F(3));
 		
 		define_key("\033[A",KEY_UP);
 		define_key("\033OA",KEY_UP);

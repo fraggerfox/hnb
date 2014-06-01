@@ -23,8 +23,6 @@ extern void init_import (import_state_t * is, Node *node);
 extern Node* import_node (import_state_t * is, int level,
 						 int flags, int priority, char *data);
 
-extern char file_error[128];
-
 int xml_check (char *filename);
 int xml_getpos (char *filename);
 

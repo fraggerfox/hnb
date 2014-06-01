@@ -1,6 +1,6 @@
 #define i(a,b,c) import_node(&ist,a,c,0,b)
 
-i(0,"press right arrow to begin",0);
+i(0,"press right arrow to begin (this documentation is out of date,.. will be fixed)",0);
 	i(1,"Welcome to 'hierachical notebook'",0);
 	i(1,"",0);
 	i(1,"Navigate using your arrow keys, right takes you a level further down in the tree, left brings you up a level, up and down navigates amongst the siblings.",0);

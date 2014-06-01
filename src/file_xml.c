@@ -238,13 +238,12 @@ int export_xml (char *params, void *data)
 	char *filename = params;
 	FILE *file;
 
-	file_error[0] = 0;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
 		file = fopen (filename, "w");
 	if (!file) {
-		sprintf (file_error, "export xml unable to open \"%s\"", filename);
+		cli_outfunf ("xml export, unable to open \"%s\"", filename);
 		return (int) node;
 	}
 
@@ -252,6 +251,10 @@ int export_xml (char *params, void *data)
 
 	if (file != stdout)
 		fclose (file);
+
+	cli_outfunf ("xml export, wrote data to \"%s\"", filename);
+
+
 	return (int) node;
 }
 
@@ -264,7 +267,7 @@ static Node *xml_cuddle_nodes (Node *node)
 	char *tdata;
 	char data[bufsize];
 
-	tnode = node;
+	tnode = node_root(node);
 
 	while (tnode) {
 		if (node_right (tnode)) {
@@ -299,12 +302,11 @@ int import_xml (char *params, void *data)
 
 	FILE *file;
 
-	file_error[0] = 0;
 	nodedata[0] = 0;
 
 	file = fopen (filename, "r");
 	if (!file) {
-		sprintf (file_error, "xml importer unable to open \"%s\"", filename);
+		cli_outfunf ("xml import, unable to open \"%s\"", filename);
 		return (int) node;
 	}
 	s = xml_tok_init (file);
@@ -312,8 +314,7 @@ int import_xml (char *params, void *data)
 
 	while (((type = xml_tok_get (s, &rdata)) != t_eof)) {
 		if (type == t_error) {
-			sprintf (file_error, "xml parsing of \"%s\", %s", filename,
-					 rdata);
+			cli_outfunf ("xml import error, parsing og '%s', %s",filename, rdata);
 			fclose (file);
 			return (int) node;
 		}
@@ -440,6 +441,8 @@ int import_xml (char *params, void *data)
 
 	if (prefs.xml_cuddle)
 		node = xml_cuddle_nodes (node);
+
+	cli_outfunf ("xml import - imported \"%s\"", filename);
 
 	return (int) node;
 }

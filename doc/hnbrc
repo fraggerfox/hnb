@@ -9,7 +9,7 @@
 ##########
 # number of spaces to indent each level relative to the parent level
 #
-indentspaces	4
+indentspaces	2
 
 ########## 
 # what kind of bullets are displayed before each item
@@ -19,7 +19,7 @@ indentspaces	4
 # 2 * 
 # 3 - 
 #
-bulletmode	3
+bulletmode	1
 
 ##########
 # amount of tree displayed
@@ -61,6 +61,7 @@ keepwhitespace	0
 #
 savepos		1
 
+xml_cuddle 1
 
 ##########
 # color scheme configuration, syntax is:
@@ -70,10 +71,10 @@ savepos		1
 # attributes are: normal, reverse, bold, underline
 
 style menuitem		default/default	reverse
-style menutext		default/default normal
+style menutext		cyan/default normal
+style parentnode	white/default bold
 style node		default/default	normal
-style parentnode	default/default bold
-style bullet		default/default	normal
+style bullet		cyan/default	normal
 style selected		yellow/red 	bold
 style parentselected	yellow/red	bold
 style background	default/default	normal
@@ -84,56 +85,15 @@ style background	default/default	normal
 # syntax: 
 #   "bindkey <scope[,scope[...]]>  <key>   <action>"
 #
+# multiple actions can be chained together by using the virtual key ".."
+# as the following keybinding
+#
 ##################################################
-#    available actions:
-#####
-#           add <string>
-#          addc <parent> <string>
-#          bind <key> <action> [parameter]
-#            cd <path>
-#   commandline 
-#       context <context>
-#          copy 
-#           cut 
-#          edit 
-#  export_ascii <filename>
-#   export_help <filename>
-#    export_hnb <filename>
-#   export_html <filename>
-#    export_xml <filename>
-#      getquery 
-#      helptext <help for context>
-#  import_ascii <filename>
-#   import_help <filename>
-#    import_hnb <filename>
-#    import_xml <filename>
-#        indent 
-#  insert_below 
-#            ls [-Rst] [path]
-#      movenode <up|left|right|down>
-#    next_match 
-#       outdent 
-#         paste 
-#          popd 
-#    prev_match 
-#         pushd 
-#           pwd returns the current path
-#             q see the entry for 'quit'
-#          quit quits the application
-#        remove 
-#            rm [-f] path
-#          save 
-#     show_vars show all variables
-#          sort 
-#        status <message>
-#  status_clear 
-#         style <item> <foreground/background> <attributes>
-#   toggle_done 
-#   toggle_todo 
-
 
 context main
-	helptext ^Q(uit) ^S(ave) return edit ^F(ind) ^O(rder) F5 commandline
+	helptext <ESC>| exit || |F2| save || |F5| commandline || |return| edit || | / | find || |^S| ort
+
+	bind	esc		context quitsave
 
 	bind	up		up
 	bind	down		down
@@ -151,21 +111,21 @@ context main
 	bind  	^T		toggle_todo
 	bind  	^D		toggle_done
 
-	bind  	^N		indent
-	bind  	^B		outdent
+	bind  	>		indent
+	bind  	<		outdent
 
-	bind  	^F		context search
+	bind  	/		context search
+	bind	..		save_state
 	bind	..		getquery
+	bind	..		next_match
 
-	bind  	^Q		context quit
-
-	bind  	^S		save
+	bind  	f2		save
 
 	bind	^X		cut
 	bind	^C		copy
 	bind	^V		paste
 
-	bind	^O		sort
+	bind	^S		sort
 
 	bind	backspace	backspace
 	bind	backspace2	backspace
@@ -177,56 +137,68 @@ context main
 	bind	sright		movenode right
 	bind	sprevious	movenode up
 	bind	snext		movenode down
-	
-	bind	^space		context grab
-	bind	..		status grabbed node, move it, and drop it
+
+	bind	^G		context grab
+	bind	..		save_state
+
+context quitsave
+	helptext Save on exit? |    | Y |es | J |a || | N |o || |ESC| cancel
+
+	bind	Y	save
+	bind	..	quit
+	bind	y	save
+	bind	..	quit
+
+	bind	j	save
+	bind	..	quit
+	bind	J	save
+	bind	..	quit
+
+	bind	n	quit
+	bind	N	quit
+
+	bind	esc	context main
+	bind	any unbound
+
 
 context grab
-	bind	esc		context main
+	helptext Node grabbed |  |return| |space| drop here || |ESC| cancel
+	bind	esc		restore_state
+	bind	..		context main
 	bind	return		context main
 	bind	space		context main
-	bind	left		status movenode left
-	bind	right		status movenode right
+
+	bind	left		movenode left
+	bind	right		movenode right
 	bind	up		movenode up
 	bind	down		movenode down
+
 	bind	any		unbound
 
 
 context search
-	helptext "ESC-cancel up/down-previous/next - space/return-stop"
+	helptext Searching |  |ESC| cancel || | n |ext || | p |revious || |space|/|return| go
 	bind	esc		context main
-	bind	down		next_match
+	bind	..		restore_state
+	bind	n		next_match
+	bind	N		next_match
+	bind	P		prev_match
+	bind	p		prev_match
 	bind	up		prev_match
+	bind	down		next_match	
 	bind	cancel		poppd
 	bind	return		context main
 	bind	any		unbound
 
-
-context quit
-	helptext ^S(ave)  ^Q(uit)  ^X(quit and save) ESC(ancel) 
-
-	bind	esc		context main
-	bind	^S		save
-	bind	..		context main
-	bind	s		save
-	bind	..		context main
-	bind	S		save
-	bind	..		context main
-	bind	^Q		quit
-	bind	q		quit
-	bind	Q		quit
-	bind	^X		save
-	bind	X		save
-	bind	x		save
-	bind	..		quit
-	bind	any		unbound
-
 context confirm
+	helptext  y | | j | |return| confirm || |any key| cancel
 	bind	y		confirm
+	bind	j		confirm
 	bind	return		confirm
 	bind	any		cancel
 
 context lineedit
+	helptext lineedit
 	bind	up		up
 	bind	down		down
 	bind	left		left
@@ -235,6 +207,7 @@ context lineedit
 	bind	^S		split
 	bind	^J		join
 	bind	backspace	backspace
+	bind	backspace2	backspace
 	bind	^A		bol
 	bind	^E		eol
 	bind	home		bol
@@ -244,6 +217,7 @@ context lineedit
 	bind	esc		cancel
 
 context nodeedit
+	helptext editing node |  |ESC| revert || |return| confirm
 	bind	up		up
 	bind	down		down
 	bind	left		left
@@ -252,6 +226,7 @@ context nodeedit
 	bind	^S		split
 	bind	^J		join
 	bind	backspace	backspace
+	bind	backspace2	backspace
 	bind	^A		bol
 	bind	^E		eol
 	bind	home		bol

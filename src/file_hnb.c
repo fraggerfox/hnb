@@ -132,7 +132,6 @@ int export_hnb (char *params, void *data)
 	char *filename = params;
 	FILE *file;
 
-	file_error[0] = 0;
 	while (*params && (*params != ' '))
 		params++;
 	if (*params == ' ') {
@@ -146,7 +145,7 @@ int export_hnb (char *params, void *data)
 		file = fopen (filename, "w");
 
 	if (!file) {
-		sprintf (file_error, "export hnb unable to open \"%s\"", filename);
+		cli_outfunf ("hnb export, unable to open \"%s\"", filename);
 		return (int) node;
 	}
 
@@ -167,6 +166,8 @@ int export_hnb (char *params, void *data)
 	fprintf (file, "\n</tree>\n");
 	if (file != stdout)
 		fclose (file);
+
+	cli_outfunf ("hnb export, wrote data to \"%s\"", filename);
 
 	return (int) node;
 }
@@ -192,11 +193,10 @@ int import_hnb (char *params, void *data)
 
 	FILE *file;
 
-	file_error[0] = 0;
 
 	file = fopen (filename, "r");
 	if (!file) {
-		sprintf (file_error, "hnb importer unable to open \"%s\"", filename);
+		cli_outfunf ("hnb import, unable to open \"%s\"", filename);
 		return (int) node;
 	}
 	s = xml_tok_init (file);
@@ -204,8 +204,7 @@ int import_hnb (char *params, void *data)
 
 	while (((type = xml_tok_get (s, &rdata)) != t_eof) && (type != t_error)) {
 		if (type == t_error) {
-			sprintf (file_error, "xml parsing of \"%s\", %s", filename,
-					 rdata);
+			cli_outfunf ("hnb import error, parsing og '%s', %s",filename, rdata);
 			fclose (file);
 			return (int) node;
 		}
@@ -241,6 +240,7 @@ int import_hnb (char *params, void *data)
 			}
 			if (type == t_tag && !strcmp (rdata, "data")) {
 				nodedatapos = 0;
+				nodedata[nodedatapos] = 0;
 				in_data = 1;
 			}
 			if (in_data) {
@@ -299,6 +299,8 @@ int import_hnb (char *params, void *data)
 
 	if (node_getflag (node, F_temp))
 		node = node_remove (node);	/* remove temporary node, if tree was empty */
+
+	cli_outfunf ("hnb import - imported \"%s\"", filename);
 
 	return (int) node;
 }

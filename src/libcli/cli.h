@@ -52,6 +52,13 @@ extern void (*cli_outfun) (char *);	/* the outputting function
 									   to use something other than printf
 									 */
 
+#define cli_outfunf(args...)  \
+     do{        char cli_outfun_buf[128];\
+                snprintf (cli_outfun_buf, 127, args);\
+                cli_outfun(cli_outfun_buf);\
+       }while(0)
+
+
 extern void (*cli_precmd) (char *);	/* cstuff to run before executing commands */
 extern void (*cli_postcmd) (char *);	/* stuff to run after executing commands */
 

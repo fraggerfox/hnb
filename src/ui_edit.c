@@ -40,8 +40,11 @@ int ui_edit_cmd (char *params, void *data)
 	int stop = 0;
 	static int cursor_pos;
 	static char *data_backup;
+	int tempscope=ui_current_scope;	
 	static char input[BUFFERLENGTH];
 	Node *pos=(Node *)data;
+
+	ui_current_scope=ui_scope_nodeedit;
 
 	memset (input, 0, sizeof (input));
 
@@ -58,6 +61,7 @@ int ui_edit_cmd (char *params, void *data)
 				node_setflag (pos, F_todo, 1);
 			}
 		}
+		ui_current_scope=tempscope;
 		return (int)pos;
 	}
 
@@ -117,19 +121,6 @@ int ui_edit_cmd (char *params, void *data)
 			case ui_action_eol:
 				cursor_pos = strlen (input) - 1;
 				break;
-/*			case k_edit_kill_to_eol:
-				input[cursor_pos] = ' ';
-				input[cursor_pos +1]=0;
-				input[cursor_pos +2]=0;				
-																			break;
-*/ case ui_action_cancel:
-				strcpy (&input[0], data_backup);
-				pos->data = &input[0];
-				cursor_pos = strlen (input);
-				input[cursor_pos] = ' ';
-				input[cursor_pos + 1] = 0;
-				stop = 1;
-				break;
 			case ui_action_up:
 				if (hnb_edit_posup >= 0)
 					cursor_pos = hnb_edit_posup;
@@ -140,7 +131,13 @@ int ui_edit_cmd (char *params, void *data)
 				else
 					cursor_pos = strlen (input) - 1;
 				break;
+			 case ui_action_cancel:
+				strcpy (&input[0], data_backup);
+				pos->data = &input[0];
+				stop = 1;
+				break;
 			case ui_action_confirm:
+				input[strlen (input) - 1] = 0;
 				stop = 1;
 				break;
 			case ui_action_delete:
@@ -206,11 +203,10 @@ int ui_edit_cmd (char *params, void *data)
 		}
 	}
 
-	input[strlen (input) - 1] = 0;
 
 	pos->data = data_backup;
 	node_setdata (pos, input);
-
+	ui_current_scope=tempscope;
 	return (int)data;
 }
 
@@ -256,6 +252,20 @@ int ui_getstr_loc(char *input, int x,int y, int maxlen){
 				if (cursor_pos)
 					cursor_pos--;
 				break;
+			case ui_action_up:
+/*				strcpy(input,cli_historyprev());
+				cursor_pos=strlen(input);
+				input[cursor_pos] = ' ';
+				input[cursor_pos + 1] = 0;
+				input[cursor_pos + 2] = 0;
+*/				break;
+			case ui_action_down:
+/*				strcpy(input,cli_historynext());
+				cursor_pos=strlen(input);
+				input[cursor_pos] = ' ';
+				input[cursor_pos + 1] = 0;
+				input[cursor_pos + 2] = 0;
+*/				break;
 			case ui_action_bol:
 				cursor_pos = 0;
 				break;
@@ -278,10 +288,13 @@ int ui_getstr_loc(char *input, int x,int y, int maxlen){
 				break;
 			case ui_action_cancel:
 				strcpy (&input[0], data_backup);
+				input[strlen (input) - 1] = 0;
 				stop = 1;
 				break;
 			case ui_action_confirm:
-				stop = 1;
+				input[strlen (input) - 1] = 0;
+/*				cli_historyadd(input);
+*/				stop = 1;
 				break;
 			case ui_action_delete:
 				if (cursor_pos < (strlen (input) - 1)) {
@@ -315,7 +328,6 @@ int ui_getstr_loc(char *input, int x,int y, int maxlen){
 		}
 	}
 
-	input[strlen (input) - 1] = 0;
 
 	free(data_backup);
 
@@ -332,6 +344,8 @@ void ui_getstr(char *prompt, char *datastorage){
 	move(LINES-1,0);
 	ui_style(ui_style_menuitem);
 	addstr(">");
+	ui_style(ui_style_menutext);
+	addch(' ');
 
 	ui_getstr_loc(datastorage, -1, -1, 80);
 }

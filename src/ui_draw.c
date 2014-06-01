@@ -566,7 +566,7 @@ void ui_draw (Node *node, Node *lastnode, char *input, int edit_mode)
 			}
 		}
 
-	help_draw ();
+	help_draw (ui_current_scope);
 
 	move (LINES - 1, COLS - 1);
 

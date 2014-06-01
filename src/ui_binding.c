@@ -204,7 +204,7 @@ static int ui_binding_count[MAX_SCOPES]={0};
 static int string2scope(char *str){
 	int j=0;
 	while(j<scope_count){
-		if(!strcmp(ui_scope_names[j],str))
+		if(!strcmp(str,ui_scope_names[j]))
 			return j;
 		j++;
 	}

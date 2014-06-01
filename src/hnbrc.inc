@@ -9,7 +9,7 @@
 ##########\n\
 # number of spaces to indent each level relative to the parent level\n\
 #\n\
-indentspaces	4\n\
+indentspaces	2\n\
 \n\
 ########## \n\
 # what kind of bullets are displayed before each item\n\
@@ -19,7 +19,7 @@ indentspaces	4\n\
 # 2 * \n\
 # 3 - \n\
 #\n\
-bulletmode	3\n\
+bulletmode	1\n\
 \n\
 ##########\n\
 # amount of tree displayed\n\
@@ -61,6 +61,7 @@ keepwhitespace	0\n\
 #\n\
 savepos		1\n\
 \n\
+xml_cuddle 1\n\
 \n\
 ##########\n\
 # color scheme configuration, syntax is:\n\
@@ -70,10 +71,10 @@ savepos		1\n\
 # attributes are: normal, reverse, bold, underline\n\
 \n\
 style menuitem		default/default	reverse\n\
-style menutext		default/default normal\n\
+style menutext		cyan/default normal\n\
+style parentnode	white/default bold\n\
 style node		default/default	normal\n\
-style parentnode	default/default bold\n\
-style bullet		default/default	normal\n\
+style bullet		cyan/default	normal\n\
 style selected		yellow/red 	bold\n\
 style parentselected	yellow/red	bold\n\
 style background	default/default	normal\n\
@@ -84,56 +85,15 @@ style background	default/default	normal\n\
 # syntax: \n\
 #   \"bindkey <scope[,scope[...]]>  <key>   <action>\"\n\
 #\n\
+# multiple actions can be chained together by using the virtual key \"..\"\n\
+# as the following keybinding\n\
+#\n\
 ##################################################\n\
-#    available actions:\n\
-#####\n\
-#           add <string>\n\
-#          addc <parent> <string>\n\
-#          bind <key> <action> [parameter]\n\
-#            cd <path>\n\
-#   commandline \n\
-#       context <context>\n\
-#          copy \n\
-#           cut \n\
-#          edit \n\
-#  export_ascii <filename>\n\
-#   export_help <filename>\n\
-#    export_hnb <filename>\n\
-#   export_html <filename>\n\
-#    export_xml <filename>\n\
-#      getquery \n\
-#      helptext <help for context>\n\
-#  import_ascii <filename>\n\
-#   import_help <filename>\n\
-#    import_hnb <filename>\n\
-#    import_xml <filename>\n\
-#        indent \n\
-#  insert_below \n\
-#            ls [-Rst] [path]\n\
-#      movenode <up|left|right|down>\n\
-#    next_match \n\
-#       outdent \n\
-#         paste \n\
-#          popd \n\
-#    prev_match \n\
-#         pushd \n\
-#           pwd returns the current path\n\
-#             q see the entry for 'quit'\n\
-#          quit quits the application\n\
-#        remove \n\
-#            rm [-f] path\n\
-#          save \n\
-#     show_vars show all variables\n\
-#          sort \n\
-#        status <message>\n\
-#  status_clear \n\
-#         style <item> <foreground/background> <attributes>\n\
-#   toggle_done \n\
-#   toggle_todo \n\
-\n\
 \n\
 context main\n\
-	helptext ^Q(uit) ^S(ave) return edit ^F(ind) ^O(rder) F5 commandline\n\
+	helptext <ESC>| exit || |F2| save || |F5| commandline || |return| edit || | / | find || |^S| ort\n\
+\n\
+	bind	esc		context quitsave\n\
 \n\
 	bind	up		up\n\
 	bind	down		down\n\
@@ -151,21 +111,21 @@ context main\n\
 	bind  	^T		toggle_todo\n\
 	bind  	^D		toggle_done\n\
 \n\
-	bind  	^N		indent\n\
-	bind  	^B		outdent\n\
+	bind  	>		indent\n\
+	bind  	<		outdent\n\
 \n\
-	bind  	^F		context search\n\
+	bind  	/		context search\n\
+	bind	..		save_state\n\
 	bind	..		getquery\n\
+	bind	..		next_match\n\
 \n\
-	bind  	^Q		context quit\n\
-\n\
-	bind  	^S		save\n\
+	bind  	f2		save\n\
 \n\
 	bind	^X		cut\n\
 	bind	^C		copy\n\
 	bind	^V		paste\n\
 \n\
-	bind	^O		sort\n\
+	bind	^S		sort\n\
 \n\
 	bind	backspace	backspace\n\
 	bind	backspace2	backspace\n\
@@ -177,56 +137,68 @@ context main\n\
 	bind	sright		movenode right\n\
 	bind	sprevious	movenode up\n\
 	bind	snext		movenode down\n\
-	\n\
-	bind	^space		context grab\n\
-	bind	..		status grabbed node, move it, and drop it\n\
+\n\
+	bind	^G		context grab\n\
+	bind	..		save_state\n\
+\n\
+context quitsave\n\
+	helptext Save on exit? |    | Y |es | J |a || | N |o || |ESC| cancel\n\
+\n\
+	bind	Y	save\n\
+	bind	..	quit\n\
+	bind	y	save\n\
+	bind	..	quit\n\
+\n\
+	bind	j	save\n\
+	bind	..	quit\n\
+	bind	J	save\n\
+	bind	..	quit\n\
+\n\
+	bind	n	quit\n\
+	bind	N	quit\n\
+\n\
+	bind	esc	context main\n\
+	bind	any unbound\n\
+\n\
 \n\
 context grab\n\
-	bind	esc		context main\n\
+	helptext Node grabbed |  |return| |space| drop here || |ESC| cancel\n\
+	bind	esc		restore_state\n\
+	bind	..		context main\n\
 	bind	return		context main\n\
 	bind	space		context main\n\
-	bind	left		status movenode left\n\
-	bind	right		status movenode right\n\
+\n\
+	bind	left		movenode left\n\
+	bind	right		movenode right\n\
 	bind	up		movenode up\n\
 	bind	down		movenode down\n\
+\n\
 	bind	any		unbound\n\
 \n\
 \n\
 context search\n\
-	helptext \"ESC-cancel up/down-previous/next - space/return-stop\"\n\
+	helptext Searching |  |ESC| cancel || | n |ext || | p |revious || |space|/|return| go\n\
 	bind	esc		context main\n\
-	bind	down		next_match\n\
+	bind	..		restore_state\n\
+	bind	n		next_match\n\
+	bind	N		next_match\n\
+	bind	P		prev_match\n\
+	bind	p		prev_match\n\
 	bind	up		prev_match\n\
+	bind	down		next_match	\n\
 	bind	cancel		poppd\n\
 	bind	return		context main\n\
 	bind	any		unbound\n\
 \n\
-\n\
-context quit\n\
-	helptext ^S(ave)  ^Q(uit)  ^X(quit and save) ESC(ancel) \n\
-\n\
-	bind	esc		context main\n\
-	bind	^S		save\n\
-	bind	..		context main\n\
-	bind	s		save\n\
-	bind	..		context main\n\
-	bind	S		save\n\
-	bind	..		context main\n\
-	bind	^Q		quit\n\
-	bind	q		quit\n\
-	bind	Q		quit\n\
-	bind	^X		save\n\
-	bind	X		save\n\
-	bind	x		save\n\
-	bind	..		quit\n\
-	bind	any		unbound\n\
-\n\
 context confirm\n\
+	helptext  y | | j | |return| confirm || |any key| cancel\n\
 	bind	y		confirm\n\
+	bind	j		confirm\n\
 	bind	return		confirm\n\
 	bind	any		cancel\n\
 \n\
 context lineedit\n\
+	helptext lineedit\n\
 	bind	up		up\n\
 	bind	down		down\n\
 	bind	left		left\n\
@@ -235,6 +207,7 @@ context lineedit\n\
 	bind	^S		split\n\
 	bind	^J		join\n\
 	bind	backspace	backspace\n\
+	bind	backspace2	backspace\n\
 	bind	^A		bol\n\
 	bind	^E		eol\n\
 	bind	home		bol\n\
@@ -244,6 +217,7 @@ context lineedit\n\
 	bind	esc		cancel\n\
 \n\
 context nodeedit\n\
+	helptext editing node |  |ESC| revert || |return| confirm\n\
 	bind	up		up\n\
 	bind	down		down\n\
 	bind	left		left\n\
@@ -252,6 +226,7 @@ context nodeedit\n\
 	bind	^S		split\n\
 	bind	^J		join\n\
 	bind	backspace	backspace\n\
+	bind	backspace2	backspace\n\
 	bind	^A		bol\n\
 	bind	^E		eol\n\
 	bind	home		bol\n\

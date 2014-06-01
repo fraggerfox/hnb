@@ -26,11 +26,6 @@
 #include "tree.h"
 #include "file.h"
 
-/**i string used to return error state from import/export functions
- *
- * */
-char file_error[128] = "";
-
 void init_import (import_state_t * is, Node *node)
 {
 	is->npos = node;

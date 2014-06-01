@@ -80,10 +80,10 @@ int export_help (char *params, void *data)
 	char *cdata;
 	FILE *file;
 
-	file_error[0] = 0;
 	file = fopen (filename, "w");
 	if (!file) {
-		sprintf (file_error, "help export, unable to open \"%s\"", filename);
+		cli_outfunf ("help export, unable to open \"%s\"", filename);
+
 		return (int) node;
 	}
 	startlevel = nodes_left (node);
@@ -106,8 +106,10 @@ int export_help (char *params, void *data)
 		tnode = node_recurse (tnode);
 	}
 	level = 0;
-
+	
 	fclose (file);
+
+	cli_outfunf ("help export, wrote data to \"%s\"", filename);
 	return (int) node;
 }
 
@@ -116,7 +118,6 @@ int import_help (char *params, void *data)
 	Node *node = (Node *) data;
 	import_state_t ist;
 
-	file_error[0] = 0;
 	init_import (&ist, node);
 #include "tutorial.inc"
 
