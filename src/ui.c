@@ -30,6 +30,11 @@
 #include "ui.h"
 
 
+static char is_done(Node *n)
+{
+	return node_getflag (n, F_todo) && node_getflag (n, F_done);
+}
+
 
 #ifdef NCURSES_MOUSE_VERSION
 	#define MOUSE
@@ -62,16 +67,40 @@ void ui_init (){
 	intrflush (stdscr, TRUE);
 	keypad (stdscr, TRUE);
 	nonl ();
-	raw ();						/* enable the usage of ctl+c,ctrl+q,ctrl+z.. */
+	raw ();						/* enable the usage of ctl+c,ctrl+q,ctrl+z.. */	
 	noecho ();
 	middle_line = LINES / 3;
 	#ifdef MOUSE
 		mousemask(BUTTON1_CLICKED+BUTTON3_CLICKED+BUTTON1_DOUBLE_CLICKED,NULL);
 	#endif	
+	
+	
+	if (has_colors())
+	{
+		start_color();
+
+		init_pair(UI_COLOR_MENU,	 prefs.fg_menu,prefs.bg_menu);
+		init_pair(UI_COLOR_NODE,	 prefs.fg_node,prefs.bg_node);
+		init_pair(UI_COLOR_NODEC,	 prefs.fg_nodec,prefs.bg_nodec);
+		init_pair(UI_COLOR_BULLET,   prefs.fg_bullet,prefs.bg_bullet);
+		init_pair(UI_COLOR_BG,		 COLOR_WHITE,prefs.bg);
+	}
 	/* COLS ? */
 	nodes_above = middle_line;
 	nodes_below = LINES - middle_line;
+
+	bkgdset(' '+COLOR_PAIR(UI_COLOR_BG));
 }
+
+#define att_menuitem	{attrset(A_REVERSE);attron(COLOR_PAIR(UI_COLOR_MENU));}
+#define att_menutext	{attrset(A_NORMAL);attron(COLOR_PAIR(UI_COLOR_MENU));}
+#define att_normal		{attrset(A_NORMAL);attron(COLOR_PAIR(UI_COLOR_BG));}
+
+#define att_node		{attron(COLOR_PAIR(UI_COLOR_NODE));}
+#define att_nodec		{attron(A_BOLD);attron(COLOR_PAIR(UI_COLOR_NODEC));}
+
+#define att_bullet		{attron(COLOR_PAIR(UI_COLOR_BULLET));}
+
 
 Node *up (Node *sel,Node *node){
 	switch(prefs.collapse_mode){
@@ -110,7 +139,7 @@ Node *down (Node *sel,Node *node){
 					node = node_left (node);
 					if (node_down (node))
 						return (node_down (node));
-				};
+				}
 			}
 			break;
 		case COLLAPSE_NONE:
@@ -135,16 +164,27 @@ void debug(Node *node,int mode){
 	char buf[10];
 	
 	move(0,0);
-	attron(A_REVERSE);addstr("not");attroff(A_REVERSE);sprintf(buf," %.2i ",node_no(node));addstr(buf);
-	attron(A_REVERSE);addstr("id");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node&0xFFFF);addstr(buf);
-	attron(A_REVERSE);addstr("up");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->up&0xFFFF);addstr(buf);
-	attron(A_REVERSE);addstr("dn");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->down&0xFFFF);addstr(buf);			
-	attron(A_REVERSE);addstr("<-");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->left&0xFFFF);addstr(buf);
-	attron(A_REVERSE);addstr("->");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->right&0xFFFF);addstr(buf);			
-	attron(A_REVERSE);addstr("lvl");attroff(A_REVERSE);sprintf(buf," %.2i ",nodes_left(node));addstr(buf);			
-	attron(A_REVERSE);addstr("no");attroff(A_REVERSE);sprintf(buf," %.2i ",nodes_up(node));addstr(buf);			
-	attron(A_REVERSE);addstr("flags");attroff(A_REVERSE);sprintf(buf," %i%i%i%i%i ",(node_getflags(node)>>4)&1,(node_getflags(node)>>3)&1,(node_getflags(node)>>2)&1,(node_getflags(node)>>1)&1,(node_getflags(node)>>0)&1);addstr(buf);		
-	attron(A_REVERSE);addstr("mode");attroff(A_REVERSE);sprintf(buf," %.2i ",mode);addstr(buf);			
+	att_menuitem;addstr("not"); att_menutext;
+	sprintf(buf," %.2i ",node_no(node));addstr(buf);
+	att_menuitem;addstr("id");att_menutext;
+	sprintf(buf," %.4X ",(int)node&0xFFFF);addstr(buf);
+	att_menuitem;addstr("up");att_menutext;
+	sprintf(buf," %.4X ",(int)node->up&0xFFFF);addstr(buf);
+	att_menuitem;addstr("dn");att_menutext;
+	sprintf(buf," %.4X ",(int)node->down&0xFFFF);addstr(buf);			
+	att_menuitem;addstr("<-");att_menutext;
+	sprintf(buf," %.4X ",(int)node->left&0xFFFF);addstr(buf);
+	att_menuitem;addstr("->");att_menutext;
+	sprintf(buf," %.4X ",(int)node->right&0xFFFF);addstr(buf);			
+	att_menuitem;addstr("lvl");att_menutext;
+	sprintf(buf," %.2i ",nodes_left(node));addstr(buf);			
+	att_menuitem;addstr("no");att_menutext;
+	sprintf(buf," %.2i ",nodes_up(node));addstr(buf);			
+	att_menuitem;addstr("flags");att_menutext;
+	sprintf(buf," %i%i%i%i%i ",(node_getflags(node)>>4)&1,(node_getflags(node)>>3)&1,(node_getflags(node)>>2)&1,(node_getflags(node)>>1)&1,(node_getflags(node)>>0)&1);addstr(buf);		
+	att_menuitem;addstr("mode");att_menutext;
+	sprintf(buf," %.2i ",mode);addstr(buf);
+	att_normal;
 }
 
 char toeleet(char in){
@@ -197,10 +237,12 @@ void help_draw (int mode, char *message){
 	int pos;
 	int line;
 	
-	#define clrc(a) {int c;move(line,0);for(c=0;c<COLS;c++)addch(a);};
-	#define clr	clrc(' ')
-	#define rl(a) attrset(A_REVERSE);clr;move(line,0);addstr(a);attrset(A_NORMAL);
-	#define i(KEY,TEXT) {move(line, pos * (COLS/6)  );attrset(A_REVERSE);addstr(KEY);attrset(A_NORMAL);addstr(TEXT);pos++;}
+	#define clrc(a) {int c;move(line,0);for(c=0;c<COLS;c++)addch(a);}
+	#define clr	att_menutext;clrc(' ')att_normal;
+	#define rl(a) att_menuitem;clrc(' ');move(line,0);\
+				addstr(a);att_normal;
+	#define i(KEY,TEXT) {move(line, pos * (COLS/6)  );att_menuitem;\
+				addstr(KEY);att_menutext;addstr(TEXT);pos++;att_normal;}
 	
 	switch (mode) {
 		case UI_MODE_CONFIRM:mdc();m_nwarp;
@@ -212,6 +254,19 @@ void help_draw (int mode, char *message){
 			i (" Y ", " yes");md('y');
 			pos=5;			
 			i ("Esc,C", " cancel");md('c');
+			break;
+		case UI_MODE_PREFS:
+			line = LINES - 2;mdc();m_warp;
+			rl("hnb configuration");
+			line = LINES - 1;
+			pos = 0;
+			clr;
+			i ("arrows", " move");
+			i ("return", " change");md(UI_ENTER);
+			pos++;
+			i ("^A", " apply");md(UI_INSERT);
+			i ("^S", " save");md(UI_REMOVE);
+			i ("^X", " cancel");md(UI_QUIT);
 			break;
 		case UI_MODE_HELP2:mdc();m_warp;
 			break;
@@ -262,7 +317,7 @@ void help_draw (int mode, char *message){
 			line = LINES - 2;
 			pos = 0;
 			clr;
-			i ("", "");
+			i ("F5", " prefs");;md(UI_PREFS);
 			i ("abc..", " match");
 			i ("TAB", " complete");md(UI_COMPLETE);
 			i ("^B", " parentify");md(UI_LOWER);
@@ -292,7 +347,21 @@ void help_draw (int mode, char *message){
 			i ("^J", " join");md(UI_JOIN);
 			i ("^S", " split");md(UI_SPLIT);
 			pos=5;
-			i (" esc ", " cancel");md(UI_ESCAPE);			
+			i ("esc,^X", " cancel");md(UI_ESCAPE);
+			break;
+		case UI_MODE_EDITR:
+			line = LINES - 2;mdc();m_nwarp;
+			pos = 0;
+			clr;
+			i ("abc.. ", " entry");
+			line = LINES - 1;
+			pos = 0;
+			clr;
+			i ("return", " confirm");md(UI_ENTER);
+			pos++;
+			i ("arrows", " move");			
+			pos=5;
+			i ("esc,^X", " cancel");md(UI_ESCAPE);
 			break;
 		case UI_MODE_QUIT:
 			line=LINES-2;
@@ -328,7 +397,7 @@ void help_draw (int mode, char *message){
 			i (" A ", " Ascii");md('a');
 			i (" H ", " html");md('h');
 			i (" X ", " xml");md('x');
-/*			i (" G ", " general xml");md('g');*/
+			i (" G ", " general xml");md('g');
 			i (" | ", " pipe");md('|');
 			pos=5;
 			i ("Esc,C", " Cancel");md('c');
@@ -390,7 +459,7 @@ void help_draw (int mode, char *message){
 			i (" A ", " Ascii");md('a');
 /*			i (" H ", " html");md('h');*/
 			i (" X ", " xml");md('x');
-/*			i (" G ", " general xml");md('g');*/
+			i (" G ", " general xml");md('g');
 /*			i (" | ", " pipe");md('|');*/
 			pos=5;
 			i ("Esc,C", " Cancel");md('c');
@@ -415,10 +484,10 @@ void help_draw (int mode, char *message){
 			pos=5;			
 			i ("Esc,C", " cancel");md('c');
 			break;
-				#ifdef hnbgimp
-					case 11111: line = LINES - 2; pos = 0; clr; i (" hnb-gimp ", " ver -0.1"); addch (' '); addstr (message); i ("", ""); i("", ""); i ("ESC,Q", " quit"); i ("arrows", " draw"); i (" X ", " toggle color"); line = LINES - 1; pos = 0; clr; i("", ""); i ("", ""); i ("", ""); i (" I ", " invert image"); i ("", ""); i (" C ", " clear canvas"); break;
+																		#ifdef hnbgimp
+																		case 11111: line = LINES - 2; pos = 0; clr; i (" hnb-gimp ", " ver -0.1"); addch (' '); addstr (message); i ("", ""); i("", ""); i ("ESC,Q", " quit"); i ("arrows", " draw"); i (" X ", " toggle color"); line = LINES - 1; pos = 0; clr; i("", ""); i ("", ""); i ("", ""); i (" I ", " invert image"); i ("", ""); i (" C ", " clear canvas"); break;
 						#endif
-	};
+	}
 }
 
 #define indentstart 1
@@ -442,9 +511,11 @@ int startlevel = 0;
 int hnb_edit_posup=0;
 int hnb_edit_posdown=0;
 
-int draw_item (int line_start, int col_start, char *data, int draw_mode, int completion){
+int draw_item (int line_start, int col_start, char *data, 
+			int draw_mode, int completion, char done){
 	int lines_used = 0;
 	int col_end = COLS;
+	int in_tag=0;			/* in an xml tag to highlight */
 	#define udc_no 0
 	#define udc_yes 1
 	#define udc_below 2
@@ -457,64 +528,65 @@ int draw_item (int line_start, int col_start, char *data, int draw_mode, int com
 	
 	if (draw_mode & D_M_WRAP) {
 		int pos, col = col_start;
-		char word[200];			/* maximum displayed (not stored) word length */
+		char word[200];	/* maximum displayed (not stored) word length */
 		
 		word[0] = 0;
 		
 		move (line_start, col);
-		
-	if (draw_mode&D_M_EDIT){
-		col=col_start+=3;		
+
+		att_bullet;
+		if (draw_mode&D_M_EDIT){
+			col=col_start+=3;		
 		} else 
-		if (completion > -1) {/* todo bullets */
-			switch (completion) {
-				case 0:
+		if (completion > -1) {/* todo bullets */			
+			if (done) {
+				if (col != 0)
+					move (line_start, col - 1);
+				if (!(draw_mode & D_M_TEST))
+					addstr ("[X] ");
+				col = col_start += 3;
+			} else {
+
+				if (!completion) {
 					if (col != 0)
 						move (line_start, col - 1);
 					if (!(draw_mode & D_M_TEST))
 						addstr ("[ ] ");
 					col = col_start += 3;
-					break;
-				case 1000:
-					if (col != 0)
-						move (line_start, col - 1);
-					if (!(draw_mode & D_M_TEST))
-						addstr ("[X] ");
-					col = col_start += 3;
-					break;
-				default:{
-					char str[10];
-	sprintf (str, "%2i%% ", completion / 10);
-		if (col != 0) {
-			move (line_start, col - 1);
 				} else {
-					col_start += 1;
-					};
+					char str[10];
+					sprintf (str, "%2i%% ", completion / 10);
+					if (col != 0) {
+						move (line_start, col - 1);
+					} else {
+						col_start += 1;
+					}
 					if (!(draw_mode & D_M_TEST))
 						addstr (str);
 					col = col_start += 3;
 				}
-					break;
 			}
-	/*		if( ! (draw_mode & D_M_TEST))addch((draw_mode & D_M_CHILD)?'+':' ');*/
-	} else {
-	/*	 if(completion==-1)if(data[0]) if( ! (draw_mode & D_M_TEST))  addstr((draw_mode & D_M_CHILD)?"   ":"   ");*/
-	col = col_start += 3;
+/*if( ! (draw_mode & D_M_TEST))addch((draw_mode & D_M_CHILD)?'+':' ');*/
+		} else {
+/* if(completion==-1)if(data[0]) if( ! (draw_mode & D_M_TEST))  addstr((draw_mode & D_M_CHILD)?"   ":"   ");*/
+			col = col_start += 3;
 		}
 
-	if (!(draw_mode & D_M_TEST) && (draw_mode & D_M_CHILD)) {
-		attron (A_BOLD);
+		if (!(draw_mode & D_M_TEST) && (draw_mode & D_M_CHILD)) {
+			att_nodec;
+		} else {
+			att_node;
 		}
 
-	if(udc==udc_yes){
-		hnb_edit_posup=0;
-		hnb_edit_posdown=strlen(data);
+		if(udc==udc_yes){
+			hnb_edit_posup=0;
+			hnb_edit_posdown=strlen(data);
 		}
 
 	for (pos = 0; pos <= strlen (data); pos++)
 		switch (data[pos]) {
 			case 0:
-				case ' ':
+			case ' ':
 					if (col + strlen (word) + 1 >= col_end) {
 					  if(udc==udc_yes){
 					  	hnb_edit_posup= completion-(col-col_start);
@@ -528,50 +600,49 @@ int draw_item (int line_start, int col_start, char *data, int draw_mode, int com
 
 	if (LINES <= lines_used + line_start)
 		return lines_used + 1;	/* avoid drawing past the screen */
-			};
-				move (line_start + lines_used, col);
-					if (!(draw_mode & D_M_TEST)) {
-						if (line_start + lines_used >= 0) {							
-							addstr (word);
-							if(udc==udc_yes){
-								if(completion==pos){
-									attron(A_REVERSE);
-									addch(' ');
-									udc=udc_below;
-									attroff(A_REVERSE);
-								}
-							}
-							if (data[pos] != 0)
-								addch (' ');
-							if(udc==udc_yes){
-								if(pos>completion){
-									char ch=word[strlen(word)-(pos-completion)];
-									attron(A_REVERSE);									
-									move(line_start+lines_used,col-(pos-completion)+strlen(word));
-									addch(ch);
-									udc=udc_below;
-									attroff(A_REVERSE);
-								}
-							}
-
-	}
-		}
+			}
+			move (line_start + lines_used, col);
+			if (!(draw_mode & D_M_TEST)) {
+				if (line_start + lines_used >= 0) {	
+					addstr (word);
+					if(udc==udc_yes){
+						if(completion==pos){
+							attron(A_REVERSE);
+							addch(' ');
+							udc=udc_below;
+							attroff(A_REVERSE);
+						}
+					}
+					if (data[pos] != 0)
+						addch (' ');
+					if(udc==udc_yes){
+						if(pos>completion){
+							char ch=word[strlen(word)-(pos-completion)];
+							attron(A_REVERSE);									
+							move(line_start+lines_used,col-(pos-completion)+strlen(word));
+							addch(ch);
+							udc=udc_below;
+							attroff(A_REVERSE);
+						}
+					}
+				}
+			}
 			col += strlen (word) + 1;
-				word[0] = 0;
-					break;
-				case 9:
-					if ((strlen (word) < 198)) {
-						word[strlen (word) + 1] = 0;
-						word[strlen (word)] = ' ';
-					}
-					break;
-				default:
-					if ((strlen (word) < 198)) {
-						word[strlen (word) + 1] = 0;
-						word[strlen (word)] = prefs.eleet_mode?toeleet(data[pos]):data[pos];
-					}
-					break;
-			};
+			word[0] = 0;
+			break;
+		case 9:case 10:case 11: /* display tabs and newlines as spaces */
+			if ((strlen (word) < 198)) {
+				word[strlen (word) + 1] = 0;
+				word[strlen (word)] = ' ';
+			}
+			break;
+		default:
+			if ((strlen (word) < 198)) {
+				word[strlen (word) + 1] = 0;
+				word[strlen (word)] = prefs.eleet_mode?toeleet(data[pos]):data[pos];
+			}
+			break;
+			}
 	} else if (!(draw_mode & D_M_TEST))
 		addnstr (data, col_end - col_start);
 
@@ -621,21 +692,21 @@ void ui_draw (Node *node, char *input, int mode){
 		draw_item (line -=
 			   draw_item (0, indentlevel (tnode),
 				  node_getdata (tnode),
-					  D_M_TEST + D_M_WRAP, -1),
-						   indentlevel (tnode), node_getdata (tnode),
-						   D_M_WRAP + (node_right (tnode) ? D_M_CHILD : 0),
-						   node_calc_complete (tnode));
+				  D_M_TEST + D_M_WRAP, -1, is_done(tnode)),
+				   indentlevel (tnode), node_getdata (tnode),
+				   D_M_WRAP + (node_right (tnode) ? D_M_CHILD : 0),
+				   node_calc_complete (tnode), is_done(tnode));
 #ifdef MOUSE						   
 	if(line>0){
 		mouse_node[line]=tnode;
-			mouse_todo[line]=node_getflag(tnode,F_todo)?1:0;
-				mouse_xstart[line]=indentlevel(tnode)+3;
-				}
+		mouse_todo[line]=node_getflag(tnode,F_todo)?1:0;
+		mouse_xstart[line]=indentlevel(tnode)+3;
+	}
 #endif
 	tnode = up (node,tnode);
 		if (middle_line - nodes_above >= line)
 			tnode = 0;
-				hnb_nodes_up++;
+			hnb_nodes_up++;
 			}
 		}
 
@@ -643,65 +714,59 @@ void ui_draw (Node *node, char *input, int mode){
 
 #ifdef MOUSE						   
 	mouse_node[middle_line]=node;
-		mouse_todo[middle_line]=node_getflag(node,F_todo)?1:0;
-			mouse_xstart[middle_line]=indentlevel(node)+3;
+	mouse_todo[middle_line]=node_getflag(node,F_todo)?1:0;
+	mouse_xstart[middle_line]=indentlevel(node)+3;
 #endif
 
-
-	if(mode== UI_MODE_EDIT){
+	if(mode== UI_MODE_EDIT || mode == UI_MODE_EDITR){
 		/* bullet */
-			draw_item (middle_line, indentlevel (node),
-				   "",D_M_WRAP,node_calc_complete (node));
+		draw_item (middle_line, indentlevel (node),
+			"",D_M_WRAP,node_calc_complete (node), is_done(node));
 
-	lines =	draw_item (middle_line, indentlevel (node),
-		   node_getdata (node),
-			   D_M_WRAP + D_M_EDIT+ (node_right (node) ? D_M_CHILD : 0),
-				   (int)input);
-		} else
-
-	{	/* bullet */
+		lines =draw_item (middle_line, indentlevel (node),
+			node_getdata (node),
+			D_M_WRAP + D_M_EDIT+ (node_right (node) ? D_M_CHILD : 0),
+			(int)input, (int)input == 1000);
+		} else {	/* bullet */
 		draw_item (middle_line, indentlevel (node), "", D_M_WRAP,
-			   node_calc_complete (node));
+			   node_calc_complete (node), is_done(node));
 			attrset (A_REVERSE);
 			/* the selected node */
-			lines =
-				draw_item (middle_line, indentlevel (node),
-					   node_getdata (node),
-						   D_M_WRAP + (node_right (node) ? D_M_CHILD : 0),
-						   -2);
+			lines = draw_item (middle_line, indentlevel (node),
+					node_getdata (node),
+					D_M_WRAP + (node_right (node) ? D_M_CHILD : 0),
+					-2, 0);
 			attrset (A_BOLD);
 			/* the search input */
 			if (mode == UI_MODE_HELP0 || mode == UI_MODE_HELP1
 				|| mode == UI_MODE_HELP2) draw_item (middle_line,
-					 indentlevel (node),
-						 input, D_M_WRAP, -2);
+				indentlevel (node),
+				input, D_M_WRAP, -2, 0);
 		}
 		attrset (A_NORMAL);		
 
 /* draw lines below selected node */
-	{
+		{
 		Node *tnode = down (node,node);
 
-	lines += middle_line;
+		lines += middle_line;
 
-	while (tnode) {
+		while (tnode) {
 #ifdef MOUSE						   
-	mouse_node[lines]=tnode;
-		mouse_todo[lines]=node_getflag(tnode,F_todo)?1:0;
+			mouse_node[lines]=tnode;
+			mouse_todo[lines]=node_getflag(tnode,F_todo)?1:0;
 			mouse_xstart[lines]=indentlevel(tnode)+3;
 #endif
-	lines += draw_item (lines,
-		indentlevel (tnode),
-			node_getdata (tnode),
-				D_M_WRAP +
-					(node_right (tnode) ? D_M_CHILD : 0),
-						node_calc_complete (tnode));
-				tnode = down (node,tnode);
-				if (middle_line + nodes_below <= lines)
-					tnode = 0;
-				hnb_nodes_down++;
-			};
+			lines += draw_item (lines,
+				indentlevel (tnode),
+				node_getdata (tnode),
+				D_M_WRAP + (node_right (tnode) ? D_M_CHILD : 0),
+				node_calc_complete (tnode), is_done(tnode));
+			tnode = down (node,tnode);
+			if (middle_line + nodes_below <= lines) tnode = 0;
+			hnb_nodes_down++;
 		}
+	}
 
 #ifdef MOUSE						   
 {int j;/*fill in the gaps in the lines */
@@ -713,11 +778,8 @@ void ui_draw (Node *node, char *input, int mode){
 			}
 		}
 	}
-}
+	}
 #endif
-	
-		
-		
 	}
 
 
@@ -727,9 +789,9 @@ void ui_draw (Node *node, char *input, int mode){
 		echo ();
 		getstr (&input[0]);
 		noecho ();
-	};
+	}
 	
-	if(prefs.view_debug)
+	if(prefs.debug)
 		debug(node,mode);
 		
 	move (LINES - 1, COLS - 1);	
@@ -737,7 +799,6 @@ void ui_draw (Node *node, char *input, int mode){
 	refresh ();
 	ignore_next=0;
 	if(mode==UI_MODE_INFO || mode==UI_MODE_ERROR)ignore_next=1;
-
 }
 
 void ui_end ()
@@ -747,14 +808,14 @@ void ui_end ()
 	endwin ();
 }
 	#ifdef hnbgimp
-		#define pset(a,b,c) v[b][a]=c;
-			#define pget(a,b) v[b][a];
-				#define mva(a,b,c) mvaddch(a,b,c)
-					#define cw 33
-						#define ch 17
-							char qixels[16] = " ,'L`/~Pcw\\b]d\\@"; int v[32][64];void cls () { int x, y; for (x = 0; x < 64; x++) for (y = 0; y < 32; y++) pset (x, y, 0); } void draw (int xp, int yp) { int x, y; for (x = 0; x < 16; x++) for (y = 0; y < 32; y++) { mva (x + yp + 1,y + xp + 1, qixels[v[x * 2][y * 2] * 2 + v[x * 2 + 1][y * 2] + v[x * 2][y * 2 + 1] * 4 + v[x * 2 + 1][y * 2 + 1] * 8]);} for (x =xp; x <= xp + cw; x++) { mva (yp, x, '_'); mva (yp + ch, x, '~'); }; for (y = yp; y <= yp + ch; y++) { mva (y, xp + cw, '|'); mva(y, xp, '|'); }; mva (yp, xp, '.'); mva (yp, xp + cw, '.'); mva (yp + ch, xp, '`'); mva (yp + ch, xp + cw, '\''); move (0, 0); }
+	#define pset(a,b,c) v[b][a]=c;
+	#define pget(a,b) v[b][a];
+	#define mva(a,b,c) mvaddch(a,b,c)
+	#define cw 33
+	#define ch 17
+							char qixels[16] = " ,'L`/~Pcw\\b]d\\@"; int v[32][64];void cls () { int x, y; for (x = 0; x < 64; x++) for (y = 0; y < 32; y++) pset (x, y, 0); } void draw (int xp, int yp) { int x, y; for (x = 0; x < 16; x++) for (y = 0; y < 32; y++) { mva (x + yp + 1,y + xp + 1, qixels[v[x * 2][y * 2] * 2 + v[x * 2 + 1][y * 2] + v[x * 2][y * 2 + 1] * 4 + v[x * 2 + 1][y * 2 + 1] * 8]);} for (x =xp; x <= xp + cw; x++) { mva (yp, x, '_'); mva (yp + ch, x, '~'); } for (y = yp; y <= yp + ch; y++) { mva (y, xp + cw, '|'); mva(y, xp, '|'); } mva (yp, xp, '.'); mva (yp, xp + cw, '.'); mva (yp + ch, xp, '`'); mva (yp + ch, xp + cw, '\''); move (0, 0); }
 
-	#endif
+#endif
 
 extern Node *pos;
 #ifdef MOUSE
@@ -789,10 +850,6 @@ int ui_input ()
 			prefs.eleet_mode= !prefs.eleet_mode;
 			return UI_IGNORE;
 			break;
-		case UI_DEBUG:
-			prefs.view_debug= !prefs.view_debug;
-			return UI_IGNORE;
-			break;
 		case KEY_RESIZE:
 			middle_line = LINES / 3;
 			nodes_above = middle_line;
@@ -803,58 +860,61 @@ int ui_input ()
 #ifdef MOUSE			
 	case KEY_MOUSE:
 		getmouse(&mouse);
-		if(mouse.bstate&BUTTON1_CLICKED || mouse.bstate&BUTTON1_DOUBLE_CLICKED){/*button1*/
+		if(mouse.bstate&BUTTON1_CLICKED 
+			|| mouse.bstate&BUTTON1_DOUBLE_CLICKED){/*button1*/
 			if (mouse.y >= LINES-5){
 				int line=(mouse.y-LINES)*-1;
 				int pos= (mouse.x/ (COLS/6));
 
-	if( mouse_codes[line][pos]!= -1 ) return mouse_codes[line][pos];
-		}
-
-	if(mouse_warp){
-		  if (mouse_node[mouse.y]!=0){
-			if(mouse.x<mouse_xstart[mouse.y]-4){
-				return(UI_LEFT);
-				}
-				if((mouse_todo[mouse.y]) && (mouse.x<mouse_xstart[mouse.y])){
-					Node *tnode=mouse_node[mouse.y];
-
-	node_toggleflag(tnode,F_done);
-
-	node_update_parents_todo(tnode);
-		return(UI_IGNORE);
+				if( mouse_codes[line][pos]!= -1 ) 
+					return mouse_codes[line][pos];
 			}
+
+		if(mouse_warp){
+			if (mouse_node[mouse.y]!=0){
+				if(mouse.x<mouse_xstart[mouse.y]-4){
+					return(UI_LEFT);
+				}
+				if((mouse_todo[mouse.y]) 
+						&& (mouse.x<mouse_xstart[mouse.y])){
+					Node *tnode=mouse_node[mouse.y];
+					node_toggleflag(tnode,F_done);
+					node_update_parents_todo(tnode);
+					return(UI_IGNORE);
+				}
 				if(mouse.x<mouse_xstart[mouse.y])
 					return(UI_LEFT);
-		
-			if(mouse.x>=mouse_xstart[mouse.y]){
-				if(mouse.y==middle_line){
-					if(node_right(pos))pos=node_right(pos);
+				if(mouse.x>=mouse_xstart[mouse.y]){
+					if(mouse.y==middle_line){
+						if(node_right(pos))
+							pos=node_right(pos);
 					} else {					
 						pos=mouse_node[mouse.y];
 						if(mouse.bstate&BUTTON1_DOUBLE_CLICKED)
-							if(node_right(pos))pos=node_right(pos);
+							if(node_right(pos))
+								pos=node_right(pos);
 					}
 				}
 				return UI_IGNORE;
 			  }
 
-	  if( mouse.y > middle_line ) return UI_DOWN;
-		  if( mouse.y < middle_line ) return UI_UP;			  
+	  	if( mouse.y > middle_line ) 
+			return UI_DOWN;
+		if( mouse.y < middle_line ) 
+		 	return UI_UP;			  
 			  
-			}
+		}
 		}
 		if(mouse.bstate&BUTTON3_CLICKED){/* button 3 */
 			return(UI_HELP);
 		}
-
-
-	return UI_IGNORE;
+		return UI_IGNORE;
 		break;
 #endif
-	#ifdef hnbgimp
-		case KEY_F (12):{ int c = 0; int x = 5, y = 5, i = 1;erase (); help_draw (11111, ""); draw (2, 2); refresh (); while (c != 27) { c = getch (); switch (c) { case 8: case KEY_UP: y--; break; case 2: case KEY_DOWN: y++; break; case 4: case KEY_LEFT: x--; break; case 6: case KEY_RIGHT: x++;break; case 'i': case 'I':{ int x, y;for (y = 31; y >= 0; y--) for (x = 63; x >= 0; x--) { pset (x, y, !pget (x, y)); draw (2, 2); refresh ();} }; case 'x': case 'X': i = !i; break; case 'c': cls (); break; case 'q': case KEY_F (12): c = 27; break; } x = x > 63 ?0 : x < 0 ? 63 : x; y = y > 31 ? 0 : y < 0 ? 31 : y; pset (x, y, i); pset (x, y, !pget (x, y)); draw (2, 2); refresh ();pset (x, y, !pget (x, y)); } return UI_IGNORE; }
-			#endif
+
+#ifdef hnbgimp
+		case KEY_F (12):{ int c = 0; int x = 5, y = 5, i = 1;erase (); help_draw (11111, ""); draw (2, 2); refresh (); while (c != 27) { c = getch (); switch (c) { case 8: case KEY_UP: y--; break; case 2: case KEY_DOWN: y++; break; case 4: case KEY_LEFT: x--; break; case 6: case KEY_RIGHT: x++;break; case 'i': case 'I':{ int x, y;for (y = 31; y >= 0; y--) for (x = 63; x >= 0; x--) { pset (x, y, !pget (x, y)); draw (2, 2); refresh ();} } case 'x': case 'X': i = !i; break; case 'c': cls (); break; case 'q': case KEY_F (12): c = 27; break; } x = x > 63 ?0 : x < 0 ? 63 : x; y = y > 31 ? 0 : y < 0 ? 31 : y; pset (x, y, i); pset (x, y, !pget (x, y)); draw (2, 2); refresh ();pset (x, y, !pget (x, y)); } return UI_IGNORE; }
+#endif
 	}
 
 	return (c);

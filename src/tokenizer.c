@@ -37,7 +37,7 @@ char *tokenize (char *haystack){
 	} else {
 		if (pos == 0)
 			return ("");		/* we cannot start with an empty string */
-	};
+	}
 	
 	if (pos >= strlen (buffer))
 		return ("");			/* this is the end */
@@ -52,17 +52,17 @@ char *tokenize (char *haystack){
 					buffer[pos + 1] = token_seperator;
 					buffer[pos + 2] = 0;
 					buffer[pos] = token_seperator;
-				};
+				}
 				
 				if ((pos == 1)) {	/* "root" */
 					token[0] = token_seperator;
 					token[1] = 0;
 				}
 				return (token);
-			};
-		};
+			}
+		}
 		token[tokenpos++] = buffer[pos++];
 		token[tokenpos] = 0;
-	};
+	}
 	return (token);
 }

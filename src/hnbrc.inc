@@ -1,0 +1,137 @@
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n\
+<!-- hnb1.6 configuration file -->\n\
+<tree>\n\
+<node><data>interface</data>\n\
+	<node><data>help level</data>\n\
+		<node done=\"yes\" priority=\"2\"><data>sparse (default)</data></node>\n\
+		<node done=\"no\" priority=\"2\"><data>full</data></node>\n\
+		<node done=\"no\" priority=\"2\"><data>expert (none)</data></node>\n\
+		<node><data>----</data></node>\n\
+		<node><data>the verbosity of hnb&apos;s help line, in navigation mode.</data></node>\n\
+	</node>\n\
+	<node><data>tree display</data>\n\
+		<node><data>default collapse mode</data>\n\
+			<node done=\"yes\" priority=\"2\"><data>collapse all (default)</data></node>\n\
+			<node done=\"no\" priority=\"2\"><data>show whole tree</data></node>\n\
+			<node done=\"no\" priority=\"2\"><data>show path</data></node>\n\
+			<node done=\"no\" priority=\"2\"><data>show children of current node</data></node>\n\
+			<node><data>----</data></node>\n\
+			<node><data>sets a default collapse mode, does not affect the ability to cycle with ^V</data></node>\n\
+		</node>\n\
+		<node><data>bullet mode</data>\n\
+			<node done=\"yes\" priority=\"2\"><data>none (default)</data></node>\n\
+			<node done=\"no\" priority=\"2\"><data>+/-</data></node>\n\
+			<node done=\"no\" priority=\"2\"><data>*</data></node>\n\
+			<node done=\"no\" priority=\"2\"><data>-</data></node>\n\
+			<node done=\"yes\" priority=\"1\"><data>show percentages</data></node>\n\
+			<node><data>----</data></node>\n\
+			<node><data>not implemented yet</data></node>\n\
+		</node>\n\
+		<node><data>indentation level:</data>\n\
+			<node priority=\"3\"><data>4</data></node>\n\
+			<node><data>----</data></node>\n\
+			<node><data>not implemented yet</data></node>\n\
+		</node>\n\
+	</node>\n\
+	<node><data>colors</data>\n\
+		<node><data>background</data>\n\
+			<node priority=\"3\"><data>black</data></node>\n\
+		</node>\n\
+		<node><data>node with children</data>\n\
+			<node priority=\"3\"><data>white</data></node>\n\
+			<node priority=\"3\"><data>black</data></node>\n\
+		</node>\n\
+		<node><data>node without children</data>\n\
+			<node priority=\"3\"><data>white</data></node>\n\
+			<node priority=\"3\"><data>black</data></node>\n\
+		</node>\n\
+		<node><data>menu (and messages)</data>\n\
+			<node priority=\"3\"><data>yellow</data></node>\n\
+			<node priority=\"3\"><data>black</data></node>\n\
+		</node>\n\
+		<node><data>bullets (and percentages)</data>\n\
+			<node priority=\"3\"><data>cyan</data></node>\n\
+			<node priority=\"3\"><data>black</data></node>\n\
+		</node>\n\
+		<node><data>----</data></node>\n\
+		<node><data>allows changing the colors of various hnb interface elements,</data></node>\n\
+		<node><data>valid colors listed below (must be entered in lowercase)</data></node>\n\
+		<node><data>--</data></node>\n\
+		<node><data>black</data></node>\n\
+		<node><data>blue</data></node>\n\
+		<node><data>cyan</data></node>\n\
+		<node><data>green</data></node>\n\
+		<node><data>magenta</data></node>\n\
+		<node><data>red</data></node>\n\
+		<node><data>yellow</data></node>\n\
+	</node>\n\
+</node>\n\
+<node><data>navigation</data>\n\
+	<node done=\"no\" priority=\"1\"><data>forced up</data>\n\
+		<node><data>allow going up from topmost node</data></node>\n\
+	</node>\n\
+	<node done=\"no\" priority=\"1\"><data>forced down</data>\n\
+		<node><data>allow going down from lowermost node</data></node>\n\
+	</node>\n\
+</node>\n\
+<node><data>editing</data>\n\
+	<node done=\"no\" priority=\"1\"><data>usertags</data>\n\
+		<node><data>--help--</data>\n\
+			<node><data>these are shortcuts that let you insert a string, if it is the first thing you do after pressing insert. useful for writing sgml and xml documents.</data></node>\n\
+			<node><data>you may modify the actual keys as well, by changing the shortcut name, be aware that certain names are reserved by hnb</data></node>\n\
+			<node><data>the usertag checkbox must be checked if hnb is to check for these tags.</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^Q</data>\n\
+			<node priority=\"3\"><data>&lt;para&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^W</data>\n\
+			<node priority=\"3\"><data>&lt;li&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^E</data>\n\
+			<node priority=\"3\"><data>&lt;ul&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^R</data>\n\
+			<node priority=\"3\"><data>&lt;br/&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^A</data>\n\
+			<node priority=\"3\"><data>&lt;hr/&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^D</data>\n\
+			<node priority=\"3\"><data>&lt;node&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^F</data>\n\
+			<node priority=\"3\"><data>&lt;data&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^Z</data>\n\
+			<node priority=\"3\"><data>&lt;br/&gt;</data></node>\n\
+		</node>\n\
+		<node priority=\"3\"><data>^C</data>\n\
+			<node priority=\"3\"><data>&lt;br/&gt;</data></node>\n\
+		</node>\n\
+	</node>\n\
+</node>\n\
+<node><data>files</data>\n\
+	<node><data>default file format</data>\n\
+		<node done=\"no\" priority=\"2\"><data>xml</data>\n\
+			<node><data>for using hnb as a general purpose xml editor, the default database will still be loaded and saved with hnb&apos;s dtd</data></node>\n\
+		</node>\n\
+		<node done=\"yes\" priority=\"2\"><data>hnb</data>\n\
+			<node><data>use hnb&apos;s xml dtd for other files than the default database as well</data></node>\n\
+		</node>\n\
+		<node done=\"no\" priority=\"2\"><data>ascii</data>\n\
+			<node><data>use hnb&apos;s old plain text format, this is intended primarily for compatibilty, the ascii export filter will probably change soon to be write only</data></node>\n\
+		</node>\n\
+	</node>\n\
+	<node><data>xml loading options</data>\n\
+		<node done=\"no\" priority=\"1\"><data>cuddle nodes</data>\n\
+			<node><data>joins tags with first child if the first child is not another tag.</data></node>\n\
+		</node>\n\
+	</node>\n\
+</node>\n\
+<node><data>misc</data>\n\
+	<node done=\"no\" priority=\"1\"><data>debug information</data>\n\
+		<node><data>this may give the author additional information regarding problems </data></node>\n\
+	</node>\n\
+</node>\n\
+</tree>\n\
+"

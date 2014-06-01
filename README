@@ -44,6 +44,14 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.6 25 may 2001
+		generic xml import and export filter
+		preferences
+		color settings
+		todobox fixes
+		percentage calculations fixes
+		xml tag shortcuts
+		macrofied node.<c|h>
 	1.5 19 may 2001
 		switched to autoconf/automake
 		joining/splitting of nodes.
@@ -148,6 +156,8 @@ AUTHORS
 		manual page
 	Karsten Hilbert    <Karsten.Hilbert@gmx.net>
 		pipe export
+	Martin van Beilen  <bln@simlab.dhs.org>
+		various todo/done issues in the code
 BUGS
 	slashes (/) inside nodes are not escaped correctly in cli mode
 TODO
@@ -205,3 +215,5 @@ TODO
 			node_insert_up
 			node_insert_down
 			node_remove
+	make a dead tree copy of he source for examination
+		enscript *.h *.c -E  --output uts.ps -U 2 -j

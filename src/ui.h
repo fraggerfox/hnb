@@ -24,6 +24,8 @@
 #define UI_JOIN		10/* ctrl+j*/
 #define UI_PRIORITY	16/* ctrl+p*/
 
+#define UI_PREFS	KEY_F(5)
+
 #define UI_ESCAPE	27
 
 /* these two wont work in my rxvts */
@@ -76,7 +78,9 @@
 #define UI_MODE_SEARCH   12
 #define UI_MODE_EXPORT   13
 #define UI_MODE_IMPORT 	 14
-#define UI_MODE_DEBUG 	 15
+#define UI_MODE_PREFS	 15
+#define UI_MODE_EDITR	 16
+#define UI_MODE_DEBUG 	 17
 
 
 /* collapse modes */
@@ -86,6 +90,15 @@
 #define COLLAPSE_PATH 3
 #define COLLAPSE_END 3
 #define COLLAPSE_ONLY_SIBLINGS 4
+
+/*color pairs used*/
+#define UI_COLOR_MENU		1
+#define UI_COLOR_NODE		2
+#define UI_COLOR_NODEC		3
+#define UI_COLOR_BULLET		4
+#define UI_COLOR_BG			5
+
+
 
 /* initializes the curses ui sets keyboard mode etc.
 */
@@ -114,3 +127,4 @@ extern int hnb_edit_posup;
 extern int hnb_edit_posdown;
 
 #endif /* UI_H */
+

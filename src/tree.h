@@ -2,6 +2,21 @@
 #define TREE_H
 #include "node.h"
 
+/*flag (attribute) definitions*/
+#define F_hidden	1
+#define F_readonly	2
+#define F_temp		4
+#define F_todo		8
+#define F_done		16
+#define F_32		32
+#define F_64		64
+#define F_128		128
+#define F_256		256
+#define F_512		512
+#define F_1024		1024
+#define F_2048		2048
+#define F_visible	4096
+
 /* creates a new tree and returns a node pointing to it don't store this node
    for reference, keep updating	your pointer into the tree with the pointers 
    returned	from other functions.
@@ -147,4 +162,56 @@ Node *node_lower(Node *node);
 /* returns the number of this node in the database 
 */
 int node_no(Node *node); 
+
+/* included from node.h
+
+(most of these are actually macros but can be used as if functions)
+
+   determines if there is a node immedietly next to the specified
+   node in given direction, returns the node if there is 0 otherwise
+
+Node *node_up(node);
+Node *node_down(node);
+Node *node_left(node);
+Node *node_right(node);
+
+    sets all the flags of a node, if it exists
+	Returns: New flags, or 0 if node didn't exist
+
+int node_setflags(node,flags);
+
+	gets all the flags of a node, if it exists
+	Returns: flags, or 0 if node didn't exist
+int node_getflags(node);
+
+	returns the state of the specified flag
+	Returns: 1 if flag is set 0 if not
+int node_getflag(node,flag);
+
+	sets the specified flag if state is 1, turns of the flag if state is 0
+	Returns: new flags
+int node_setflag(node,flag);
+
+	toggles the specified flag, 
+	Returns: 1 if flag were set 0 if flag were turned of
+int node_toggleflag(node,flag);
+
+	gets priority of node
+	Returns: priority, or 0 if node didn't exist
+int node_getpriority(node);
+
+	sets priority of a node, if it exists
+	Returns: New priority, or 0 if node didn't exist
+int node_setpriority(node,priority);
+
+
+	sets and gets the data for a node, does neccesary allocating
+	and freeing as well.
+char *node_setdata(Node *node,char *data);
+
+	Returns: pointer to data
+char *node_getdata(Node *node);
+*/
+
+
 #endif /* TREE_H */

@@ -62,7 +62,7 @@ MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
-EXTRA_DIST = README.html ../ChangeLog hnb.1 ../AUTHORS hnbrc
+EXTRA_DIST = asc2c.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -76,7 +76,7 @@ GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps doc/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps util/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
@@ -88,10 +88,9 @@ TAGS:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
-subdir = doc
+subdir = util
 
 distdir: $(DISTFILES)
-	$(mkinstalldirs) $(distdir)/..
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -113,13 +112,13 @@ installcheck: installcheck-am
 install-exec-am:
 install-exec: install-exec-am
 
-install-data-am: install-data-local
+install-data-am:
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-local
+uninstall-am:
 uninstall: uninstall-am
 all-am: Makefile
 all-redirect: all-am
@@ -157,27 +156,14 @@ maintainer-clean: maintainer-clean-am
 
 .PHONY: tags distdir info-am info dvi-am dvi check check-am \
 installcheck-am installcheck install-exec-am install-exec \
-install-data-local install-data-am install-data install-am install \
-uninstall-local uninstall-am uninstall all-redirect all-am all \
-installdirs mostlyclean-generic distclean-generic clean-generic \
-maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
 
 
-README.html : ../src/hnb ../README
-	../src/hnb -a ../README "export -h README.html"
-
-../ChangeLog : ../src/hnb ../README
-	../src/hnb -a ../README "cd CHANGELOG" "export -a ../ChangeLog"
-
-../AUTHORS : ../src/hnb ../README
-	../src/hnb -a ../README "cd AUTHORS" "export -a ../AUTHORS"
-
-install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(mandir)/man1
-	$(INSTALL_DATA) $(srcdir)/hnb.1 $(DESTDIR)$(mandir)/man1/
-
-uninstall-local:
-	-rm -f $(DESTDIR)$(mandir)/man1/hnb.1
+asc2c:	asc2c.c
+	gcc -o asc2c asc2c.c
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

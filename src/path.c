@@ -26,6 +26,43 @@
 #include "tokenizer.h"
 
 /*
+	converts a best matching node to the path.. (path tokens start
+	as specified)
+*/
+Node *matchpath2node (char *path, Node *start){
+	char *token;
+	Node *node;		/* should perhaps be a relative start node? */
+	
+	node = start;
+	
+	token_seperator = '/';
+	
+	token = tokenize (path);
+	if (!strcmp (token, "/")) {
+		node = node_root(start);
+		token = tokenize ("");
+		if (token[0] != '/') /* this is returned if there was only a "/" in path dunno why*/
+			node = node_match (token, node);
+			if(!node)return 0;
+	} else {
+		node = node_match (token, node);
+		if(!node)return 0;
+	}
+	token = tokenize ("");
+	
+	while (token[0] != 0) {
+		if (node_right (node))
+			node = node_right (node);
+		if (strcmp (token, "/"))/* it is not the lonely / at the end */
+			node = node_match (token, node);
+		if(!node)return 0;			
+		token = tokenize ("");
+	}
+	
+	return (node);
+}
+
+/*
  converts a pathstring to a node in the
  tree, ps, the tokenizer escapes
  double //'s as a single / without
@@ -36,7 +73,7 @@
 
 Node *path2node (char *path, Node *start){
 	char *token;
-	Node *node;					/* should perhaps be a relative start node? */
+	Node *node;		/* should perhaps be a relative start node? */
 	
 	node = start;
 	
@@ -52,17 +89,17 @@ Node *path2node (char *path, Node *start){
 	} else {
 		node = node_exact_match (token, node);
 		if(!node)return 0;
-	};
+	}
 	token = tokenize ("");
 	
 	while (token[0] != 0) {
 		if (node_right (node))
 			node = node_right (node);
-		if (strcmp (token, "/"))	/* it is not the lonely / at the end */
+		if (strcmp (token, "/"))/* it is not the lonely / at the end */
 			node = node_exact_match (token, node);
 		if(!node)return 0;			
 		token = tokenize ("");
-	};
+	}
 	
 	return (node);
 }
@@ -71,7 +108,7 @@ Node *path2node (char *path, Node *start){
 
 Node *path2node_make (char *path, Node *root){
 	char *token;
-	Node *node;					/* should perhaps be a relative start node? */
+	Node *node;			/* should perhaps be a relative start node? */
 	
 	node = root;
 	
@@ -88,12 +125,12 @@ Node *path2node_make (char *path, Node *root){
 			if (tnode == 0) {
 				tnode = node_insert_down (node);
 				node_setdata (tnode, token);
-			};
+			}
 			node = tnode;
-		};
+		}
 	} else {
 		node = node_exact_match (token, node);
-	};
+	}
 	token = tokenize ("");
 	
 	while (token[0] != 0) {
@@ -106,17 +143,17 @@ Node *path2node_make (char *path, Node *root){
 				if (tnode == 0) {
 					tnode = node_insert_down (node);
 					node_setdata (tnode, token);
-				};
+				}
 				node = tnode;
 			}
 		} else {				/* we must create a child */
 			node = node_insert_right (node);
 			if (strcmp (token, "/")) {	/* it is not the lonely / at the end */
 				node_setdata (node, token);
-			};
-		};
+			}
+		}
 		token = tokenize ("");
-	};
+	}
 	
 	/* if there is a node below,.. we should remove it,...   we don't want duplicate entries..*/
 	
@@ -127,7 +164,7 @@ Node *path2node_make (char *path, Node *root){
 
 /*	creates an absolute path like 
 	/aaa/bbb/ccc
-	for the node (ccc) specified
+	for the node (ccc) specified 
 	
 	FIXME: it uses a static char array,.. that is reused..
 	probably not the best way.. but..
@@ -153,7 +190,7 @@ char *node2path (Node *node){
 		pos = strlen (path);
 		path[pos] = '/';
 		path[++pos] = 0;
-	};
+	}
 	
 	path[--pos] = 0;
 	
@@ -181,7 +218,7 @@ char *node2no_path (Node *node){
 		pos = strlen (path);
 		path[pos] = '/';
 		path[++pos] = 0;
-	};
+	}
 	
 	path[--pos] = 0;
 	
@@ -200,7 +237,7 @@ char *node2no_path (Node *node){
 
 Node *no_path2node (char *path, Node *root){
 	char *token;
-	Node *node;					/* should perhaps be a relative start node? */
+	Node *node;		/* should perhaps be a relative start node? */
 	
 	node = root;
 	
@@ -215,14 +252,14 @@ Node *no_path2node (char *path, Node *root){
 			
 			for (; no > 0; no--)
 				node = node_down (node);
-		};
+		}
 		
 	} else {
 		int no = atoi (token);
 		
 		for (; no > 0; no--)
 			node = node_down (node);
-	};
+	}
 	token = tokenize ("");
 	
 	while (token[0] != 0) {
@@ -233,9 +270,9 @@ Node *no_path2node (char *path, Node *root){
 			
 			for (; no > 0; no--)
 				node = node_down (node);
-		};
+		}
 		token = tokenize ("");
-	};
+	}
 	
 	return (node);
 }

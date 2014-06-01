@@ -28,10 +28,14 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "tree.h"
+#include "prefs.h"
 
 #define bufsize 4096
+
+#define indent(a,b)	{int j;for(j=0;j<a;j++)fprintf(file,b);}
 
 static Node *npos;
 	/* pointer within to keep track of where we are, whilst importing */
@@ -52,24 +56,6 @@ void import_node (int level, int flags, unsigned char priority, char *data){
 	node_setflags (npos, flags);
 	node_setpriority (npos, priority);	
 	node_setdata (npos, data);
-}
-
-static void ascii_export_node (FILE * file, int level, int flags, char *data){
-	#define indent(a)	{int j;for(j=0;j<a;j++)fprintf(file,"\t");}
-	
-	indent(level);
-	
-	if (flags & F_todo) {		/* print the flags of the current node */
-		if (flags & F_done)
-			fprintf (file, "[X]");
-		else
-			fprintf (file, "[ ]");
-	} else {				
-		if (data[0] == '[')	/* escape the first char */
-			fprintf (file, "[]");
-	}
-	
-	fprintf (file, "%s\n", data);
 }
 
 Node *ascii_import (Node *node, char *filename){
@@ -123,13 +109,32 @@ Node *ascii_import (Node *node, char *filename){
 	return (node);
 }
 
+static void ascii_export_node (FILE * file, int level, int flags, char *data){
+
+	indent(level,"\t");
+	
+	if (flags & F_todo) {		/* print the flags of the current node */
+		if (flags & F_done)
+			fprintf (file, "[X]");
+		else
+			fprintf (file, "[ ]");
+	} else {				
+		if (data[0] == '[')	/* escape the first char */
+			fprintf (file, "[]");
+	}
+	
+	fprintf (file, "%s\n", data);
+}
+
 void ascii_export (Node *node, char *filename){
 	Node *tnode;
 	int level, flags, startlevel;
 	char *data;
 	FILE *file;
 	
-	file = fopen (filename, "w");
+	if(!strcmp(filename,"-"))file=stdout;
+	else file = fopen (filename, "w");
+
 	startlevel = nodes_left (node);
 	
 	tnode = node;
@@ -143,24 +148,53 @@ void ascii_export (Node *node, char *filename){
 		tnode = node_recurse (tnode);
 	}
 	
-	fclose (file);
+	if(file!=stdout)fclose (file);
 }
 
-char *xml_quote(char *in){
+#define transform(a,b) case a:\
+						{int j=0;char * msg=b;\
+							while(msg[j])\
+								out[outpos++]=msg[j++];\
+							out[outpos]=0;\
+							inpos++;\
+							break;\
+						}\
+
+
+/* converts special chars into entities */
+char *xml_quote(const char *in){
 	static char out[bufsize+30]; /* for added tags'n'tabs */
 	int inpos=0;
-	int outpos=0;	
-
+	int outpos=0;
 	out[0]=0;
-	strcpy(&out[outpos],"<data>");outpos+=6;
-	
+						
 	while(in[inpos]){
 		switch(in[inpos]){
-			case '&':	strcpy(&out[outpos],"&amp;");outpos+=5;inpos++;break;
-			case '<':	strcpy(&out[outpos],"&lt;");outpos+=4;inpos++;break;
-			case '>':	strcpy(&out[outpos],"&gt;");outpos+=4;inpos++;break;
-			case '\'':	strcpy(&out[outpos],"&apos;");outpos+=6;inpos++;break;
-			case '"':	strcpy(&out[outpos],"&quot;");outpos+=6;inpos++;break;
+			transform('&',"&amp;");
+			transform('<',"&lt;");
+			transform('>',"&gt;");			
+			transform('\'',"&apos;");
+			transform('"',"&quot;");
+			default:
+				out[outpos++]=in[inpos++];
+				out[outpos]=0;
+				break;
+		}
+	}	
+	return(out);
+}
+
+char *help_quote(char *in){
+	static char out[bufsize+10];
+	int inpos=0;
+	int outpos=0;
+
+	out[0]=0;
+
+	while(in[inpos]){
+		switch(in[inpos]){
+			transform('\\',"\\\\");
+			transform('"',"\\\"");
 			default:
 				out[outpos++]=in[inpos++];
 				out[outpos]=0;
@@ -168,8 +202,33 @@ char *xml_quote(char *in){
 		}
 	}
 	
-	strcpy(&out[outpos],"</data>");outpos+=7;
 		
+	return(out);
+}
+
+char *html_quote(char *in){
+	static char out[bufsize];
+	int inpos=0;
+	int outpos=0;
+
+	out[0]=0;
+	while(in[inpos]){
+		switch(in[inpos]){
+			transform('&',"&amp;");
+			transform('<',"&lt;");
+			transform('>',"&gt;");
+			transform('ø',"&oslash;");
+			transform('Ø',"&Oslash;");
+			transform('å',"&aring;");
+			transform('Å',"&Aring;");
+			transform('æ',"&aelig;");
+			transform('Æ',"&AElig;");
+			default:
+				out[outpos++]=in[inpos++];
+				out[outpos]=0;
+				break;
+		}
+	}
 	return(out);
 }
 
@@ -178,15 +237,13 @@ static void xml_export_nodes (FILE * file, Node *node, int level){
 	char *data;
 	unsigned char priority;
 	
-	#define indent(a)	{int j;for(j=0;j<a;j++)fprintf(file,"\t");}
-	
 	while(node){
 		flags = node_getflags (node);
 		data = node_getdata (node);
 		priority = node_getpriority(node);
 		
 		fprintf(file,"\n");
-		indent(level);
+		indent(level,"\t");
 		fprintf(file,"<node");  /* the start tag with attributes if any */
 		if(flags&F_todo){
 			fprintf(file," done=");
@@ -195,17 +252,18 @@ static void xml_export_nodes (FILE * file, Node *node, int level){
 			} else {
 				fprintf(file,"\"no\"");
 			}
+		}
 		if(priority!=0)
 			fprintf(file," priority=\"%i\"",priority);		
-		}
+		
 		fprintf(file,">");
 
-		fprintf(file,"%s",xml_quote(data));
+		fprintf(file,"<data>%s</data>",xml_quote(data));
 	
 		if(node_right(node)){
 			xml_export_nodes(file,node_right(node),level+1);
 			fprintf(file,"\n");	
-			indent(level);
+			indent(level,"\t");
 			fprintf(file,"</node>");	
 		} else {
 			fprintf(file,"</node>");			
@@ -215,30 +273,28 @@ static void xml_export_nodes (FILE * file, Node *node, int level){
 	}
 }
 
-void xml_export (Node *node, char *filename){
+void hnb_export (Node *node, char *filename){
 	FILE *file;
 	
-	file = fopen (filename, "w");
+	if(!strcmp(filename,"-"))file=stdout;
+	else file = fopen (filename, "w");
 
 	fprintf(file,"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n\
-\n\
-<!-- this is the native format of hnb (http://hnb.sourceforge.net/) -->\n\
-<!-- generated by hnb %s -->\n\
+<!-- generated by hnb %s (http://hnb.sourceforge.net) -->\n\
 \n\
 <!DOCTYPE tree[\n\
 	<!ELEMENT tree (node*)>\n\
-	<!ELEMENT data (#PCDATA)>\n\
+	<!ELEMENT data (#PCDATA)> <!-- (max 4096 bytes long) -->\n\
 	<!ELEMENT node (data?,node*)>\n\
-	<!ATTLIST node done (yes|no) #IMPLIED priority (1|2|3|4|5|6|7|8|9) #IMPLIED>\n\
-	<!-- maximum line length: 4096 -->\n\
-]>\n\
+	<!ATTLIST node done (yes|no) #IMPLIED priority (1|2|3|4|5|6|7|8|9) #IMPLIED> ]>\n\
 \n\
 <tree>",VERSION);	
 	
 	xml_export_nodes (file, node,0);
 	
 	fprintf(file,"\n</tree>\n");		
-	fclose (file);
+	if(file!=stdout)fclose (file);	
+	
 }
 
 /* returns 1 if the first couple of lines of file contains 'xml' */
@@ -265,141 +321,15 @@ int xml_check(char *filename){
 	return 0;
 }
 
-			/*	single pass xml import filter for hnb's DTD */
-Node *xml_import (Node *node, char *filename){
-	int level, flags=0;	unsigned char priority=0;	
-	char data[bufsize]; /* data to store in tree */
-	int dpos=0;		/* how much data we've got yet */
-	
-	char buf[bufsize+30]; /* line buffer */
-	int cnt=0;				/* position in line buffer */	
-
-	int in_data=0;	/* for remembering where we are */
-	int in_dtd=0;
-	int in_comment=0;
-	
+/*returns 1 if file exists*/
+int file_check(char *filename)
+{
 	FILE *file;
-	
-	file = fopen (filename, "r");
-	if (file == NULL)
-		return (node);
-	
-	npos = node;
-	startlevel = nodes_left (node);
-	level=0;
-	
-	while (fgets (buf, bufsize, file) != NULL) {
-		cnt=0;
-
-		while(buf[cnt]){
-			if(in_dtd){
-				if(in_dtd==1){
-					if(buf[cnt]==']')in_dtd=2;
-				} else if(buf[cnt]=='>')in_dtd=0;
-			} else if(in_comment) {
-				if(!strncmp(&buf[cnt],	"-->",3)){
-					in_comment--;
-					cnt+=2;
-				}				
-			} else switch(buf[cnt]){
-				case '<':
-					if(!strncmp(&buf[cnt+1],			"?xml",4))	{ /* xml version */
-						while( (buf[++cnt] != '>'));
-					} else if(!strncmp(&buf[cnt+1],		"!DO",3))	{ /* DTD starts */
-							in_dtd=1;
-					} else if(!strncmp(&buf[cnt+1],		"!--",3))	{ /* comment start */
-							in_comment++;
-					} else if(!strncmp(&buf[cnt+1],		"tree",4))	{ /* starting tree */
-						while (buf[++cnt] != '>');
-					} else if(!strncmp(&buf[cnt+1],		"/tree",5))	{ /* closing tree */
-						while (buf[++cnt] != '>');
-					} else if(!strncmp(&buf[cnt+1],		"data",4))	{ /* starting data */
-						data[0]=0;
-						dpos=0;
-						in_data=1;
-						while (buf[++cnt] != '>');
-					} else if(!strncmp(&buf[cnt+1],		"/data",5)) { /* closing data */
-						if(data[dpos-1]==' ')
-							data[dpos-1]=0;	/* removing trailing space */	
-						import_node (level-1, flags, priority, data);
-						in_data=0;
-						while (buf[++cnt] != '>');
-					} else if(!strncmp(&buf[cnt+1],		"node",4))	{ /* starting node */
-						level++;						/* level up */
-						flags = priority = 0;			/* reset variables */
-						while (buf[++cnt] != '>') { 	/* fill variables with attributes */ 
-							if(!strncmp(&buf[cnt+1],"done=",5)) { 		
-								if(buf[cnt+7]=='y')
-									flags = flags + F_todo + F_done;
-								else
-									flags = flags + F_todo;
-							} else if(!strncmp(&buf[cnt+1],"priority=",9)) { 
-								priority=(unsigned char)buf[cnt+11]-48;
-							}
-						}
-					} else if(!strncmp(&buf[cnt+1],		"/node",5))	{ /* closing node */
-						level--;			/* level down */
-						while (buf[++cnt] != '>');
-					}
-					break;
-				case '&':{int epos=dpos+1;	/* entity */
-					data[dpos++]=buf[cnt];
-					data[dpos]=0;
-					while(buf[++cnt]!=';')
-						data[epos++]=buf[cnt];
-						data[epos]=0;
-					}
-					if(!strcmp(&data[dpos],"amp")){data[dpos-1]='&';data[dpos]=0;}
-					if(!strcmp(&data[dpos],"lt")){data[dpos-1]='<';data[dpos]=0;}
-					if(!strcmp(&data[dpos],"gt")){data[dpos-1]='>';data[dpos]=0;}
-					if(!strcmp(&data[dpos],"apos")){data[dpos-1]='\'';data[dpos]=0;}
-					if(!strcmp(&data[dpos],"quot")){data[dpos-1]='"';data[dpos]=0;}
-					break;
-				case ' ':					/*white space*/
-				case '\t':
-				case 13:
-				case 10: 
-					if(in_data && data[0] && data[dpos-1]!=' '){
-						data[dpos++]=' ';	/*only add if last char wasn't */
-						data[dpos]=0;
-					}
-					break;
-				default:
-					if(in_data){
-						data[dpos++]=buf[cnt];
-						data[dpos]=0;
-					}
-					break;
-			}
-			cnt++;
-		}
-	}
-		fclose (file);
-	
-	if (node_getflag (node, F_temp))	/* remove temporary node, if tree was empty */
-		node = node_remove (node);
-	return (node);
-}
-
-
-char *html_quote(char *in){
-	static char out[bufsize];
-	int inpos=0;
-	int outpos=0;
-
-	out[0]=0;
-	while(in[inpos]){
-		switch(in[inpos]){
-			case '&':	strcpy(&out[outpos],"&amp;");outpos+=5;inpos++;break;
-			case '<':	strcpy(&out[outpos],"&lt;");outpos+=4;inpos++;break;
-			case '>':	strcpy(&out[outpos],"&gt;");outpos+=4;inpos++;break;
-			default:
-				out[outpos++]=in[inpos++];
-				out[outpos]=0;
-				break;
-		}
-	}
-	return(out);
+	file=fopen(filename,"r");
+	if(file==NULL)
+		return 0;
+	fclose(file);
+	return 1;
 }
 
 void html_export (Node *node, char *filename){
@@ -408,7 +338,9 @@ void html_export (Node *node, char *filename){
 	char *data;
 	FILE *file;
 	
-	file = fopen (filename, "w");
+	if(!strcmp(filename,"-"))file=stdout;
+	else file = fopen (filename, "w");
+
 	startlevel = nodes_left (node);
 	
 	tnode = node;
@@ -426,36 +358,32 @@ void html_export (Node *node, char *filename){
 		data = node_getdata (tnode);
 		
 	if (level > lastlevel) {
-		for (cnt = 0; cnt <= level - 1; cnt++) {
-			fprintf (file, "\t");
-			};
-			fprintf (file, "  <UL>\n");
-		}
+		indent(level-1,"\t");
+		fprintf (file, "  <UL>\n");
+	}
 	
 	if (level < lastlevel) {
 		int level_diff = lastlevel - level;
 	
-	for (; level_diff; level_diff--) {
-		for (cnt = 0; cnt <= level + level_diff - 1; cnt++)
-			fprintf (file, "\t");
-				fprintf (file, "  </UL>\n");
-			}
+		for (; level_diff; level_diff--) {
+			indent(level+level_diff-1,"\t");
+			fprintf (file, "  </UL>\n");
 		}
+	}
 	
-	for (cnt = 0; cnt <= level; cnt++)
-		fprintf (file, "\t");
+	indent(level,"\t");
 	
 	if (data[0] != 0) {
-		fprintf (file, "<LI>%s%s\n",
+		fprintf (file, "<LI>%s%s</LI>\n",
 			 (flags & F_todo ? (flags & F_done ? "[X] " : "[&nbsp] ")
 				  : ""), data);
 		} else {
-			fprintf (file, "<BR><BR>\n");
+			fprintf (file, "<!-- empty line?,.. nahh -->\n");
 		}
 	
-	lastlevel = level;
+		lastlevel = level;
 		tnode = node_recurse (tnode);
-	};
+	}
 	level = 0;
 	
 	{
@@ -465,33 +393,12 @@ void html_export (Node *node, char *filename){
 		for (cnt = 0; cnt <= level + level_diff - 1; cnt++)
 			fprintf (file, "\t");
 			fprintf (file, "  </UL>\n");
-		};
-	}
-	
-	fprintf (file, "</UL>\n</BODY></HTML>");
-	fclose (file);
-}
-
-char *help_quote(char *in){
-	static char out[bufsize+10];
-	int inpos=0;
-	int outpos=0;
-
-	out[0]=0;
-
-	while(in[inpos]){
-		switch(in[inpos]){
-			case '\\':	strcpy(&out[outpos],"\\\\");outpos+=2;inpos++;break;
-			case '"':	strcpy(&out[outpos],"\"");outpos+=2;inpos++;break;
-			default:
-				out[outpos++]=in[inpos++];
-				out[outpos]=0;
-				break;
 		}
 	}
 	
-		
-	return(out);
+	fprintf (file, "</UL>\n</BODY></HTML>");
+	if(file!=stdout)fclose (file);
+	
 }
 
 void help_export (Node *node, char *filename){
@@ -518,7 +425,7 @@ void help_export (Node *node, char *filename){
 	
 	lastlevel = level;
 		tnode = node_recurse (tnode);
-	};
+	}
 	level = 0;
 	
 	fclose (file);
@@ -534,10 +441,357 @@ if (node_getflag (node, F_temp))
 
 return (node);
 }
-
-
-void gxml_export (Node *node, char *filename){
+/* returns the first occurence of one of the needles, or 0 (termination)
+   if not found, return 0*/
+int findchar(char *haystack,char *needles){
+	int j=0;int k;
+	while(haystack[j]){
+		for(k=0;k<strlen(needles)+1;k++)
+		if(haystack[j]==needles[k])
+			return j;
+		j++;
+	}
+	return 0;
 }
-Node *gxml_import (Node *node, char *filename){
-	return node;
+
+static void gxml_export_nodes (FILE * file, Node *node, int level){
+	char tag[bufsize];
+	int flags;
+	char *data;
+
+	static int no_quote=0;
+
+	#define indent(a,b)	{int j;for(j=0;j<a;j++)fprintf(file,b);}
+
+	while(node){
+		int data_start=0;
+		tag[0]=0;
+		flags = node_getflags (node);
+		data = node_getdata (node);
+
+		indent(level,"  ");
+
+		if(data[0]=='<'){  /* calculate start tag, if any */      
+			strcpy(tag,data);
+			data_start=findchar(tag,">")+1;
+			tag[data_start]=0;
+			if(data[1]=='!'||data[1]=='?'){
+				no_quote++;
+			}	
+		}
+
+		if(no_quote)
+			fprintf(file,"%s%s",tag,&data[data_start]);
+		else
+			fprintf(file,"%s%s",tag,xml_quote(&data[data_start]));
+		
+		if(data[0]=='<'){ /* calculate end tag */
+			strcpy(tag,data);
+			tag[findchar(tag," \t>")+1]=0;
+			tag[findchar(tag," \t>")]='>';
+			tag[0]='/';
+		}
+
+		if(node_right(node)){
+			fprintf(file,"\n");	
+			gxml_export_nodes(file,node_right(node),level+1);
+			indent(level,"  ");
+			if(data[0]=='<'){
+				if(data[1]=='!' && data[2]=='-'){
+					fprintf(file," -->\n");
+				} else if(tag[1]!='?' && tag[1]!='!') {
+					fprintf(file,"<%s\n",tag);
+				} else {
+					fprintf(file,"\n");
+				}
+			}
+		} else {
+			if(data[0]=='<' && data[strlen(data)-2]!='/'){ 
+				if(data[1]=='!' && data[2]=='-'){
+					fprintf(file," -->\n");
+				}else if(tag[1]!='?' && tag[1]!='!'){
+					fprintf(file,"<%s\n",tag);
+				}else{
+					fprintf(file,"\n");
+				}
+			} else
+			fprintf(file,"\n");
+		}
+		if(data[0]=='<'&&(data[1]=='!'||data[1]=='?')){
+			no_quote--;
+		}	
+		
+		node=node_down(node);
+	}
+}
+
+void xml_export (Node *node, char *filename){
+	FILE *file;
+	
+	if(!strcmp(filename,"-"))file=stdout;
+	else file = fopen (filename, "w");
+	
+	gxml_export_nodes (file, node,0);
+	
+	if(file!=stdout)fclose (file);
+}
+
+/* joins up tags with data if there is data as the first child
+   of the tag.*/
+Node *gxml_cuddle_nodes(Node *node){
+
+	Node *tnode;
+	char *tdata;
+	char data[bufsize];
+	
+	tnode=node;
+
+	while(tnode){
+		if(node_right(tnode)){
+			tdata=node_getdata(node_right(tnode));
+			if(tdata[0]!='<'){	/* not a child tag */
+				strcpy(data,node_getdata(tnode));
+				strcat(data," ");
+				strcat(data,tdata);
+				node_setdata(tnode,data);
+				node_remove(node_right(tnode));
+			}
+		}
+		tnode=node_recurse(tnode);
+	}
+
+	return(node);
+
+}
+
+/*	removes double whitspaces from data, and translates enities into chars
+*/
+char *xml_unquote(char *in,int generic){
+	static char out[bufsize];
+	int inpos=0;
+	int outpos=0;
+	out[0]=0;
+
+#undef transform
+#define transform(a,b) if(!strcmp(&out[outpos],a)){\
+					out[outpos-1]=b;\
+					out[outpos]=0;\
+				}
+	while(in[inpos]){
+		switch(in[inpos]){
+			case '&': {int epos=outpos+1;
+				out[outpos++]=in[inpos];
+				out[outpos]=0; 
+				while(in[++inpos]!=';' && in[inpos]!=0 && in[inpos]!='<' )
+					out[epos++]=in[inpos];
+				out[epos]=0; 
+				} 
+				transform("amp",'&')
+				else transform("gt",'>')
+				else transform("lt",'<')
+				else transform("quot",'"')
+				else transform("apos",'\'')
+				break;
+			case ' ':/*white space*/
+			case '\t': case 13: case 10: 
+				if(out[0] && out[outpos-1]!=' '){
+					out[outpos++]=' ';
+					out[outpos]=0;
+				}
+				break;
+			default:
+				out[outpos++]=in[inpos];
+				out[outpos]=0;
+		}
+		inpos++;
+	}
+
+	if(generic && out[0]=='<'){	
+		memmove(&out[1],&out[0],bufsize-1);
+		out[0]=' ';
+	}
+	
+return out;
+}
+
+/*	single pass xml parser (c) Øyvind Kolås 2001 */
+/*  if generic==0,.. import hnb DTD else import general XML */
+Node *xml__import (Node *node, char *filename,int generic){
+	char data[bufsize+5];	 /* data to store in tree */
+	int dpos=0;			/* position in data */
+	char buf[bufsize]; /* input buffer */
+	int cnt=0;			/* position in input buffer */	
+
+	int in_comment=0;	/* variables keeping track of */
+	int got_data=0;		/* where in the xml file we are*/
+	int in_tag=0;
+	int in_spec_tag=0;	/* we're in a tag starting with ! or ?*/
+
+	int level=0;		/* keeps track of nesting, for the tree insertion */	
+	int swallow=0;
+	int flags=0;		/* for usage with hnb's dtd only */
+	int priority=0;
+	
+	int line=0;
+	
+	FILE *file;
+
+	file = fopen (filename, "r");
+	if (file == NULL)
+		return (node);
+
+
+	data[0]=0;
+	npos = node;
+	startlevel = nodes_left (node);
+	
+	while (fgets (buf, bufsize, file) != NULL) {	/* fill buffer */
+		line++;
+		cnt=0;
+		if(prefs.debug)fprintf(stderr,"[%4i,%4i,%i]",line,dpos,level);
+		while(buf[cnt]){		/* process buffer */
+			if(dpos>bufsize){
+				fprintf(stderr,"\n\n!!!! input buffer exceeded in line '%i',\
+reducing 50 bytes, data will be loast !!! \n\n",line);
+					dpos-=50;
+					data[dpos]=0;
+			}
+			if(prefs.debug)fprintf(stderr,"%c",buf[cnt]);
+			if (in_tag){					/* <in tag */
+				switch(buf[cnt]){
+									/*ignore white space*/
+					case ' ':case '\t':case 13:case 10:
+						if(data[1]&&data[dpos-1]!=' '){
+							data[dpos++]=' ';
+							data[dpos]=0;
+						}
+						break;
+					case '>':		/*tag ends*/
+						if(data[dpos-1]==' '){
+							data[dpos-1]='>';
+						} else {
+							data[dpos++]=buf[cnt];
+							data[dpos]=0;
+						}
+						if(generic)import_node(level,0,0,data);
+						if(data[strlen(data)-2]!='/')
+							level++;
+						data[dpos=got_data=0]=0;
+						in_tag=0;
+						break;
+					case '=':		
+						if(!generic){	/*get attributes*/
+							if(buf[cnt+2]=='y')flags=F_todo+F_done;
+							else if(buf[cnt+2]=='n')flags=F_todo;
+							else priority=(unsigned char)buf[cnt+2]-48;
+						}
+					case '/':			/* closing time? */
+						if(dpos==1){ 
+							level--;
+							swallow='>';
+							in_tag=0;
+							data[dpos=got_data=0]=0;
+							break;
+						}
+					case '!':
+						if(dpos==1&&buf[cnt+1]=='-'&&buf[cnt+2]=='-'){
+							data[dpos++]=buf[cnt++];
+							data[dpos++]=buf[cnt++];
+							data[dpos++]=buf[cnt];
+							data[dpos]=0;
+							in_tag=0;
+							in_comment=1;
+							if(prefs.debug)fprintf(stderr,"--");
+						}
+					case '?':	/* entity? tag? */
+						if(dpos==1){
+							in_spec_tag=1;
+							in_tag=0;
+							data[dpos++]=buf[cnt];
+							data[dpos]=0;
+							break;
+						}
+					default:
+						data[dpos++]=buf[cnt];
+						data[dpos]=0;
+						break;
+				}
+			} else if (swallow){
+				if(buf[cnt]==swallow){
+					swallow=0;
+				}
+			}else if (in_spec_tag) {					/* <?|! in tag thingum>*/
+				switch(buf[cnt]){
+					case '<':in_spec_tag++;		/* count <>'s*/
+						data[dpos++]=buf[cnt];
+						data[dpos]=0;
+						break;
+					case '>':in_spec_tag--;
+					default:
+						data[dpos++]=buf[cnt];
+						data[dpos]=0;
+						break;
+				}
+				if(!in_spec_tag){
+						if(generic)
+							import_node(level,0,0,data);
+						data[dpos=got_data=0]=0;
+				}
+			} else if(in_comment) {		/* <!-- in comment --> */
+				data[dpos++]=buf[cnt];
+				data[dpos]=0;
+				got_data=1;
+				if(buf[cnt]=='-' && buf[cnt+1]=='-' && buf[cnt+2]=='>'){
+					in_comment=0;
+					data[--dpos]=0;
+					cnt+=2;
+					if(prefs.debug)fprintf(stderr,"->");
+					if(generic && got_data)
+						import_node(level,0,0,data);
+					
+					data[dpos=got_data=0]=0;
+				}
+			} else { 								/* > outside <tags*/
+				if(buf[cnt]=='<'){/*tag start*/
+					if(got_data){
+						import_node (level-(generic?0:3),
+							flags,priority,
+							xml_unquote(data,generic));
+						flags=priority=0;
+					}
+					data[dpos=got_data=0]=0;
+					in_tag=1;
+					dpos=0;
+					data[dpos++]=buf[cnt];
+					data[dpos]=0;
+				} else {
+					data[dpos++]=buf[cnt];
+					data[dpos]=0;
+					if(buf[cnt]!=' '		/* pure whitespace isn't data */
+						&&buf[cnt]!='\t'
+						&&buf[cnt]!=10
+						&&buf[cnt]!=13)	got_data=1;
+				}
+			}
+			cnt++;
+		}
+	}
+	fclose (file);
+	if(level)fprintf(stderr,level>0?"%i tags not closed\n":"%s too many tags closed\n",level);
+	/* remove temporary node, if tree was empty */
+	if (node_getflag (node, F_temp))
+		node = node_remove (node);
+
+	return (node);
+}
+
+Node *hnb_import (Node *node, char *filename){
+	return xml__import (node, filename,0);
+}
+
+Node *xml_import (Node *node, char *filename){
+	Node *tnode;
+	tnode=xml__import (node, filename,1);
+	if(prefs.xml_cuddle)tnode=gxml_cuddle_nodes(tnode);
+	return tnode;
 }

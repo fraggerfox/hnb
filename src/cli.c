@@ -32,7 +32,7 @@
 #include <string.h>
 
 /* strips the ending node off a path */
-char *path_strip(char *path){			/* add double // escaping when node2path gets it */
+char *path_strip(char *path){		/* FIXME add double // escaping when node2path gets it */
 	
 	int j=strlen(path);
 	
@@ -42,7 +42,7 @@ char *path_strip(char *path){			/* add double // escaping when node2path gets it
 			return path;
 		}
 		j--;
-	};
+	}
 	return path;
 }
 
@@ -63,23 +63,21 @@ Node* save(Node *pos, char *params){
 			case FORMAT_ASCII:
 				ascii_export ((Node *) node_root (pos), prefs.db_file);
 				break;
+			case FORMAT_HNB:
+				hnb_export ((Node *) node_root (pos), prefs.db_file);
+				break;
 			case FORMAT_XML:
-				xml_export ((Node *) node_root (pos), prefs.db_file);								
+				xml_export ((Node *) node_root (pos), prefs.db_file); 
 				break;
-			case FORMAT_GXML:
-				gxml_export ((Node *) node_root (pos), prefs.db_file);								
-				break;
-			}				
-
+			} 
 		fprintf (stderr,"wrote stuff to '%s'\n", prefs.db_file);
-	}
-	
+	} 
 	return pos;
 }
 
 Node* export(Node *pos, char *params){
 	
-	int format=0; /* 0 = ascii */
+	int format=FORMAT_HNB; 
 	
 	if(params[0]=='-'){ /* parse options */
 		int j=0;
@@ -89,10 +87,10 @@ Node* export(Node *pos, char *params){
 				format=FORMAT_ASCII;
 			if(params[j]=='h' || params[j]=='H')
 				format=FORMAT_HTML;
-			if(params[j]=='x' || params[j]=='X')
+			if(params[j]=='s' || params[j]=='S')
+				format=FORMAT_HNB;
+			if(params[j]=='x' || params[j]=='X' || params[j]=='g')
 				format=FORMAT_XML;
-			if(params[j]=='g' || params[j]=='G')
-				format=FORMAT_GXML;
 		}
 		params= &params[j];
 		if(params[0]==' ')
@@ -111,11 +109,11 @@ Node* export(Node *pos, char *params){
 		case FORMAT_HTML:
 			html_export (node_top (pos), params);		
 			break;
+		case FORMAT_HNB:
+			hnb_export(node_top(pos),params);
+			break;
 		case FORMAT_XML:
 			xml_export(node_top(pos),params);
-			break;
-		case FORMAT_GXML:
-			gxml_export(node_top(pos),params);
 			break;			
 	}
 	
@@ -124,7 +122,7 @@ Node* export(Node *pos, char *params){
 
 Node* import(Node *pos, char *params){
 	
-	int format=0; /* 0 = ascii */
+	int format=FORMAT_HNB; /* 0 = ascii */
 	
 	if(params[0]=='-'){ /* parse options */
 		int j=0;
@@ -132,10 +130,10 @@ Node* import(Node *pos, char *params){
 			j++;
 			if(params[j]=='a' || params[j]=='A')
 				format=FORMAT_ASCII;
-			if(params[j]=='x' || params[j]=='X')
+			if(params[j]=='s' || params[j]=='S')
+				format=FORMAT_HNB;
+			if(params[j]=='x' || params[j]=='X' || params[j]=='g')
 				format=FORMAT_XML;
-			if(params[j]=='g' || params[j]=='G')
-				format=FORMAT_GXML;
 		}
 		params= &params[j];
 		if(params[0]==' ')
@@ -151,11 +149,11 @@ Node* import(Node *pos, char *params){
 		case FORMAT_ASCII:
 			pos=ascii_import (node_bottom (pos), params);
 			break;
+		case FORMAT_HNB:
+			pos=hnb_import(node_bottom(pos),params);
+			break;
 		case FORMAT_XML:
 			pos=xml_import(node_bottom(pos),params);
-			break;
-		case FORMAT_GXML:
-			pos=gxml_import(node_bottom(pos),params);
 			break;
 	}
 	
@@ -335,7 +333,7 @@ Node* ls(Node *pos, char *params){
 			}
 		}
 		
-		fprintf(stdout,"%s",node_getdata(tnode));
+		fprintf(stderr,"%s",node_getdata(tnode));
 	
 	if(indicate_sub)
 		if(node_right(tnode)){
@@ -355,9 +353,9 @@ Node* ls(Node *pos, char *params){
 			}
 	
 	if(paren){
-		fprintf(stdout,")\n");
+		fprintf(stderr,")\n");
 		} else {
-			fprintf(stdout,"\n");
+			fprintf(stderr,"\n");
 		}
 		
 		if(recurse){
@@ -367,24 +365,22 @@ Node* ls(Node *pos, char *params){
 		} else {
 			tnode=node_down(tnode);		
 		}
-	};
+	}
 	return pos;
 }
 
 typedef struct{
-	char    *name;						/* name of the variable */
-	int*    integer;					/* pointer to integer (set to NULL if string)*/
-	char*   string;						/* pointer to string (set to NULL if integer) */
-	char      *help;					/* helptext for this variable */
+	char    *name;		/* name of the variable */
+	int*    integer;		/* pointer to integer (set to NULL if string)*/
+	char*   string;		/* pointer to string (set to NULL if integer) */
+	char      *help;		/* helptext for this variable */
 } VariableT;
 
 VariableT Variable[]={
-	{"eleet",			&prefs.eleet_mode,		NULL,	"display chars in eLi7e mode"},
-	{"debug",			&prefs.view_debug,		NULL,	"view debug information"},
-	{"format",			&prefs.format,			NULL,	"the format of this file"},
-	{"def_format",		&prefs.def_format,		NULL,	"default format (and format of default db)"},	
-	{"collapse_mode",	&prefs.collapse_mode,	NULL,	"controls how the information is collapsed"},
-	{"help_level",		&prefs.help_level,		NULL,	"amount of help to give"},
+	{"debug",	&prefs.debug,		NULL,"view debug information"},
+	{"format",	&prefs.format,		NULL,"the format of this file"},
+	{"f dn",	&prefs.forced_down,		NULL,"test"},
+	{"def_format",&prefs.def_format,NULL,"default format (and format of default db)"},
 	{NULL,NULL,NULL,NULL}/*termination*/
 };
 
@@ -394,11 +390,17 @@ Node *set(Node *pos,char *params){
 		j=0;
 		while(Variable[j].name!=NULL){
 			if(Variable[j].integer!=NULL)
-				fprintf(stderr,"%s\t[%i]\t- %s\n",Variable[j].name,*Variable[j].integer,Variable[j].help);
+				fprintf(stderr,"%s\t[%i]\t- %s\n",
+					Variable[j].name,
+					*Variable[j].integer,
+					Variable[j].help);
 			else if(Variable[j].string!=NULL)
-				fprintf(stderr,"%s\t[%s]\t- %s\n",Variable[j].name,Variable[j].string,Variable[j].help);
+				fprintf(stderr,"%s\t[%s]\t- %s\n",
+					Variable[j].name,
+					Variable[j].string,
+					Variable[j].help);
 			j++;
-		};
+		}
 		return pos;
 	} else 	{
 		int j=0;
@@ -419,16 +421,26 @@ Node *set(Node *pos,char *params){
 				if(Variable[j].integer!=NULL){
 					if(value[0]){
 						*Variable[j].integer=atoi(value);
-						fprintf(stderr,"%s\t set to [%i]\t\n",Variable[j].name,*Variable[j].integer);
+						fprintf(stderr,"%s\t set to [%i]\t\n",
+							Variable[j].name,
+							*Variable[j].integer);
 					} else {
-						fprintf(stderr,"%s\t[%i]\t- %s\n",Variable[j].name,*Variable[j].integer,Variable[j].help);
+						fprintf(stderr,"%s\t[%i]\t- %s\n",
+							Variable[j].name,
+							*Variable[j].integer,
+							Variable[j].help);
 					}
 				} else if(Variable[j].string!=NULL){
 					if(value[0]){
 						strcpy(Variable[j].string,value);
-						fprintf(stderr,"%s\t set to [%s]\t\n",Variable[j].name,Variable[j].string);
+						fprintf(stderr,"%s\t set to [%s]\t\n",
+							Variable[j].name,
+							Variable[j].string);
 					} else {
-						fprintf(stderr,"%s\t[%s]\t- %s\n",Variable[j].name,Variable[j].string,Variable[j].help);
+						fprintf(stderr,"%s\t[%s]\t- %s\n",
+							Variable[j].name,
+							Variable[j].string,
+							Variable[j].help);
 					}
 				}
 				return pos;
@@ -441,43 +453,60 @@ Node *set(Node *pos,char *params){
 }
 
 typedef struct{
-	char    *name;								/* what the user types */
+	char    *name;			/* what the user types */
 	Node*    (*func) (Node *pos,char *params);	/* function that is the command */
-	char	 *synopsis;							/* usage for the command */
-	char     *help;								/* helptext for this command */
+	char	 *synopsis;			/* usage for the command */
+	char     *help;			/* helptext for this command */
 } CommandT;
 
 CommandT Command[]={
-	{"?"	,help	,"? [command]",
+	{"?"	,	help,
+		"? [command]",
 		"see the entry for 'help'"},
-	{"add"	,add	,"add <string>",
+	{"add"	,add,
+		"add <string>",
 		"adds a node containing string at bottom"},
-	{"addc"	,addc	,"addc <parent> <string>",
+	{"addc"	,addc,
+		"addc <parent> <string>",
 		"creates a child for specified parent node"},
-	{"cd"	,cd		,"cd <path>",
+	{"cd"	,	cd,
+		"cd <path>",
 		"changes location in tree"},	
-	{"echo"	,eCho	,"echo <string>",
+	{"echo"	,eCho,
+		"echo <string>",
 		"echo's the string to screen."},	
-	{"export",export,"export [-ahxg] <file>\n\noptions: a = ascii(default), h = html, x = xml, g = general xml",
+	{"export",	export,
+		"export [-ahsx] <file>\n\noptions: a = ascii, h = html, s = standard(default), x = general xml",
 		"exports the database from the current level and down to a file."},	
-	{"help"	,help	,"help [command]",
+	{"help"	,help,
+		"help [command]",
 		"displays available commands and help for them"},
-	{"import",import,"import [-axg] <file>\n\noptions: a = ascii(default), x = xml, g = general xml",
+	{"import",	import,
+		"import [-asx] <file>\n\noptions: a = ascii, s = standard(default), x = general xml",
 		"imports the specified file, at the current level."},	
-	{"ls"	,ls		,"ls [-Rst] [path]\n\noptions: R = recurse, s = indicate subnodes, t = indicate todo status",
+	{"ls"	,	ls,
+		"ls [-Rst] [path]\n\noptions: R = recurse, s = indicate subnodes, t = indicate todo status",
 		"lists the nodes on this level, or under the node specified\n\t  as a parameter"},
-	{"rm"	,rm		,"rm [-f] path\n\noptions: f = force removal of node with children"	,"removes a node"},
-	{"pwd"	,pwd	,"pwd",
+	{"rm"	,	rm,
+		"rm [-f] path\n\noptions: f = force removal of node with children",
+		"removes a node"},
+	{"pwd"	,pwd,
+		"pwd",
 		"returns the current path"},
-	{"q"	,dummy	,"q",
+	{"q"	,dummy,
+		"q",
 		"see the entry for 'quit'"},
-	{"quit"	,dummy	,"quit",
+	{"quit"	,dummy,
+		"quit",
 		"exits hnb, (no confirmation, no saving)"},
-	{"set"	,set	,"set [<variable> [value]]",
+	{"set"	,set,
+		"set [<variable> [value]]",
 		"sets a variable, without argument shows all variables"},
-	{"save"	,save	,"save",
+	{"save"	,save,
+		"save",
 		"saves the database"},
-	{"sort"	,sort	,"sort",
+	{"sort"	,sort,
+		"sort",
 		"sorts the nodes in this level"},
 	{NULL,NULL,NULL}
 };
@@ -489,9 +518,11 @@ Node *help(Node *pos, char *params){
 		printf("HELP:\n");	  
 	  
 		while(Command[j].name!=NULL){
-			fprintf(stderr,"%s\t- %s\n",Command[j].name,Command[j].help);
+			fprintf(stderr,"%s\t- %s\n",
+				Command[j].name,
+				Command[j].help);
 			j++;
-		};
+		}
 	
 	
 	} else { /* show help for specified command */
@@ -500,11 +531,13 @@ Node *help(Node *pos, char *params){
 		
 		while(Command[j].name!=NULL){
 			if(!strcmp(params,Command[j].name)){
-				fprintf(stderr,"%s\n\n%s\n\n",Command[j].synopsis,Command[j].help);
+				fprintf(stderr,"%s\n\n%s\n\n",
+					Command[j].synopsis,
+					Command[j].help);
 				return pos;
 			}
 			j++;
-		};
+		}
 		fprintf(stderr,"unknown command '%s'\n",params);
 	}
 	
@@ -531,7 +564,7 @@ Node *docmd(Node *pos,char * commandline){
 			return pos;
 		}
 		j++;
-	};
+	}
 	
 	printf("unknown command '%s' type '?' to see allowed commands.\n",command);
 	return pos;
@@ -539,7 +572,8 @@ Node *docmd(Node *pos,char * commandline){
 
 Node *cli(Node *pos){
 	char commandline[4096];
-	fprintf(stderr,"Welcome to %s %s\ntype ? or help for more information\n",PACKAGE, VERSION);
+	fprintf(stderr,"Welcome to %s %s\ntype ? or help for more information\n",
+		PACKAGE, VERSION);
 	
 	do{
 		fprintf(stderr,"%s>",path_strip(node2path(pos)));

@@ -1,5 +1,5 @@
 EXTRA_DIST = configure reconf Makefile.win32
-SUBDIRS = src doc
+SUBDIRS = src doc util
 
 hnb.exe: Makefile.win32
 	make -f Makefile.win32 hnb.exe
@@ -21,3 +21,11 @@ scp: distwin dist
 webupdate: www/*
 	scp1 www/* pippin@hnb.sourceforge.net:www/
 	touch webupdate
+
+util/asc2c:
+	(cd util;make asc2c;)
+
+rc: doc/hnbrc util/asc2c
+	echo -n \">src/hnbrc.inc
+	cat doc/hnbrc | util/asc2c >>src/hnbrc.inc
+	echo \">>src/hnbrc.inc

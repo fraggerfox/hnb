@@ -1,13 +1,14 @@
-EXTRA_DIST = README.html ../ChangeLog hnb.1 ../AUTHORS sgml-sample.xml
+EXTRA_DIST = README.html ../ChangeLog hnb.1 ../AUTHORS hnbrc
+
 
 README.html : ../src/hnb ../README
 	../src/hnb -a ../README "export -h README.html"
 
 ../ChangeLog : ../src/hnb ../README
-	../src/hnb -a ../README "ls -r CHANGELOG">../ChangeLog
+	../src/hnb -a ../README "cd CHANGELOG" "export -a ../ChangeLog"
 
 ../AUTHORS : ../src/hnb ../README
-	../src/hnb -a ../README "ls -r AUTHORS">../AUTHORS
+	../src/hnb -a ../README "cd AUTHORS" "export -a ../AUTHORS"
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(mandir)/man1

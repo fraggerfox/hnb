@@ -8,7 +8,7 @@
 Node * path2node (char *path, Node *root);
 
 
-
+Node * matchpath2node (char *path, Node *root);
 /*
  same as above,.. but forcing and recursive (creates the nodes as we go
  if they don't exist)

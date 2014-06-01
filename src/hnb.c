@@ -49,8 +49,9 @@ Options:\n\
 \t-v  or --version  prints the version\n\
 \t-t  or --tutorial loads the tutorial instead of a database\n\
 \n\
-\t-a  or --ascii    ascii\n\
-\t-x  or --xml      hnb xml\n\
+\t-a  or --ascii    load ascii ascii\n\
+\t       --hnb      load hnb DTD\n\
+\t-x or  --xml      load general xml\n\
 \n\
 \t-rc <file>        specify other config file\n\
 \t-ui <interface>   interface to use, ( curses(default) or cli)\n\
@@ -86,7 +87,7 @@ Node *pos;
 	#define undefined_key(a,c)
 #endif
 
-void app_edit (){
+int app_edit (int restricted){
 	int c;
 	int stop = 0;
 	static int cursor_pos;
@@ -105,7 +106,7 @@ void app_edit (){
 	c = 0;
 	
 	while (!stop) {
-		ui_draw (pos, (char *) cursor_pos, UI_MODE_EDIT);
+		ui_draw (pos, (char *) cursor_pos, restricted?UI_MODE_EDITR:UI_MODE_EDIT);
 		c = ui_input ();
 		switch (c) {
 			case UI_RIGHT:
@@ -146,11 +147,24 @@ void app_edit (){
 			case UI_ENTER:
 				stop = 1;
 				break;
+			case UI_REMOVE:
+				if (cursor_pos < (strlen (input) - 1)){
+					cursor_pos++;
+					if (cursor_pos) {
+						memmove (&input[cursor_pos-1], 
+							&input[cursor_pos],
+							 strlen (input) - cursor_pos);
+						input[strlen(input)-1]=0;
+						cursor_pos--;
+					}
+				}
+				break;
 			case UI_BACKSPACE:
 			case UI_BACKSPACE2:
 			case UI_BACKSPACE3:
 				if (cursor_pos) {
-					memmove (&input[cursor_pos-1], &input[cursor_pos],
+					memmove (&input[cursor_pos-1], 
+						&input[cursor_pos],
 						 strlen (input) - cursor_pos);
 					input[strlen(input)-1]=0;
 					cursor_pos--;
@@ -160,7 +174,7 @@ void app_edit (){
 			case UI_INSERT:
 				break;
 			case UI_SPLIT:
-				input[strlen (input) - 1] = 0;
+				if(!restricted){input[strlen (input) - 1] = 0;
 				node_insert_down(pos);
 				if(input[cursor_pos]==' ')
 					node_setdata(node_down(pos),&input[cursor_pos+1]);
@@ -168,11 +182,13 @@ void app_edit (){
 					node_setdata(node_down(pos),&input[cursor_pos]);
 				input[cursor_pos]=' ';
 				input[cursor_pos+1]=0;		
+				}
 				break;
 			case UI_JOIN:
-				if(node_down(pos)){
+				if(!restricted)if(node_down(pos)){
 					cursor_pos=strlen(input);
-					strcpy(&input[cursor_pos-1],node_getdata(node_down(pos)));
+					strcpy(&input[cursor_pos-1],
+						node_getdata(node_down(pos)));
 					input[strlen(input)]=' ';
 					input[strlen(input)+1]=0;
 					if(node_right(node_down(pos))){
@@ -185,11 +201,18 @@ void app_edit (){
 				break;
 			default:
 				if (c > 31 && c < 255) {	/*  input for buffer */
-					memmove (&input[cursor_pos + 1], &input[cursor_pos],
+					memmove (&input[cursor_pos + 1], 
+						&input[cursor_pos],
 						 strlen (input) - cursor_pos + 1);
 					input[cursor_pos++] = c;
-				} else {		/* undefined keycode */
-					undefined_key ("edit", c);
+				} else if(!restricted){
+					if(prefs.usertag && c < 28 && cursor_pos==0&&input[cursor_pos+1]==0){
+						strcpy(&input[0],prefs.usertags[c]);
+						cursor_pos=strlen(input);				
+						input[cursor_pos++]=' ';
+						input[cursor_pos++]=' ';
+						input[cursor_pos--]=0;
+					} else undefined_key ("edit", c);
 				}
 				break;
 		}
@@ -200,14 +223,17 @@ void app_edit (){
 	pos->data = data_backup;
 	node_setdata (pos, input);
 
+	return(input[0]);
+
 }
 
-/* code duplication warning, this function and it's helping variables is also defined in file.c */
+/* FIXME code duplication warning, this function and it's helping variables is 
+  also defined in file.c */
 
 Node *npos;
 int tstartlevel;
 
-static void	import_node (int level, int flags, unsigned char priority, char *data){
+static void	himport_node (int level, int flags, unsigned char priority, char *data){
 	level = level + tstartlevel;
 	
 	while (nodes_left (npos) > level)
@@ -240,7 +266,7 @@ void node_duplicate_tree (Node *source, Node *target){
 			flags = node_getflags (source);
 			priority = node_getpriority(source);
 			data = node_getdata (source);
-			import_node (level, flags,priority, data);
+			himport_node (level, flags,priority, data);
 			source = node_recurse (source);
 		}
 	}
@@ -283,22 +309,24 @@ void app_mark (){
 				case UI_LEFT:
 					if (node_left (pos)) {
 						Node *tnode = node_insert_down (node_left (pos));
-						
 						node_swap (tnode, pos);
 						node_remove (pos);
 						pos = tnode;
-					};
+					}
 					break;
 				case UI_RIGHT:
-					if (node_up (pos) && (node_up (pos) != marked)) {	/* only if there is a node above */
-						if (node_right (node_up (pos))) {	/* if there is children */
+					if (node_up (pos) && (node_up (pos) != marked)) {
+						if (node_right (node_up (pos))) {	
 							Node *tnode =
-								node_insert_up (node_right (node_up (pos)));
+								node_insert_up (
+									node_right (
+										node_up (pos)));
 							node_swap (tnode, pos);
 							node_remove (pos);
 							pos = tnode;
 						} else {	/* if there are no children */
-							Node *tnode = node_insert_right (node_up (pos));
+							Node *tnode = node_insert_right (
+								node_up (pos));
 							
 							node_swap (tnode, pos);
 							node_remove (pos);
@@ -312,7 +340,8 @@ void app_mark (){
 					stop = 1;
 					break;
 					
-				/* clone?????,.. this is the place to add symlinks,.. but how to implement it in the structure? */
+				/* clone?????,.. this is the place to add symlinks,.. 
+					but how to implement it in the structure? */
 				
 				case UI_ENTER:
 				case 'c':
@@ -330,13 +359,13 @@ void app_mark (){
 				default:
 					undefined_key ("mark", c);
 					break;
-			};
-		};
+			}
+		}
 		stop = 0;
-	};
+	}
 }
 
-int app_quit (){/* queries user wether to quit or not, returns 1 when quitting */
+int app_quit (){	/* returns 1 when user says quit */
 	int c;
 	
 	ui_draw (pos, input, UI_MODE_QUIT);
@@ -348,14 +377,20 @@ int app_quit (){/* queries user wether to quit or not, returns 1 when quitting *
 		case 'X':
 		case UI_QUIT:
 			if (prefs.db_file[0] != (char) 255) {
-						switch(prefs.format){
-							case FORMAT_ASCII:
-								ascii_export ((Node *) node_root (pos), prefs.db_file);
-							break;
-							case FORMAT_XML:
-								xml_export ((Node *) node_root (pos), prefs.db_file);
-							break;
-						}				
+				switch(prefs.format){
+					case FORMAT_ASCII:
+						ascii_export ((Node *) node_root (pos), 
+							prefs.db_file);
+						break;
+					case FORMAT_HNB:
+						hnb_export ((Node *) node_root (pos), 
+							prefs.db_file);
+						break;
+					 case FORMAT_XML:
+						xml_export ((Node *) node_root (pos),
+							prefs.db_file);                       
+						break; 
+				}				
 				ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 				infof (" wrote stuff to '%s'", prefs.db_file);
 			}
@@ -368,17 +403,20 @@ int app_quit (){/* queries user wether to quit or not, returns 1 when quitting *
 		case 's':
 		case 'S':
 			if (prefs.db_file[0] != (char) 255) { /* fixme eehh? */
-						switch(prefs.format){
-							case FORMAT_ASCII:
-								ascii_export ((Node *) node_root (pos), prefs.db_file);
-							break;
-							case FORMAT_XML:
-								xml_export ((Node *) node_root (pos), prefs.db_file);								
-							break;
-							case FORMAT_GXML:
-								gxml_export ((Node *) node_root (pos), prefs.db_file);								
-							break;
-						}
+				switch(prefs.format){
+					case FORMAT_ASCII:
+						ascii_export ((Node *) node_root (pos), 
+							prefs.db_file);
+						break;
+					case FORMAT_HNB:
+						hnb_export ((Node *) node_root (pos), 
+							prefs.db_file);				
+						break;
+					case FORMAT_XML:
+						xml_export ((Node *) node_root (pos),
+							prefs.db_file);	
+						break;
+				}
 				ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 				infof (" wrote stuff to '%s'", prefs.db_file);
 			}
@@ -391,7 +429,7 @@ int app_quit (){/* queries user wether to quit or not, returns 1 when quitting *
 		default:
 			undefined_key ("quit", c);
 			return (0);
-	};
+	}
 }
 
 void app_search (){
@@ -399,7 +437,8 @@ void app_search (){
 	Node *query_start = pos;
 	int query_start_level = nodes_left (pos);
 	
-	ui_draw (pos, (char *) query, UI_MODE_GETSTR);	/* query user for search term */
+	/* query user for search term */
+	ui_draw (pos, (char *) query, UI_MODE_GETSTR);	
 	
 	pos = node_recursive_match ((char *) query, pos);
 	
@@ -408,7 +447,7 @@ void app_search (){
 		ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 		infof (" search for '%s' returned emptyhanded", query);
 		return;
-	};
+	}
 	
 	while (pos != 0 && (nodes_left (pos) >= query_start_level)) {
 		int c;
@@ -441,8 +480,8 @@ void app_search (){
 			default:
 				undefined_key ("search", c);
 				break;
-		};
-	};
+		}
+	}
 	pos = query_start;
 	ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 	info (" end of search");
@@ -458,7 +497,7 @@ void app_remove (){
 			pos = node_remove (pos);
 	} else {
 		pos = node_remove (pos);
-	};
+	}
 }
 
 void app_export (){
@@ -473,11 +512,11 @@ void app_export (){
 				strcpy ((char *) filename, "File to save hnb xml output in:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
-					xml_export (node_top (pos), filename);
+					hnb_export (node_top (pos), filename);
 				stop = 1;
 				break;
 			case '?':
-				strcpy ((char *) filename, "Save help-include file in:");
+				strcpy ((char*) filename, "Save help-include file in:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					help_export (node_top (pos), filename);
@@ -504,7 +543,7 @@ void app_export (){
 				strcpy ((char *) filename, "File to save general xml output in:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
-					gxml_export (node_top (pos), filename);
+					xml_export (node_top (pos), filename);
 				stop = 1;
 				break;
 			case '|':
@@ -529,7 +568,7 @@ void app_export (){
 				break;
 			default:
 				undefined_key ("export", c);
-		};
+		}
 	}
 }
 
@@ -545,7 +584,7 @@ void app_import (){
 				strcpy ((char *) filename, "xml file to import:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
-					pos=xml_import (node_top (pos), filename);
+					pos=hnb_import (node_top (pos), filename);
 				stop = 1;
 				break;
 			case 'a':
@@ -561,7 +600,7 @@ void app_import (){
 				strcpy ((char *) filename, "general xml file to import:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
-					pos=gxml_import (node_top (pos), filename);
+					pos=xml_import (node_top (pos), filename);
 				stop = 1;
 				break;
 			case 'c':
@@ -571,14 +610,99 @@ void app_import (){
 				break;
 			default:
 				undefined_key ("import", c);
-		};
+		}
 	}
+}
+
+void app_prefs (){
+	Node *tpos=pos; /*store orignal pos in original tree*/
+	int stop = 0;
+	pos=load_prefs();
+	
+	while (!stop) {
+		int c;
+		
+		ui_draw (pos, input, UI_MODE_PREFS);
+		c = ui_input ();
+		switch (c) {
+			case UI_QUIT:case UI_ESCAPE:case UI_PREFS:
+				stop = 1;
+				break;
+			case UI_SAVE:
+					save_prefs(pos);
+					tree_free(pos);
+					pos=tpos;
+					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);								
+					infof (" saved config in %s", prefs.rc_file);
+					return;
+				break;
+			case 1:	/* ctrl+A apply */
+					apply_prefs(pos);
+				break;
+			case UI_UP:
+				if (node_up (pos))
+					pos = node_up (pos);
+				break;
+			case UI_DOWN:
+				if (node_down (pos))
+					pos = node_down (pos);
+				break;
+			case UI_LEFT:
+				if (node_left (pos))
+					pos = node_left (pos);
+				break;
+			case UI_RIGHT:
+				if (node_right (pos)){
+					pos = node_right (pos);
+					break;
+				}
+			case UI_ENTER:case ' ':case UI_TOGGLE_DONE:
+				switch node_getpriority(pos){
+					case 1:node_toggleflag(pos,F_done); /* checkbox */
+						break;
+					case 2:{ /* radio button */
+						Node *tnode=node_top(pos);
+						while(tnode){
+							if(node_getpriority(tnode)==2)
+								node_setflag(tnode,F_done,0);
+							tnode=node_down(tnode);
+						}
+						node_setflag(pos,F_done,1);
+						break;
+					}
+					case 3: /* editable item */
+						app_edit(1);
+						break;
+					case 4: /* color */
+						break;
+					case 5: /* shortcut */
+					
+						break;
+					default:
+						if(node_getpriority(node_right(pos))==3){
+							pos=node_right(pos);
+							app_edit(1);
+						}
+						break;
+				}
+				break;
+		}
+	}
+	tree_free(pos);
+	pos=tpos;
 }
 
 int hnb_nodes_down;
 int hnb_nodes_up;
 
 void app_navigate (){
+
+#define chktemp		if (node_getflag(pos,F_temp)){\
+					pos = node_remove (pos);\
+					node_update_parents_todo (pos);\
+				}
+
+
 	int stop = 0;
 	
 	while (!stop) {
@@ -604,16 +728,19 @@ void app_navigate (){
 				break;
 			case UI_SAVE:
 				if (prefs.db_file[0] != (char) 255) {
-						switch(prefs.format){
-							case FORMAT_ASCII:
-								ascii_export ((Node *) node_root (pos), prefs.db_file);
-							break;
-							case FORMAT_XML:
-								xml_export ((Node *) node_root (pos), prefs.db_file);								
-							break;
-							case FORMAT_GXML:
-								gxml_export ((Node *) node_root (pos), prefs.db_file);								
-							break;
+					switch(prefs.format){
+						case FORMAT_ASCII:
+						ascii_export ((Node *) node_root (pos), 
+							prefs.db_file);
+						break;
+						case FORMAT_HNB:
+						hnb_export ((Node *) node_root (pos), 
+							prefs.db_file);
+						break;
+						case FORMAT_XML:
+						xml_export ((Node *) node_root (pos), 
+							prefs.db_file);
+						break;
 						}
 					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 					infof (" wrote stuff to '%s'", prefs.db_file);
@@ -637,30 +764,41 @@ void app_navigate (){
 				break;
 			case UI_LOWER:
 				pos = node_lower(pos);
+				node_update_parents_todo (pos);				
 				break;
 			case UI_RAISE:
 				pos = node_raise(pos);
 				break;
 			case UI_TOP:
-				if (node_getflag(pos,F_temp))
-					pos = node_remove (pos);
+				chktemp;
 				input[0] = 0;
 				pos = node_root (pos);
 				break;
 			case UI_UP:
-				if (node_getflag(pos,F_temp)){
-					pos = node_remove (pos);
-				} else {
+				chktemp else {
 					if (node_up (pos))
 						pos = node_up (pos);
-				};
+					else if(prefs.forced_up){
+						if(node_left(pos))
+							pos=node_left(pos);
+					}
+				}
 				input[0] = 0;			
 				break;
 			case UI_DOWN:
-				if (node_getflag(pos,F_temp))	{
-					pos = node_remove (pos);
-				} else if (node_down (pos))
+				chktemp else if (node_down (pos))
 					pos = node_down (pos);
+					else if(prefs.forced_down){
+						while(node_left(pos)){
+							if(node_down(pos)){
+								pos=node_down(pos);
+								break;
+							}
+							pos=node_left(pos);
+						}
+					if(node_down(pos))
+						pos=node_down(pos);
+					}					
 				input[0] = 0;
 				break;
 			case UI_PDN:
@@ -670,26 +808,23 @@ void app_navigate (){
 					for (n = 0; n < hnb_nodes_down-1; n++)
 						if (node_down (pos))
 							pos = node_down (pos);
-				};
+				}
 				break;
 			case UI_PUP:
-				if (node_getflag(pos,F_temp))	
-					pos = node_remove (pos);
+				chktemp;
 				input[0] = 0;
 				{
 					int n;
 					for (n = 0; n < hnb_nodes_up; n++)
 						if (node_up (pos))
 							pos = node_up (pos);
-				};
+				}
 				break;
 			case UI_LEFT:
-				if (node_getflag(pos,F_temp))	{
-					pos = node_remove (pos);
-				} else {
+				chktemp else {
 					if (node_left (pos))
 						pos = node_left (pos);
-				};
+				}
 				input[0] = 0;
 				break;
 			case UI_RIGHT:
@@ -698,15 +833,14 @@ void app_navigate (){
 				} else {				
 					if(node_getdata(pos)[0]){
 						node_insert_right(pos);
-						
 						if (node_getflag(pos,F_temp))	
 							node_setflag(pos,F_temp,0);
+						if(node_getflag(pos,F_todo))
+							node_setflag(node_right(pos),F_todo,1);	
 						node_setflag(node_right(pos),F_temp,1);
-						
 						pos=node_right(pos);
-						node_update_parents_todo (pos);
 					}
-				};
+				}
 				input[0] = 0;
 				break;
 			case UI_REMOVE:
@@ -720,13 +854,13 @@ void app_navigate (){
 					} else {
 						if(node_getdata(pos)[0]){
 							node_insert_right(pos);
-							
 							if (node_getflag(pos,F_temp))
 								node_setflag(pos,F_temp,0);
+							if(node_getflag(pos,F_todo))
+								node_setflag(node_right(pos),F_todo,1);	
 							node_setflag(node_right(pos),F_temp,1);
 							
 							pos=node_right(pos);
-							node_update_parents_todo (pos);
 						}
 					}
 					input[0] = 0;
@@ -739,15 +873,16 @@ void app_navigate (){
 					pos = node_remove (pos);
 				} else {
 					stop = app_quit ();
-				};
+				}
 				input[0] = 0;
 				break;
 			case UI_ENTER:
 				if (!strlen (input)) {
-					app_edit ();
+					app_edit (0);
 				} else {
 					if (node_getflag(pos,F_temp))	{
 						node_setflag (pos, F_temp,0);
+						node_update_parents_todo (pos);
 					} else {
 						pos = node_insert_down (node_bottom (pos));
 						node_setdata (pos, input);
@@ -755,12 +890,15 @@ void app_navigate (){
 							node_setflag (pos, F_todo,1);
 							node_update_parents_todo (pos);
 						}
-					};
+					}
 					input[0] = 0;
-				};
+				}
+				break;
+			case UI_PREFS:
+				app_prefs();
 				break;
 			case UI_PRIORITY: /* ^P priority */
-				if (node_getflag(pos,F_temp))	{
+				if (node_getflag(pos,F_todo))	{
 					sprintf(input,"Current priority [%i], enter new, press return to keep",node_getpriority(pos));
 					ui_draw (pos, input, UI_MODE_GETSTR);
 					if (strlen (input)){
@@ -781,7 +919,7 @@ void app_navigate (){
 					if (node_getflag(pos,F_temp))	
 						if (node_up (pos))
 							pos = node_remove (pos);
-				};
+				}
 				break;
 			case UI_INSERT:
 				if(node_getflag(pos,F_temp)){
@@ -794,7 +932,8 @@ void app_navigate (){
 					node_update_parents_todo (pos);
 				}
 				
-				app_edit ();
+				if(!app_edit (0))
+					pos=node_remove(pos);
 				input[0]=0;
 				break;
 			
@@ -805,7 +944,7 @@ void app_navigate (){
 				} else
 					undefined_key ("navigation", c);
 				break;
-		};
+		}
 		
 		if (strlen (input)) {
 			if (node_getflag(pos,F_temp))	 {
@@ -823,11 +962,10 @@ void app_navigate (){
 					if (node_left (pos))
 						if (node_getflag(node_left(pos),F_todo))
 							node_setflag (pos, F_todo,1);
-					node_update_parents_todo (pos);
-				};
-			};
-		};
-	};
+				}
+			}
+		}
+	}
 }
 
 int main(int argc,char **argv){
@@ -841,9 +979,10 @@ int main(int argc,char **argv){
 		int format;
 		int ui;
 		int tutorial;
+		int debug;
 		char *dbfile;
 		char *rcfile;
-		char *cmd;
+		char *cmd; 
 	}cmdline={
 		0,   /* version */
 		0,   /* usage */
@@ -851,44 +990,57 @@ int main(int argc,char **argv){
 		-1, /*format to load by default*/
 		1,	 /* ui */
 		0,	 /* tutorial */
+		0,	/*debug*/
 		0,0,0
 	};
 	
 	{/*parse commandline*/
 		for (argno = 1; argno < argc; argno++) {
-			if ( !strcmp(argv[argno], "-h") || !strcmp (argv[argno], "--help")) {
+			if ( !strcmp(argv[argno], "-h") 
+					|| !strcmp (argv[argno], "--help")) {
 				cmdline.usage=1;
-			} else if (!strcmp(argv[argno], "-v") || !strcmp (argv[argno], "--version")) {
+			} else if (!strcmp(argv[argno], "-v") 
+					|| !strcmp (argv[argno], "--version")) {
 				cmdline.version=1;			
-			} else if (!strcmp(argv[argno], "-t") || !strcmp (argv[argno], "--tutorial")) {
+			} else if (!strcmp(argv[argno], "-t") 
+					|| !strcmp (argv[argno], "--tutorial")) {
 				cmdline.tutorial=1;
-			} else if (!strcmp(argv[argno], "-a") || !strcmp (argv[argno], "--ascii")) {
+			} else if (!strcmp(argv[argno], "-a") 
+					|| !strcmp (argv[argno], "--ascii")) {
 				cmdline.format=FORMAT_ASCII;
-			} else if (!strcmp(argv[argno], "-x") || !strcmp (argv[argno], "--xml")) {
+			} else if (!strcmp(argv[argno], "-hnb") 
+					|| !strcmp (argv[argno], "--hnb")) {
+				cmdline.format=FORMAT_HNB;
+			} else if (!strcmp(argv[argno], "-x") || !strcmp(argv[argno], "-gx") 
+					|| !strcmp (argv[argno], "--xml")) {
 				cmdline.format=FORMAT_XML;
-			} else if (!strcmp(argv[argno], "-gx") || !strcmp (argv[argno], "--gxml")) {
-				cmdline.format=FORMAT_GXML;
 			} else if (!strcmp(argv[argno], "-ui") ) {
 				if(!strcmp(argv[++argno],"curses")){
 					cmdline.ui=1;
 				} else if(!strcmp(argv[argno],"cli")){
 					cmdline.ui=2;
-				} else if(!strcmp(argv[argno],"gtk") || !strcmp(argv[argno],"gtk+") ){
+				} else if(!strcmp(argv[argno],"gtk") 
+					|| !strcmp(argv[argno],"gtk+") ){
 					cmdline.ui=3;
 				} else {
-					fprintf (stderr, "unknown interface %s\n", argv[argno]);
+					fprintf (stderr, "unknown interface %s\n", 
+						argv[argno]);
 					exit(1);				
 				}				
 			} else if (!strcmp(argv[argno], "-rc") ) {
 				cmdline.rcfile=argv[++argno];
-			} else if (!strcmp(argv[argno], "-e") ) {  /* actually just a dummy option to specify default db */
+			} else if (!strcmp(argv[argno], "-e") ) {  
+			/* actually just a dummy option to specify default db */
 				if(!cmdline.dbfile){
 					cmdline.def_db=1;      
 					cmdline.dbfile=(char*)-1;
 				}
+			} else if(!strcmp(argv[argno],"-d")){
+				cmdline.debug=1;
 			} else {
 				if(argv[argno][0]=='-'){
-					fprintf (stderr, "unknown option %s\n", argv[argno]);				
+					fprintf (stderr, "unknown option %s\n", 
+						argv[argno]);	
 					exit(1);
 				} else if(!cmdline.dbfile){
 					cmdline.dbfile=argv[argno];
@@ -918,24 +1070,37 @@ int main(int argc,char **argv){
 	if(cmdline.rcfile){
 		strcpy(prefs.rc_file,cmdline.rcfile);
 	}
-	
-	load_prefs();
+
+	{/*rc file sanity*/
+		if(!file_check(prefs.rc_file)){
+			write_def_rc();
+			fprintf(stderr,"created %s for configuration\n",prefs.rc_file);
+			sleep(1);
+		} else if(!xml_check(prefs.rc_file)){
+			fprintf(stderr,"%s does not seem to be a xml file, and thus cannot be a valid config file for hnb, please remove it.\n",prefs.rc_file);
+			exit(1);
+		}		
+	}
+
+	pos=load_prefs();
+	apply_prefs(pos);
+	tree_free(pos);
 	
 	/* ovveride the prefs with commandline specified options*/
+		if(cmdline.debug)
+			prefs.debug=1;
 		if(cmdline.tutorial)
 			prefs.tutorial=1;
 		if(cmdline.format!=-1){ /* format specified */
 			prefs.format=cmdline.format;
-			if(cmdline.def_db){
-				prefs.def_format=cmdline.format;			
-			}
 		} else {
-			prefs.format=prefs.def_format;		
+			prefs.format=FORMAT_HNB;/*prefs.def_format;*/
 		}
-		
-	
+			
 	if(cmdline.def_db){
 		strcpy(prefs.db_file,prefs.default_db_file);
+		if(!file_check(prefs.db_file))
+			prefs.tutorial=1;
 	} else {
 		strcpy(prefs.db_file,cmdline.dbfile);
 	}
@@ -948,26 +1113,23 @@ int main(int argc,char **argv){
 			case FORMAT_ASCII:
 				pos = ascii_import (pos, prefs.db_file);
 				break;
-			case FORMAT_XML:
+			case FORMAT_HNB:
 				if(!xml_check(prefs.db_file)){
 					fprintf(stderr,"%s does not seem to be a xml file, aborting.\n\
 if this is an old ascii hnb file, you can convert it with:\n\
 \thnb -a \"%s\" \"export -x %s\"\n", prefs.db_file, prefs.db_file, prefs.db_file);
 					exit(1);
 				}
-				pos = xml_import (pos, prefs.db_file);			
+				pos = hnb_import (pos, prefs.db_file);			
 				break;
-			case FORMAT_GXML:
-				pos = gxml_import (pos, prefs.db_file);			
+			case FORMAT_XML:
+				pos = xml_import (pos, prefs.db_file);			
 				break;				
 		}
-		
-		if ((!node_right (pos)) && (!node_down (pos)) && (!node_up (pos)))
-			pos = help_import (pos);
 	}
 	
 	if(prefs.tutorial){
-		prefs.db_file[0] = (char) 255; /* disable saving */
+		prefs.db_file[0] = (char) 255; 	/* disable saving */
 		pos = help_import (pos);
 	}
 	
@@ -989,22 +1151,23 @@ if this is an old ascii hnb file, you can convert it with:\n\
 		case 3:
 			printf("gtk+ interface not implemented\n");
 			break;
-	};
+	}
 	
 	tree_free(pos);
+
+	if(cmdline.debug)
+		prefs.debug=0;
 	
-	save_prefs();
-	
-	if(prefs.view_debug){
-		printf("show help: %i\n",cmdline.usage);
-		printf("show version: %i\n",cmdline.version);
-		printf("ui: %i\n",cmdline.ui);
-		printf("tutorial: %i\n",cmdline.tutorial);
-		printf("default db: %i\n",cmdline.def_db);
-		printf("format: %i\n",cmdline.format);
-		printf("dbfile: %i\n",(int)cmdline.dbfile);
-		printf("rcfile: \"%s\"\n",cmdline.rcfile);
-		printf("cmd: \"%s\"\n",cmdline.cmd);
+	if(prefs.debug){
+		fprintf(stderr,"show help: \t%i\n",cmdline.usage);
+		fprintf(stderr,"show version:\t%i\n",cmdline.version);
+		fprintf(stderr,"ui:     \t%i\n",cmdline.ui);
+		fprintf(stderr,"tutorial:\t%i\n",cmdline.tutorial);
+		fprintf(stderr,"default db:\t\"%s\"\n",prefs.default_db_file);
+		fprintf(stderr,"format: \t%i\n",cmdline.format);
+		fprintf(stderr,"dbfile: \t\"%s\"\n",prefs.db_file);
+		fprintf(stderr,"rcfile: \t\"%s\"\n",prefs.rc_file);
+		fprintf(stderr,"cmd1:   \t\"%s\"\n",cmdline.cmd);
 	}
 	
 	return 0;

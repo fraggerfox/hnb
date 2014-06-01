@@ -128,7 +128,7 @@ Node *node_insert_right (Node *node){
 	if ((!node) || (node->right)) {
 		free (new);
 		return 0;
-	};
+	}
 	
 	new->left = node;
 	node->right = new;
@@ -173,8 +173,9 @@ Node *node_remove (Node *node){
 	
 	/* if we're wiping the tree, add a temp node for later reference to the empty tree */
 	if ((node_left (node)==0) && (node_up (node)==0) && (node_down (node)==0)) {
-		node_setflag (node_insert_down (node), F_temp,1 );
-		tdown=node->down;
+		Node *tnode=node_insert_down(node);
+		node_setflag (tnode, F_temp,1 );
+		tdown=node_down(node);
 	}
 	
 	/* remove all children */
@@ -182,18 +183,17 @@ Node *node_remove (Node *node){
 		node_remove (node_right (node));
 	
 	/* close the gap in the linked list */
-	if (tup) tup->down = tdown;
+	if (tup) 	tup->down = tdown;
 	if (tdown)	tdown->up = tup;
 
 	/* if we are a top-most child (parent says we are master of our siblings) */
-	if ((node_left (node) ) && (node_left (node)->right == node)) {
-		/* if we have siblings, tell parent */						/*if (tup) node->left->right = tup;	else*/
-		if (tdown)
+	if ((node_left (node) ) && ( node_right(node_left (node) ) == node)) {
+		if (tdown)	/* rearrange parents pointer */
 			node->left->right = tdown;
-		else { /* else, remove ourselves, and return parent */
+		else { /* if no siblings remove ourselves, and return parent */
 			Node *tnode = node_left (node);
 	
-	node->left->right = 0;
+		node->left->right = 0;
 		node_free (node);
 			return tnode;
 		}
@@ -269,7 +269,7 @@ char *stristr (const char *String, const char *Pattern){
 		/* find start of pattern in string */
 		while (toupper (*start) != toupper (*Pattern)) {
 			start++;
-			slen--;				/* if pattern longer than string */
+			slen--;		/* if pattern longer than string */
 			if (slen < plen)
 				return (NULL);
 		}
@@ -277,7 +277,7 @@ char *stristr (const char *String, const char *Pattern){
 		pptr = (char *) Pattern;
 		while (toupper (*sptr) == toupper (*pptr)) {
 			sptr++;
-			pptr++;				/* if end of pattern then pattern was found */
+			pptr++;	/* if end of pattern then pattern was found */
 			if ('\0' == *pptr)
 				return (start);
 		}
@@ -285,7 +285,7 @@ char *stristr (const char *String, const char *Pattern){
 	return (NULL);
 }
 
-/*returns the next recursive node having match as a substring, or 0 if not found.
+/*returns the next recursive node having match as a substring, or 0 if not found
   starting from where.
 */
 
@@ -298,7 +298,7 @@ Node *node_recursive_match (char *match, Node *where){
 		if (stristr (where->data, match) != NULL)	/* case insensitive */
 			return where;
 		where = node_recurse (where);
-	};
+	}
 	
 	return 0;
 }
@@ -355,29 +355,35 @@ void node_swap (Node *nodeA, Node *nodeB){
 	while (tnode) {
 		tnode->left = nodeB;
 		tnode = node_down (tnode);
-	};
-
+	}
 }
 
 void node_update_parents_todo (Node *pos){
 	Node *tnode = node_top (pos);
 	
-	if (node_left (pos) && node_getflag (node_left (pos), F_todo)) {
-		int all_done = 1;
-	
-		while (tnode) {
-			if ((node_getflag (tnode , F_todo))	&& !(node_getflag (tnode, F_done)))
-				all_done = 0;
-			tnode = node_down (tnode);
-		};
-	
-		tnode = node_left (pos);
-		if (all_done)
-			node_setflag(tnode,F_done,1);
-		else
-			node_setflag(tnode,F_done,0);		
+	if (node_left (pos) && node_getflag (node_left (pos), F_todo)
+			&& !node_getflag (pos,F_temp)) {
 
-		node_update_parents_todo (tnode);
+		int status = -1;
+
+		while (tnode && status) {
+			if (node_getflag (tnode , F_todo)){
+				status = 1;
+				if ( !node_getflag (tnode, F_done) )
+					status = 0;
+			}
+			tnode = node_down (tnode);
+		}
+
+		tnode = node_left (pos);
+
+		if (status == 1){		/* all todo nodes were checked */
+			node_setflag(tnode,F_done,1);
+			node_update_parents_todo (tnode);						
+		} else if (status == 0){	/* one or more todo node were unchecked*/
+			node_setflag(tnode,F_done,0);
+			node_update_parents_todo (tnode);
+		}
 	}
 }
 
@@ -390,17 +396,17 @@ int cmp_descdata(Node *a,Node *b){
 }
 
 int cmp_todo(Node *a,Node *b){
-	if( !a->flags && !b->flags )		/* accessing data directly for speed, naughty*/
+	if( !a->flags && !b->flags )	/* accessing data directly for speed, */
 		return(strcmp(a->data,b->data));	
 
-	if((a->flags&F_todo) <(b->flags&F_todo))return 1; /* first place all todos at top */
+	if((a->flags&F_todo) <(b->flags&F_todo))return 1; /*  all todos at top */
 	if((a->flags&F_todo) >(b->flags&F_todo))return -1;	
 	if((a->flags&F_todo)==(b->flags&F_todo)){
 		if(a->flags&F_todo){
-			if((a->flags&F_done) >(b->flags&F_done))return 1;	/* not done at top */
+			if((a->flags&F_done) >(b->flags&F_done))return 1;/* not done*/
 			if((a->flags&F_done) <(b->flags&F_done))return -1; 
 			
-			if((a->priority) <(b->priority))return 1;	/* highest priority at top */
+			if((a->priority) <(b->priority))return 1;	/*  priority  */
 			if((a->priority) >(b->priority))return -1;	
 			
 		}
@@ -433,9 +439,9 @@ Node *quicksort(Node *Top, Node *Bottom, int (*cmp) (Node *a, Node *b) )
 			if( part != Bottom )
 				node_swap( part, Bottom);
 			
-			quicksort( Top, node_up(part),cmp );	 /* Sort the upper partition */
+			quicksort( Top, node_up(part),cmp ); /* Sort  upper part */
 			if(node_down(part))
-				quicksort( node_down(part), Bottom,cmp ); /* sort the lower partition */
+				quicksort( node_down(part), Bottom,cmp ); /* sort lower part */
 		}
 	}
 	return(Top);
@@ -461,7 +467,7 @@ int node_calc_complete (Node *node){
 	if (node_getflag (node, F_done))
 		return 1000;			/* this node is done */
 	if (!node_right (node))
-		return 0;				/* no undone children,.. completly undone */
+		return 0;			/* no undone children,.. completly undone */
 	
 	tnode = node_right (node);
 	while (tnode) {
@@ -469,20 +475,21 @@ int node_calc_complete (Node *node){
 			parts++;
 		tnode = node_down (tnode);
 	}
-	
+      if(!parts)
+		return 0;			/* division by zero is fun */
 	tnode = node_right (node);
 	
 	while (tnode) {
 		if (node_getflag (tnode, F_todo)) {
 			if (node_getflag (tnode, F_done)) {
-				count += 1000 / parts;
+				count += 1000;
 			} else {
-				count += node_calc_complete (tnode) / parts;
-			};
+				count += node_calc_complete (tnode);
+			}
 		}
 		tnode = node_down (tnode);
 	}
-	return count;
+	return count / parts;
 }
 
 Node *node_lower(Node *node){
@@ -494,7 +501,7 @@ Node *node_lower(Node *node){
 		tnode = node_insert_down (node_left (node));
 			node_swap (tnode, bnode);
 			bnode=node_remove (bnode);
-		};
+		}
 		tnode = node_insert_down (node_left (node));
 		node_swap (tnode, bnode);
 		node_remove (bnode);
@@ -522,8 +529,8 @@ Node *node_raise(Node *node){
 			tnode =	node_insert_down (tnode);
 			node_swap (node_down (node), tnode);
 			node_remove (node_down (node));
-		};
+		}
 		return first_moved;
-	};
+	}
 	return node;
 }

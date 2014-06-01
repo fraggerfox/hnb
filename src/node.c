@@ -1,3 +1,4 @@
+
 /*
  * node.c -- definition of hnb's nodes
  *
@@ -23,15 +24,15 @@
 #include <stdlib.h>
 #include "node.h"
 
-void node_setdata (Node *node, char *data){
+char *node_setdata (Node *node, char *data){
 	free (node->data);
 	node->data = (char *) strdup (data);
+	return(node->data);
 }
 
 char *node_getdata (Node *node){
-	if (node == NULL)
-		return ("");
-	return node->data;
+	if (node)return node->data;
+	return ("");
 }
 
 Node *node_new (){
@@ -52,29 +53,3 @@ void node_free (Node *node){
 	free (node);
 }
 
-unsigned char node_getpriority(Node *node){
-	return(node->priority);
-}
-void node_setpriority(Node *node, unsigned char priority){
-	node->priority=priority;
-}
-
-void node_setflag(Node *node,int flag,int state){
-	if(state){
-		if (!node_getflag(node,flag))
-			node_setflags(node,node_getflags(node)+flag);
-	} else {
-		if (node_getflag(node,flag))
-			node_setflags(node,node_getflags(node)-flag);
-	}
-}
-
-int node_toggleflag(Node *node, int flag){
-	if (node_getflag(node,flag)) {
-		node_setflag(node,flag,0);
-		return 0;
-	} else {
-		node_setflag(node,flag,1);
-		return 1;		
-	}
-}
