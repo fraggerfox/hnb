@@ -1,14 +1,28 @@
+/**
+  @file 
+  
+  definition of node
+  
+  Datastructure for the nodes in the tree is defined in this file,
+*/
+
 #ifndef NODE_H
 #define NODE_H
 
-/* Structure of a node,.. don't acces them directly use the other functions
-   in this file to acces them.
+/** 
+  Datastructure for the nodes in the tree is defined in this file.
+
+ Structure of a node,.. don't acces them directly use the other functions
+ in this file to acces them.
 */
+
 typedef struct Node {
-	struct Node *up,*down,*left,*right;
+	struct Node *up, *down, *left, *right;
 	char *data;
 	unsigned int flags;
 	unsigned char priority;
+ 	int percent_done;	
+	int size;
 } Node;
 
 /* convenience macro for the rest of this header*/
@@ -29,7 +43,6 @@ typedef struct Node {
 	Returns: New flags, or 0 if node didn't exist
 */
 #define node_setflags(node,tflags)	if_node(node,node->flags=tflags)
-
 
 /* gets all the flags of a node, if it exists
 	Returns: flags, or 0 if node didn't exist
@@ -64,15 +77,16 @@ typedef struct Node {
 #define node_toggleflag(node,flag) (   node_setflags(node, node->flags^flag )   &flag)
 
 
-/*sets and gets the data for a node, does neccesary allocating
-  and freeing as well.
+/** sets and gets the data for a node, does neccesary allocating
+    
+	and freeing as well.
 */
-char *node_setdata(Node *node,char *data);
+char *node_setdata (Node *node, const char *data);
 
-/*
-	Returns: pointer to data
+/**
+	@returns pointer to data
 */
-char *node_getdata(Node *node);
+char *node_getdata (Node *node);
 
 
 /* getting of node priority
@@ -86,14 +100,26 @@ char *node_getdata(Node *node);
 #define node_setpriority(node,new_priority)	(node?(node->priority=new_priority):0)
 
 
+/* getting of node priority
+	Returns: priority, or 0 if node didn't exist
+*/
+#define node_getpercent_done(node)		(node?(node->percent_done):-1)
+
+/* sets priority of a node, if it exists
+	Returns: New priority, or 0 if node didn't exist
+*/
+#define node_setpercent_done(node,new_percent_done)	(node?(node->percent_done=new_percent_done):-1)
+
+#define node_getsize(node)		(node?(node->size):-1)
+#define node_setsize(node,new_size)	(node?(node->size=new_size):-1)
 /* allocates a new node, seta all data to zero
 
 	Returns: new node
 */
-Node *node_new();
+Node *node_new ();
 
 /* frees a node an it's related variables
 */
-void node_free(Node *node);
+void node_free (Node *node);
 
 #endif /* NODE_H */

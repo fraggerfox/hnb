@@ -44,8 +44,21 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
-	1.8.1
+	1.9.3 jan 2003
+		stabilizing of the code
+		ability to use default terminal colors, (patch from NN)
+	1.9.1 oct 2002
+		option to remember current position in hnb file when saving/loading
+		cleaned up most of the helpsystem code
+		further code seperation
+	1.9.0 oct 2002
 		fixed the movement behaviour when going to the parent node,.. the screen jumped too much
+		seperated the various export and load filters into own files
+		used my new libcli for the cli code, and as "glue" in some code spots
+		reverted to a manual makefile instead of autoconf/automake
+		improvements to dynamic keybindings, multiple keybindings for each action, all keybindings in various context got their own choice in the preferences.
+		The first of the actual keybindings shown as help
+		added some more bindings for the node editor, (skip word and bskip word, hooks for even more)
 	1.8 30 aug 2001
 		changed the default window scrolling behaviour to move the cursorbar instead of the whole screen when possible
 		integrated libxml support changes from orang@imonk.com
@@ -167,7 +180,6 @@ CHANGELOG
 		added resize functionality
 		pageup/pagedown
 		changes to help/confirming interface
-	1.8.1
 AUTHORS
 	hnb authors
 	

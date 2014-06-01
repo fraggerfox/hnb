@@ -5,15 +5,16 @@
  double //'s as a single / without splitting the things at the sides
  a /// means,.. a slash at the end  of token, and new token coming
 */
-Node * path2node (char *path, Node *root);
+Node *path2node (char *path, Node *root);
 
 
-Node * matchpath2node (char *path, Node *root);
+Node *matchpath2node (char *path, Node *root);
+
 /*
  same as above,.. but forcing and recursive (creates the nodes as we go
  if they don't exist)
 */
-Node * path2node_make (char *path, Node *root);
+Node *path2node_make (char *path, Node *root);
 
 /*	create an absolute path like 
 	/aaa/bbb/ccc
@@ -22,7 +23,7 @@ Node * path2node_make (char *path, Node *root);
 	FIXME: it uses a static char array,.. that is reused..
 	probably not the best way.. but..
 */
-char * node2path (Node * node);
+char *node2path (Node *node);
 
 
 /* numeric paths...
@@ -37,7 +38,7 @@ char * node2path (Node * node);
 		2 go down two
 		/ go right
 */
-Node * no_path2node (char *path, Node *root);
-char * node2no_path (Node * node, Node *root);
+Node *no_path2node (char *path, Node *root);
+char *node2no_path (Node *node);
 
-#endif /*PATH_H*/
+#endif /*PATH_H */

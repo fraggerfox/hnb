@@ -1,71 +1,28 @@
 #ifndef PREFS_H
 #define PREFS_H
 
-#define FORMAT_HNB		0
-#define FORMAT_ASCII	1
-#define FORMAT_XML		2
-#define FORMAT_HTML		3
-#define FORMAT_LIBXML	4
+enum {
+	format_hnb = 0,
+	format_ascii,
+	format_xml,
+	format_sxml,
+	format_html,
+	format_slides,
+	format_help,
+	format_terminator
+};
 
-#define RC_REV 6
+extern const char *format_name[format_terminator];
 
-typedef struct{
-	int 
-		HELP,	
-		CANCEL,
-		CONFIRM,		
-		UP,
-		DOWN,
-		LEFT,
-		RIGHT,
-		TOP,
-		BOTTOM,
-		SKIP_UP,
-		SKIP_DOWN,
-		
-		TOGGLE_VIEWMODE,
-		FIND,
-		PREFS,		
-				
-		GRAB,
-		SORT,
-		INSERT,	
-		REMOVE,	
-		SET_PRIORITY,		
-		TOGGLE_TODO,
-		TOGGLE_DONE,
-		CHILDIFY,
-		PARENTIFY,
-		
-		SAVE,
-		EXPORT,
-		IMPORT,
-		QUIT,
-
-		SPLIT,
-		JOIN,
-
-		ESCAPE,
-		BACKSPACE,
-		DEBUG;
-}TKEY;
-#ifdef PREFS_C
-	TKEY KEY={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-	-1,-1,-1,-1,-1};
-#else
-	extern TKEY KEY;
-#endif
+#define RC_REV 8
 
 /* global struct used to remeber user preferences
 */
-typedef struct{
+typedef struct {
 	int def_help_level;
 	int help_level;
 	int forced_up;
 	int forced_down;
-	int usertag;
-	char usertags[28][40];
 	int def_collapse_mode;
 	int collapse_mode;
 	int def_format;
@@ -73,54 +30,29 @@ typedef struct{
 	int xml_cuddle;
 	int xml_highlight;
 	int tutorial;
-	int eleet_mode;
 	int debug;
 	char rc_file[100];
 	char db_file[100];
 	char default_db_file[100];
-	int fg_menuitm;
-	int bg_menuitm;
-	int bold_menuitm;
-	int fg_menutxt;
-	int bg_menutxt;
-	int bold_menutxt;
-	int bg;
-	int fg_node;
-	int bg_node;
-	int bold_node;
-	int fg_nodec;
-	int bg_nodec;
-	int bold_nodec;
-	int fg_bullet;
-	int bg_bullet;
-	int fg_priority;
-	int bg_priority;
-	int bold_priority;
-	int bold_bullet;
-	int rc_rev;  /* to keep track of rc revisions */
-	int mouse;	/* allow mouse navigation */
+	char query[100];
 	int indent;
 	int bulletmode;
 	int showpercent;
 	int keepwhitespace;
 	int fixedfocus;
-}Tprefs;
+	int savepos;
+} Tprefs;
 
 extern Tprefs prefs;
 
 /*	initializes preferences with default values
 */
-void init_prefs();
+void init_prefs ();
 
 /*  load preferences, from prefs.rc_file
 */
-Node *load_prefs();
+void load_prefs (char *prefsfile);
 
-/*  saves preferences, to prefs.rc_file
-*/
-void save_prefs(Node *node);
+void write_default_prefs ();
 
-void apply_prefs(Node *node);
-
-void write_def_rc();
 #endif /* PREFS_H */

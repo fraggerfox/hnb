@@ -18,4 +18,4 @@ extern char token_seperator;
 	(c) Øyvind Kolås 2000
 */
 
-char *tokenize(char *haystack);
+char *tokenize (char *haystack);
