@@ -10,7 +10,7 @@ Node *node_root(Node *node);
 						   to the root of the tree
 						*/
 
-void tree_free();		/* frees a whole tree from memory, by reference to one of it's
+void tree_free(Node *node);	/* frees a whole tree from memory, by reference to one of it's
 							nodes
 						*/
 
@@ -59,6 +59,11 @@ int node_calc_complete(Node *node); /* returns an integer between 0 and 1000 acc
 Node * node_recurse (Node * node); /* returns the next node, doing a recursive traversal 
 									of the tree
 									*/
+
+Node * node_backrecurse (Node * node); /* returns the previous node, doing a recursive traversal 
+									of the tree
+									*/
+
 
 Node * node_recursive_match (char *match, Node * where);
 								/* returns the next node with a case insensitive 

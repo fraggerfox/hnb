@@ -14,6 +14,8 @@ int nodes_above;
 int middle_line;
 int nodes_below;
 
+int view_debug=0;
+
 #ifdef MOUSE
 #define mouse_maxnodes 100
 
@@ -51,40 +53,109 @@ void ui_init ()
 	nodes_below = LINES - middle_line;
 }
 
-/*
-Node *up(Node *node){
-	if(node_up(node))return(node_up(node));
-	else return(0);
-}
+#define COLLAPSE_NONE 0
+#define COLLAPSE_ALL 1
+#define COLLAPSE_PATH 2
+#define COLLAPSE_ALL_BUT_CHILD 3
+#define COLLAPSE_END 3
+#define COLLAPSE_ONLY_SIBLINGS 4
 
-Node *down(Node *node){
-	if(node_down(node))return(node_down(node));
-	else return(0);
-}
-*/
 
-Node *up (Node *node)
+int collapse_mode=COLLAPSE_ALL;
+
+
+Node *up (Node *sel,Node *node)
 {
-	if (node_up (node))
-		return (node_up (node));
-	else
-		return (node_left (node));
+	switch(collapse_mode){
+		case COLLAPSE_ALL:
+		case COLLAPSE_ALL_BUT_CHILD:
+			if (node_up (node))
+				return (node_up (node));
+			else
+				return (node_left (node));
+			break;
+		case COLLAPSE_NONE:
+			return node_backrecurse(node);
+			break;
+		case COLLAPSE_ONLY_SIBLINGS:
+			return node_up(node);
+			break;
+		case COLLAPSE_PATH:
+			if(nodes_left(node)==nodes_left(sel))
+				if(node_up(node))return(node_up(node));
+			return(node_left(node));
+			break;			
+	}
+	return 0;
 }
 
-Node *down (Node *node)
+Node *down (Node *sel,Node *node)
 {
-	if (node_down (node)) {
-		return (node_down (node));
-	} else {
-		while (node != 0) {
-			node = node_left (node);
-			if (node_down (node))
+	switch(collapse_mode){
+		case COLLAPSE_ALL_BUT_CHILD:
+			if((node==sel) && (node_right(node)))
+				return node_right(node); 
+		case COLLAPSE_ALL:
+			if (node_down (node)) {
 				return (node_down (node));
-		};
-
+			} else {
+				while (node != 0) {
+					node = node_left (node);
+					if (node_down (node))
+						return (node_down (node));
+				};
+			}
+			break;
+		case COLLAPSE_NONE:
+			return node_recurse(node);
+			break;
+		case COLLAPSE_ONLY_SIBLINGS:
+			return node_down(node);
+			break;
+		case COLLAPSE_PATH:
+			return node_down(node);
+			break;			
 	}
 	return (0);
 }
+
+
+/* this function draws a line at the top of the screen with various debug info,.. for tracing errors in the tree
+   code, they seem to turn up every once in a while,.. but more and more seldomly
+*/
+
+void debug(Node *node,int mode)
+{
+	char buf[10];
+	
+	move(0,0);
+	attron(A_REVERSE);addstr("id");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node&0xFFFF);addstr(buf);
+	attron(A_REVERSE);addstr("up");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->up&0xFFFF);addstr(buf);
+	attron(A_REVERSE);addstr("dn");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->down&0xFFFF);addstr(buf);			
+	attron(A_REVERSE);addstr("<-");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->left&0xFFFF);addstr(buf);
+	attron(A_REVERSE);addstr("->");attroff(A_REVERSE);sprintf(buf," %.4X ",(int)node->right&0xFFFF);addstr(buf);			
+	attron(A_REVERSE);addstr("lvl");attroff(A_REVERSE);sprintf(buf," %.2i ",nodes_left(node));addstr(buf);			
+	attron(A_REVERSE);addstr("no");attroff(A_REVERSE);sprintf(buf," %.2i ",nodes_up(node));addstr(buf);			
+	attron(A_REVERSE);addstr("flags");attroff(A_REVERSE);sprintf(buf," %i%i%i%i%i ",(node_getflags(node)>>4)&1,(node_getflags(node)>>3)&1,(node_getflags(node)>>2)&1,(node_getflags(node)>>1)&1,(node_getflags(node)>>0)&1);addstr(buf);		
+	attron(A_REVERSE);addstr("mode");attroff(A_REVERSE);sprintf(buf," %.2i ",mode);addstr(buf);			
+}
+
+int eleet_mode=0;
+
+char eleet(char in)
+{
+	char seta[]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ(),0";
+	char setb[]="aBCDeFGHiJKLMNoPQR$7uVWXyZ48(D3F6HiJKLMNoPQR57uVWXyZ[];o";
+	int j;
+	for(j=0;j<strlen(seta);j++){
+		if(in==seta[j]){		
+			in=setb[j];
+			return in;
+		}
+	}
+	return(in);
+}
+
 
 /*
 	help_draw is called with an mode, and an message that is used in some modes, see ui.h for the modes
@@ -93,6 +164,7 @@ Node *down (Node *node)
 	clr - clears the line
 	clrc('a') - fills line with the character 'a'
 	i("key","text") makes an entry at position specified by line and pos there are 6 positions per line
+	rl("string") draws a string in reverse, spanning the whole line with the reverse box.
 	mdc() clears all mouse mappings
 	md(KEY_CODE) mouse define a keycode for the coords
 */
@@ -129,20 +201,16 @@ void help_draw (int mode, char *message)
 
 #define clrc(a) {int c;move(line,0);for(c=0;c<COLS;c++)addch(a);};
 #define clr	clrc(' ')
+#define rl(a) attrset(A_REVERSE);clr;move(line,0);addstr(a);attrset(A_NORMAL);
 #define i(KEY,TEXT) {move(line, pos * (COLS/6)  );attrset(A_REVERSE);addstr(KEY);attrset(A_NORMAL);addstr(TEXT);pos++;}
 
 	switch (mode) {
 		case UI_MODE_CONFIRM:mdc();m_nwarp;
+			line = LINES - 2;
+			rl(message);
 			line = LINES - 1;
 			pos = 0;
 			clr;
-			i (message, "");
-			line = LINES - 2;
-			pos = 0;
-			clr;
-			i ("", "");
-			i ("", "");
-			i ("", "");
 			i (" Y ", " yes");md('y');
 			i (" other", " no");md('n');
 			break;
@@ -166,53 +234,52 @@ void help_draw (int mode, char *message)
 			i ("hnb", VERSION);mdc();
 			i ("", "");
 			i ("", "");
-			i ("", "");
-			i ("^E", " export");md(UI_EXPORT);
-			i ("^L", " import");md(UI_IMPORT);
-
+			i ("^F", " search");md(UI_FIND);
+			i ("^O", " sort");md(UI_SORT);
+			i ("^V", " viewmode");md(22);
 			line = LINES - 4;
 			pos = 0;
 			clr;
 			i ("(c)", " Øyvind Kolås 2000/2001");
 			i ("", "");
 			i ("", "");
-			i ("^F", " search");md(UI_FIND);
-			i ("^B", " parentify");md(UI_LOWER);
-			i ("^N", " childify");md(UI_RAISE);
+			i ("", "");
+			i ("", "");
+			i ("^L", " import");md(UI_IMPORT);			
 			line = LINES - 3;
 			pos = 0;
 			clr;
+			
 			i ("", "");
 			i ("", "");
-			i ("", "");
-			i ("^O", " sort");md(UI_SORT);
-			i ("^T", " todo toggle");md(UI_TOGGLE_TODO);
-			i ("^D", " done toggle");md(UI_TOGGLE_DONE);
-
-			line = LINES - 2;
-			pos = 0;
-			clr;
-
-			i ("  F1  ", " help");md(UI_HELP);
-			i ("arrows", " move");
-			i ("ins", " insert");md(UI_INSERT);
-			i ("^X", " quit");md(UI_QUIT);
-			i ("abc..", " match");
-			line = LINES - 1;
-			pos = 0;
-			clr;
-
-			i ("return", " edit");md(UI_ENTER);
-			i (" ^S ", " save");md(UI_SAVE);
-			i ("del", " remove");md(UI_REMOVE);
-
 #ifndef WIN32
 			i ("^space", " grab");md(UI_MARK);
 #endif
 #ifdef WIN32
 			i (" ^G ", " grab");
 #endif
-			i (" TAB ", " match completion");md(UI_COMPLETE);
+			
+			i ("^T", " todo toggle");md(UI_TOGGLE_TODO);
+			i ("^D", " done toggle");md(UI_TOGGLE_DONE);
+			i ("^E", " export");md(UI_EXPORT);
+			line = LINES - 2;
+			pos = 0;
+			clr;
+			i ("", "");
+			i ("abc..", " match");
+			i ("TAB", " complete");md(UI_COMPLETE);
+			i ("^B", " parentify");md(UI_LOWER);
+			i ("^N", " childify");md(UI_RAISE);
+			i ("^S", " save");md(UI_SAVE);
+			line = LINES - 1;
+			pos = 0;
+			clr;
+			i ("F1", " help");md(UI_HELP);
+			i ("arrows", " move");
+			i ("return", " edit");md(UI_ENTER);
+			i ("ins", " insert");md(UI_INSERT);
+			i ("del", " remove");md(UI_REMOVE);
+			i ("^X", " quit");md(UI_QUIT);
 			break;
 		case UI_MODE_EDIT:
 			line = LINES - 2;mdc();m_nwarp;
@@ -222,7 +289,7 @@ void help_draw (int mode, char *message)
 			i ("", "");
 			i (" esc  ", " cancel editing");md(UI_ESCAPE);
 			i ("", "");
-			i ("left/right", " move cursor");
+			i ("arrows", " move cursor");
 			line = LINES - 1;
 			pos = 0;
 			clr;
@@ -233,24 +300,22 @@ void help_draw (int mode, char *message)
 			i (" home/end ", " warp cursor");md(UI_TOP);
 			break;
 		case UI_MODE_QUIT:
+			line=LINES-3;
+			rl("Really quit hnb?");
 			line = LINES - 2;mdc();m_nwarp;
-			pos = 0;
+			pos = 2;
 			clr;
-			i ("", "");
-			i ("", "");
 			i (" Y,X ", " Save and Quit");md('Y');
-			i ("", "");
+			i ("", "");md('Y');
 			i ("  Q  ", " Discard changes/Quit");md('Q');
-			i ("", "");
+			i ("", "");md('Q');
 			line = LINES - 1;
-			pos = 0;
+			pos = 2;
 			clr;
-			i (" QUIT menu ", "");
-			i ("", "");
 			i ("  S  ", " Save without quit");md('s');
-			i ("", "");
+			i ("", "");md('s');
 			i ("Esc,C", " Cancel");md('c');
-			i ("", "");
+			i ("", "");md('c');
 			break;
 		case UI_MODE_EXPORT:m_nwarp;
 			line = 0;mdc();
@@ -270,31 +335,25 @@ void help_draw (int mode, char *message)
 			clr;
 			i ("      ", " the data from the current level and down are exported, not higher levels");
 			line = 4;
+			rl("");
+			line = LINES - 1;
 			pos = 0;
 			clr;
-			i ("                          ", "");
-			line = LINES - 2;
-			pos = 0;
-			clr;
-			i ("", "");
 			i ("", "");
 			i (" A ", " Ascii");md('a');
 			i (" H ", " html");md('h');
 			i (" L ", " Latex");md('l');
 			i (" P ", " PostScript");md('p');
-			line = LINES - 1;
+			i ("Esc,C", " Cancel");md('c');
+			line = LINES - 2;
 			pos = 0;
 			clr;
-			i ("Export menu", " select format");
-			i ("", "");
-			i ("", "");
-			i ("", "");
-			i ("", "");
-			i ("Esc,C", " Cancel");md('c');
+			rl ("Export menu select format");
+
 
 			break;
 		case UI_MODE_MARKED:
-			line = LINES - 2;mdc();m_nwarp;
+			line = LINES - 1;mdc();m_nwarp;
 			pos = 0;
 			clr;
 			pos++;
@@ -303,76 +362,64 @@ void help_draw (int mode, char *message)
 			i ("space", " move");md(' ');
 			i ("C Enter", " copy");md(UI_ENTER);
 			i ("Esc,Q", " cancel");md('q');
-			line = LINES - 1;
+			line = LINES - 2;
 			pos = 0;
 			clr;
-			i (message, " grabbed, move destination");
+			rl ("node grabbed, move destination");
 			break;
 		case UI_MODE_ERROR:
-			line = LINES - 3;mdc();
-			pos = 0;clr;
-
-			line = LINES - 2;
-			pos = 0;clr;
-
-			line = LINES - 1;
+			mdc();
+			line = 0;
 			pos = 0;clr;
 			i ("Error:", message);
 			break;
 		case UI_MODE_INFO:
-			line = LINES - 3;mdc();
+			mdc();
+			line = 0;
 			pos = 0;clr;
-
-			line = LINES - 2;
-			pos = 0;clr;
-
-			line = LINES - 1;
-			pos = 0;
-			clr;
 			i ("Info:", message);
 			break;
 		case UI_MODE_GETSTR:
+			line = LINES - 2;
+			rl(message);
 			line = LINES - 1;m_nwarp;
-			pos = 0;
+			pos = 1;
 			clr;
-			i (message, " ");
+			i ("", ">");
 			break;
 		case UI_MODE_IMPORT:
 			line = 0;m_nwarp;
 			pos = 0;
 			clr;
 			i ("      ",
-			   " Enter the name of a file to be imported(inserted) into the tree at");
+			   " Enter the name of a file to be imported(inserted) into the");
 			line = 1;
 			pos = 0;
 			clr;
-			i (" info ", " the current location, just press enter to cancel");
+			i (" info ", " tree at the current location, just press enter to cancel");
 			line = 2;
-			pos = 0;
+			rl("");
+			line = LINES - 2;
+			rl(message);
+			line = LINES - 1;			
+			pos = 1;
 			clr;
-			i ("                      ", "");
-			line = LINES - 1;
-			pos = 0;
-			clr;
-			i (message, " ");
+			i ("", ">");
 			break;
 		case UI_MODE_SEARCH:
 			line = LINES - 2;mdc();m_nwarp;
 			pos = 0;
 			clr;
-			i ("Searching for:", "");
+			rl ("Searching for:");
+			attrset(A_REVERSE);
 			addch (' ');
 			addstr (message);
-			i ("", "");
-			i ("", "");
+			attrset(A_NORMAL);			
+			line = LINES - 1;
+			pos = 3;clr;
 			i ("Enter,S", " stop");md('s');
 			i ("N,space", " next");md(' ');
 			i ("Esc,C", " cancel");md('c');
-			line = LINES - 1;
-			pos = 0;
-			clr;
-			i ("", "");
-			i ("", "");
 			break;
 																																						#ifdef hnbgimp
 																																			case 11111: line = LINES - 2; pos = 0; clr; i (" hnb-gimp ", " ver -0.1"); addch (' '); addstr (message); i ("", ""); i("", ""); i ("ESC,Q", " quit"); i ("arrows", " draw"); i (" X ", " toggle color"); line = LINES - 1; pos = 0; clr; i("", ""); i ("", ""); i ("", ""); i (" I ", " invert image"); i ("", ""); i (" C ", " clear canvas"); break;
@@ -398,11 +445,21 @@ int startlevel = 0;
 #define D_M_TEST	4
 #define D_M_EDIT	8
 
+extern int hnb_edit_posup;
+extern int hnb_edit_posdown;
+
 int draw_item (int line_start, int col_start, char *data, int draw_mode,
 			   int completion)
 {
 	int lines_used = 0;
 	int col_end = COLS;
+#define udc_no 0
+#define udc_yes 1
+#define udc_below 2
+#define udc_done 3
+	int udc= udc_no;
+	
+	if(draw_mode&D_M_EDIT)udc=udc_yes;
 
 	move (line_start, col_start);
 
@@ -459,11 +516,23 @@ int draw_item (int line_start, int col_start, char *data, int draw_mode,
 			attron (A_BOLD);
 		}
 
+	if(udc==udc_yes){
+		hnb_edit_posup=0;
+		hnb_edit_posdown=strlen(data);
+		}
+
 		for (pos = 0; pos <= strlen (data); pos++)
 			switch (data[pos]) {
 				case 0:
 				case ' ':
 					if (col + strlen (word) + 1 >= col_end) {
+					  if(udc==udc_yes){
+					  	hnb_edit_posup= completion-(col-col_start);
+					  } else if(udc==udc_below){
+					  	hnb_edit_posdown= (completion)+(col-col_start);
+						udc=udc_done;
+					  }
+
 						col = col_start;
 						lines_used++;
 
@@ -474,37 +543,36 @@ int draw_item (int line_start, int col_start, char *data, int draw_mode,
 					if (!(draw_mode & D_M_TEST)) {
 						if (line_start + lines_used >= 0) {							
 							addstr (word);
-							if(draw_mode&D_M_EDIT){
+							if(udc==udc_yes){
 								if(completion==pos){
 									attron(A_REVERSE);									
 									addch(' ');
-									completion=-1;
+									udc=udc_below;
 									attroff(A_REVERSE);
 								}
 							}
 							if (data[pos] != 0)
 								addch (' ');
-							if(draw_mode&D_M_EDIT){
-								if(completion!=-1){
-									if(pos>completion){
-										char ch=word[strlen(word)-(pos-completion)];
-										attron(A_REVERSE);									
-										move(line_start+lines_used,col-(pos-completion)+strlen(word));
-										addch(ch);
-										completion=-1;
-										attroff(A_REVERSE);
-									}
+							if(udc==udc_yes){
+								if(pos>completion){
+									char ch=word[strlen(word)-(pos-completion)];
+									attron(A_REVERSE);									
+									move(line_start+lines_used,col-(pos-completion)+strlen(word));
+									addch(ch);
+									udc=udc_below;
+									attroff(A_REVERSE);
 								}
 							}
-						};
-					};
+
+						}
+					}
 					col += strlen (word) + 1;
 					word[0] = 0;
 					break;
 				default:
 					if ((strlen (word) < 198)) {
 						word[strlen (word) + 1] = 0;
-						word[strlen (word)] = data[pos];
+						word[strlen (word)] = eleet_mode?eleet(data[pos]):data[pos];
 					};
 					if (strlen (word) > col_end - col_start) {
 						/* wordbreak with hyphen,..? */
@@ -526,6 +594,9 @@ int draw_item (int line_start, int col_start, char *data, int draw_mode,
 	return lines_used;
 }
 
+extern int hnb_nodes_up;
+extern int hnb_nodes_down;
+
 void ui_draw (Node *node, char *input, int mode)
 {
 	static int ignore_next=0;
@@ -545,14 +616,17 @@ if(!ignore_next)
 
 /* draw the nodes */
 	{
-		erase ();
+	hnb_nodes_up=0;
+	hnb_nodes_down=0;
+	
+		erase ();		
 #ifdef MOUSE
 		mouse_clearnodes();
 #endif
 /* draw nodes above selected node */
 		{
 			int line = middle_line;
-			Node *tnode = up (node);
+			Node *tnode = up (node,node);
 
 			while (tnode) {
 				draw_item (line -=
@@ -569,9 +643,10 @@ if(!ignore_next)
 					mouse_xstart[line]=indentlevel(tnode)+3;
 				}
 #endif
-				tnode = up (tnode);
+				tnode = up (node,tnode);
 				if (middle_line - nodes_above >= line)
 					tnode = 0;
+				hnb_nodes_up++;
 			}
 		}
 
@@ -593,10 +668,6 @@ if(!ignore_next)
 						   node_getdata (node),
 						   D_M_WRAP + D_M_EDIT+ (node_right (node) ? D_M_CHILD : 0),
 						   (int)input);
-			
-/*			attrset (A_REVERSE);		
-			move(middle_line,indentlevel(node)++3);
-			addch(node_getdata(node)[(int)input]);*/
 		} else
 
 		{	/* bullet */
@@ -620,11 +691,9 @@ if(!ignore_next)
 
 /* draw lines below selected node */
 		{
-			Node *tnode = down (node);
+			Node *tnode = down (node,node);
 
 			lines += middle_line;
-
-/*if(node_right(node))  tnode=node_right(node); *//*strange one more level collapse mode */
 
 			while (tnode) {
 #ifdef MOUSE						   
@@ -638,9 +707,10 @@ if(!ignore_next)
 									D_M_WRAP +
 									(node_right (tnode) ? D_M_CHILD : 0),
 									node_calc_complete (tnode));
-				tnode = down (tnode);
+				tnode = down (node,tnode);
 				if (middle_line + nodes_below <= lines)
 					tnode = 0;
+				hnb_nodes_down++;
 			};
 		}
 
@@ -664,41 +734,17 @@ if(!ignore_next)
 
 	if(!ignore_next)help_draw (mode, input);
 
-	move (LINES - 1, COLS - 1);
-
-
-
 	if (mode == UI_MODE_GETSTR || mode == UI_MODE_IMPORT) {
-		move (LINES - 1, strlen (input) + 1);
 		echo ();
 		getstr (&input[0]);
 		noecho ();
 	};
-/* it causes compile time warnings so, I uncomment it when I need it */
+	
+	if(view_debug)
+		debug(node,mode);
+		
+	move (LINES - 1, COLS - 1);	
 
-/*	if (mode == UI_MODE_DEBUG) {
-		int pos;
-		char msg[80];
-		int t;
-
-#define ipf(a,b,c) sprintf(msg,b,c);i(a,msg);
-		int line;
-
-		line = 0; pos = 0; clr;
-		i ("       ", "");ipf ("data:", "  %s", node_getdata (node));
-
-		line = 1; pos = 0; clr;
-		i (" debug ", ""); ipf ("flags:", " %i", node_getflags (node)); pos += 2; ipf ("/\\", " %i", ((t = (int) node_up (node)) & 4095));
-
-		line = 2; pos = 0; clr;
-		i ("       ", ""); ipf ("level:", " %i", nodes_left (node)); pos += 1; ipf ("<-", " %i", (t = ((int) node_left (node))) & 4095); ipf ("", "%i", ((int) node) & 4095); ipf ("->", " %i", (t = (int) node_right (node)) & 4095);
-
-		line = 3; pos = 0; clr;
-		i ("       ", ""); ipf ("input:", " %s", input); pos += 2; ipf ("\\/", " %i", (t = (int) node_down (node)) & 4095); pos += 2;
-
-		line = 4; pos = 0; clr; i ("                                ", ""); line = LINES - 1; pos = 0; clr; i (" press any key ", "");
-
-	};*/
 	refresh ();
 	ignore_next=0;
 	if(mode==UI_MODE_INFO || mode==UI_MODE_ERROR)ignore_next=1;
@@ -721,8 +767,10 @@ void ui_end ()
 																																			char qixels[16] = " ,'L`/~Pcw\\b]d\\@"; int v[32][64];void cls () { int x, y; for (x = 0; x < 64; x++) for (y = 0; y < 32; y++) pset (x, y, 0); } void draw (int xp, int yp) { int x, y; for (x = 0; x < 16; x++) for (y = 0; y < 32; y++) { mva (x + yp + 1,y + xp + 1, qixels[v[x * 2][y * 2] * 2 + v[x * 2 + 1][y * 2] + v[x * 2][y * 2 + 1] * 4 + v[x * 2 + 1][y * 2 + 1] * 8]);} for (x =xp; x <= xp + cw; x++) { mva (yp, x, '_'); mva (yp + ch, x, '~'); }; for (y = yp; y <= yp + ch; y++) { mva (y, xp + cw, '|'); mva(y, xp, '|'); }; mva (yp, xp, '.'); mva (yp, xp + cw, '.'); mva (yp + ch, xp, '`'); mva (yp + ch, xp + cw, '\''); move (0, 0); }
 
 																																									#endif
-#ifdef MOUSE
+extern int help_level;
 extern Node *pos;
+#ifdef MOUSE
+
 #endif
 
 int ui_input ()
@@ -735,6 +783,21 @@ int ui_input ()
 
 	c = getch ();
 	switch (c) {
+		case 22:
+			collapse_mode++;
+			if(collapse_mode>COLLAPSE_END)collapse_mode=0;
+			ui_draw (pos, "", UI_MODE_HELP0 + help_level);			
+			ui_draw(pos," changed collapse mode",UI_MODE_INFO);
+			return UI_IGNORE;
+			break;
+		case KEY_F(10):
+			eleet_mode= !eleet_mode;
+			return UI_IGNORE;
+			break;
+		case UI_DEBUG:
+			view_debug= !view_debug;
+			return UI_IGNORE;
+			break;
 		case KEY_RESIZE:
 			middle_line = LINES / 3;
 			nodes_above = middle_line;

@@ -112,6 +112,12 @@ CHANGELOG
 		changed the editing, and the cursor even further towards 'standard' use, fixed a editing bug as well.
 		added mouse navigation, and 'shortcut-emulation'
 		code cleanups
+		make pageup/pagedown skip to the topmost/bottommost node on screen of the current level.
+	1.3 14 may 2001
+		bloat
+		added different collapse/view modes cycled with ctrl+v
+		various feedback changes
+		debug mode for my own sake
 BUGS
 	as soon as I find them, and am able to fix them, I remove them from this file,.. so no bugs :P
 TODO
@@ -144,12 +150,10 @@ TODO
 		down toggles N
 		left cancels
 		right says yes
-	configuration
-		different collapse modes?
-			only display first line of parents?
-		bulletmodes
-			bullet, number, abcd, ABCD, checkbox, none
 	curses interface
 		"context" menu for mouse mode
-		pageup/pagedown implementation with pushing of up/down
+		go away from centerline centric display approach
+		help system
+			refine input menu
+			refine help menu positioning of items
 author: Øyvind Kolås / pippin@users.sourceforge.net

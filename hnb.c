@@ -10,6 +10,8 @@
 #include "version.h"
 #include "path.h"
 
+int help_level = 1;
+
 static void usage (const char *av0)
 {
 	char db_file[100];
@@ -62,10 +64,13 @@ Node *pos;
 #ifdef WIN32
 
 #undef undefined_key(a,c)
+
 #define undefined_key(a,c)
 
-
 #endif
+
+int hnb_edit_posup=0;
+int hnb_edit_posdown=0;
 
 
 void app_edit ()
@@ -106,6 +111,7 @@ void app_edit ()
 			case UI_PDN:
 				cursor_pos=strlen(input)-1;
 				break;
+			case UI_QUIT:
 			case UI_ESCAPE:
 				strcpy (&input[0], data_backup);
 				pos->data = &input[0];
@@ -115,7 +121,15 @@ void app_edit ()
 				stop = 1;
 				break;
 			case UI_UP:
+				if(hnb_edit_posup>=0)
+				cursor_pos=hnb_edit_posup;
+				break;
 			case UI_DOWN:
+				if(hnb_edit_posdown<strlen(input))
+					cursor_pos=hnb_edit_posdown;
+				else
+					cursor_pos=strlen(input)-1;
+				break;
 			case UI_ENTER:
 				stop = 1;
 				break;
@@ -127,7 +141,7 @@ void app_edit ()
 							 strlen (input) - cursor_pos);
 					input[strlen(input)-1]=0;
 					cursor_pos--;
-				};
+				}
 				break;
 				/*ignored keypresses.. */
 			case UI_INSERT:
@@ -141,8 +155,8 @@ void app_edit ()
 					undefined_key ("edit", c);
 				}
 				break;
-		};
-	};
+		}
+	}
 
 	cursor_pos= (strlen (input) - 1);
 	input[cursor_pos] = 0;
@@ -309,6 +323,7 @@ app_quit ()
 		case UI_QUIT:
 			if (db_file[0] != (char) 255) {
 				ascii_export ((Node *) node_root (pos), db_file);
+				ui_draw (pos, input, UI_MODE_HELP0 + help_level);				
 				infof (" wrote stuff to '%s'", db_file);
 			}
 			return (1);
@@ -321,6 +336,7 @@ app_quit ()
 		case 'S':
 			if (db_file[0] != (char) 255) {
 				ascii_export ((Node *) node_root (pos), db_file);
+				ui_draw (pos, input, UI_MODE_HELP0 + help_level);
 				infof (" wrote stuff to '%s'", db_file);
 			}
 			return (0);
@@ -346,8 +362,9 @@ void app_search ()
 	pos = node_recursive_match ((char *) query, pos);
 
 	if (pos == 0) {
-		infof (" search for '%s' returned emptyhanded", query);
 		pos = query_start;
+		ui_draw (pos, input, UI_MODE_HELP0 + help_level);				
+		infof (" search for '%s' returned emptyhanded", query);
 		return;
 	};
 
@@ -384,8 +401,9 @@ void app_search ()
 				break;
 		};
 	};
-	info (" end of search");
 	pos = query_start;
+	ui_draw (pos, input, UI_MODE_HELP0 + help_level);				
+	info (" end of search");
 }
 
 void app_remove ()
@@ -421,7 +439,7 @@ void app_export ()
 				break;
 			case 'h':
 			case 'H':
-				strcpy ((char *) filename, "Save output in:");
+				strcpy ((char *) filename, "File to save html output in:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					html_export (node_top (pos), filename);
@@ -429,7 +447,7 @@ void app_export ()
 				break;
 			case 'a':
 			case 'A':
-				strcpy ((char *) filename, "Save output in:");
+				strcpy ((char *) filename, "File to save ascii output in:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					ascii_export (node_top (pos), filename);
@@ -437,7 +455,7 @@ void app_export ()
 				break;
 			case 'l':
 			case 'L':
-				strcpy ((char *) filename, "Save output in:");
+				strcpy ((char *) filename, "File to save latex output in:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					latex_export (node_top (pos), filename);
@@ -445,7 +463,7 @@ void app_export ()
 				break;
 			case 'p':
 			case 'P':
-				strcpy ((char *) filename, "Save output in:");
+				strcpy ((char *) filename, "File to save postscript output in:");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
 				if (!strlen (filename))
 					return;
@@ -536,9 +554,11 @@ Node *app_raise(Node *node)
 	return pos;
 }
 
+int hnb_nodes_down;
+int hnb_nodes_up;
+
 void app_navigate ()
 {
-	int help_level = 1;
 	int stop = 0;
 
 	while (!stop) {
@@ -547,10 +567,6 @@ void app_navigate ()
 		ui_draw (pos, input, UI_MODE_HELP0 + help_level);
 		c = ui_input ();
 		switch (c) {
-			case UI_DEBUG:
-				ui_draw (pos, input, UI_MODE_DEBUG);
-				getch ();
-				break;
 			case UI_EXPORT:
 				app_export ();
 				break;
@@ -569,6 +585,7 @@ void app_navigate ()
 			case UI_SAVE:
 				if (db_file[0] != (char) 255) {
 					ascii_export ((Node *) node_root (pos), db_file);
+					ui_draw (pos, input, UI_MODE_HELP0 + help_level);
 					infof (" wrote stuff to '%s'", db_file);
 				}
 				break;
@@ -622,7 +639,7 @@ void app_navigate ()
 				{
 					int n;
 
-					for (n = 0; n < 10; n++)
+					for (n = 0; n < hnb_nodes_down-1; n++)
 						if (node_down (pos))
 							pos = node_down (pos);
 				};				/* kan ikke få pg_up/pg_dn mengde fra ui,.. (ikke nå iallefall,..)
@@ -635,7 +652,7 @@ void app_navigate ()
 				{
 					int n;
 
-					for (n = 0; n < 10; n++)
+					for (n = 0; n < hnb_nodes_up; n++)
 						if (node_up (pos))
 							pos = node_up (pos);
 				};

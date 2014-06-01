@@ -26,6 +26,21 @@ Node *node_recurse (Node *node)
 	return 0;
 }
 
+Node *node_backrecurse (Node *node)
+{
+	if (node_up(node)){
+		node=node_up(node);
+		while(node_right(node)){
+			node=node_right(node);
+			node=node_bottom(node);
+		}
+		return(node);
+	}
+	return(node_left(node));
+}
+
+
+
 Node *node_top (Node *node)
 {
 	if (node == 0)
