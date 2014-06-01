@@ -5,8 +5,8 @@ MINGW_PATH=/usr/local/cross-tools/i386-mingw32/bin
 
 C_FLAGS=-Wall -pedantic -ansi -O2
 
-BINFILES=hnb/hnb hnb/LICENSE hnb/README hnb/README.html
-WINFILES=hnb/hnb.exe hnb/LICENSE hnb/README hnb/README.html
+BINFILES=hnb/hnb hnb/LICENSE hnb/README hnb/README.html hnb/hnb.1
+WINFILES=hnb/hnb.exe hnb/LICENSE hnb/README hnb/README.html hnb/hnb.1
 
 hnb: hnb.o file.o node.o tree.o ui.o path.o tokenizer.o
 	gcc -o hnb hnb.o file.o node.o tree.o ui.o path.o tokenizer.o -lcurses
@@ -31,10 +31,6 @@ reg.o: reg.c node.h tree.h file.h path.h registry.h
 	gcc $(C_FLAGS) -c reg.c
 reg: tokenizer.o file.o path.o tree.o node.o registry.o reg.o
 	gcc -o reg file.o node.o tree.o tokenizer.o path.o registry.o reg.o
-cgi-bin.o: cgi-bin.c
-	gcc $(C_FLAGS) -c cgi-bin.c
-cgi-bin: cgi-bin.o node.o tree.o tokenizer.o path.o file.o cgi-bin.o
-	gcc -o cgi-bin cgi-bin.o file.o node.o tree.o tokenizer.o path.o
 version.h: VERSION
 	echo \#define VERSION \" hierarchical notebook ver. `cat VERSION`\">version.h
 clean: 
@@ -55,3 +51,7 @@ hnb.exe: ui.c hnb.c node.c tree.c file.c version.h tree.h node.h ui.h file.h tok
 	(export PATH=$(MINGW_PATH):$(PATH);\
 	gcc $(C_FLAGS) -DWIN32 -o hnb.exe ui.c hnb.c node.c tree.c file.c path.c tokenizer.c $(PDCURSES_PATH)/pdcurses.a;\
 	strip hnb.exe;)
+install: hnb
+	cp hnb /usr/bin
+	cp hnb.1 /usr/man/man1/hnb.1
+

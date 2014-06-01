@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<directory>
+  <file name="cgi-bin.c" icon_position="47,4"/>
+  <file name="create" icon_position="438,595" icon_scale="3.17">
+    <keyword name="important"/>
+  </file>
+  <file name="file.c" icon_position="337,4"/>
+  <file name="file.h" icon_position="482,4"/>
+  <file name="file.o" icon_position="627,4"/>
+  <file name="hnb" icon_position="773,8"/>
+  <file name="hnb.c" icon_position="917,4"/>
+  <file name="hnb.exe" icon_position="1063,8"/>
+  <file name="hnb.o" icon_position="47,106"/>
+  <file name="LICENSE" icon_position="192,106"/>
+  <file name="Makefile" icon_position="337,106"/>
+  <file name="node.c" icon_position="482,106"/>
+  <file name="node.h" icon_position="627,106"/>
+  <file name="node.o" icon_position="772,106"/>
+  <file name="path.c" icon_position="917,106"/>
+  <file name="path.h" icon_position="1062,106"/>
+  <file name="path.o" icon_position="47,208"/>
+  <file name="README" icon_position="192,208"/>
+  <file name="README.html" icon_position="337,208"/>
+  <file name="reg.c" icon_position="482,208"/>
+  <file name="registry.c" icon_position="627,208"/>
+  <file name="registry.h" icon_position="772,208"/>
+  <file name="test" icon_position="210,579" icon_scale="2.92">
+    <keyword name="special"/>
+  </file>
+  <file name="test.c" icon_position="1062,208"/>
+  <file name="test.hnb" icon_position="47,338"/>
+  <file name="TODO" icon_position="192,338"/>
+  <file name="tokenizer.c" icon_position="337,338"/>
+  <file name="tokenizer.h" icon_position="482,338"/>
+  <file name="tokenizer.o" icon_position="627,338"/>
+  <file name="tree.c" icon_position="772,338"/>
+  <file name="tree.h" icon_position="917,338"/>
+  <file name="tree.o" icon_position="1062,338"/>
+  <file name="tutorial.h" icon_position="47,440"/>
+  <file name="tutorial.inc" icon_position="192,440"/>
+  <file name="ui.c" icon_position="337,440"/>
+  <file name="ui.h" icon_position="482,440"/>
+  <file name="ui.o" icon_position="627,440"/>
+  <file name="VERSION" icon_position="920,239"/>
+  <file name="version.h" icon_position="186,9"/>
+</directory>

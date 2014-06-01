@@ -4,7 +4,7 @@ i(0,"press right arrow to begin",0);
 	i(1,"Welcome to 'hierachical notebook'",0);
 	i(1,"",0);
 	i(1,"Navigate using your arrow keys, right takes you a level further down in the tree, left brings you up a level, up and down navigates amongst the siblings.",0);
-	i(1,"All entries have an bullet in front of them, + indicates that this entry is a parent with subnodes.",0);
+	i(1,"entries that are printed in bold, have children",0);
 	i(1,"",0);
 	i(1,"usage documentation",0);
 		i(2,"In the bottom of your terminal window you see a list of allowed commands, a letter with a caret (^) in front means that you should press control and the letter.",0);

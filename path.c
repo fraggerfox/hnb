@@ -14,36 +14,35 @@
  of token, and new token coming
 */
 
-Node *
-path2node (char *path)
+Node *path2node (char *path, Node *root)
 {
-  char *token;
-  Node *node; /* should perhaps be a relative start node?*/
+	char *token;
+	Node *node;					/* should perhaps be a relative start node? */
 
-  node=tree_root();
+	node = root;
 
-  token_seperator='/';	
+	token_seperator = '/';
 
-  token=tokenize(path);
-  if(!strcmp(token,"/")){
-  	node = tree_root();
-    token=tokenize("");
-	if(token[0]!=0)
-    	node=node_exact_match(token,node);
-  } else{
-    node=node_exact_match(token,node);
-  };
-    token=tokenize("");
+	token = tokenize (path);
+	if (!strcmp (token, "/")) {
+		node = root;
+		token = tokenize ("");
+		if (token[0] != 0)
+			node = node_exact_match (token, node);
+	} else {
+		node = node_exact_match (token, node);
+	};
+	token = tokenize ("");
 
-  while(token[0]!=0)
-    { if(node_right(node))
-    	node=node_right(node);
-      if(strcmp(token,"/")) /* it is not the lonely / at the end*/
-      	 node=node_exact_match(token,node);
-      token=tokenize("");
-    };
+	while (token[0] != 0) {
+		if (node_right (node))
+			node = node_right (node);
+		if (strcmp (token, "/"))	/* it is not the lonely / at the end */
+			node = node_exact_match (token, node);
+		token = tokenize ("");
+	};
 
-  return (node);
+	return (node);
 }
 
 
@@ -53,64 +52,65 @@ path2node (char *path)
  exist)
 */
 
-Node *
-path2node_make (char *path)
+Node *path2node_make (char *path, Node *root)
 {
-  char *token;
-  Node *node; /* should perhaps be a relative start node?*/
+	char *token;
+	Node *node;					/* should perhaps be a relative start node? */
 
-  node=tree_root();
+	node = root;
 
-  token_seperator='/';	
+	token_seperator = '/';
 
-  token=tokenize(path);
-  if(!strcmp(token,"/")){
-  	node = tree_root();
-    token=tokenize("");
-	if(token[0]!=0){
-		Node *tnode;
-		tnode=node_exact_match(token,node); /* something is amiss here? */
-		if(tnode==0){
-			tnode=node_insert_down(node);
-			node_setdata(tnode,token);
+	token = tokenize (path);
+	if (!strcmp (token, "/")) {
+		node = root;
+		token = tokenize ("");
+		if (token[0] != 0) {
+			Node *tnode;
+
+			tnode = node_exact_match (token, node);	/* something is amiss here? */
+			if (tnode == 0) {
+				tnode = node_insert_down (node);
+				node_setdata (tnode, token);
+			};
+			node = tnode;
 		};
-		node=tnode;
-		};
-  } else{
-    node=node_exact_match(token,node);
-  };
-    token=tokenize("");
+	} else {
+		node = node_exact_match (token, node);
+	};
+	token = tokenize ("");
 
-  while(token[0]!=0)
-    { if(node_right(node)){
-    	node=node_right(node);
-        if(strcmp(token,"/")){ /* it is not the lonely / at the end*/
-       	   Node *tnode;
-		   tnode=node_exact_match(token,node);
-		   if(tnode==0){
-			 tnode=node_insert_down(node);
-			 node_setdata(tnode,token);
-		   };		 
-		node=tnode;
-		}
-	  } else { /* we must create a child */
-    	node=node_insert_right(node);
-        if(strcmp(token,"/")){ /* it is not the lonely / at the end*/
-			 node_setdata(node,token);
-		   };
-	  };		 
-      token=tokenize("");
-    };
+	while (token[0] != 0) {
+		if (node_right (node)) {
+			node = node_right (node);
+			if (strcmp (token, "/")) {	/* it is not the lonely / at the end */
+				Node *tnode;
+
+				tnode = node_exact_match (token, node);
+				if (tnode == 0) {
+					tnode = node_insert_down (node);
+					node_setdata (tnode, token);
+				};
+				node = tnode;
+			}
+		} else {				/* we must create a child */
+			node = node_insert_right (node);
+			if (strcmp (token, "/")) {	/* it is not the lonely / at the end */
+				node_setdata (node, token);
+			};
+		};
+		token = tokenize ("");
+	};
 
 
 /* if there is a node below,.. we should remove it,... 
    we don't want duplicate entries..
 */
 
-  if(node_up(node))
-  	node=node_remove(node_up(node));
+	if (node_up (node))
+		node = node_remove (node_up (node));
 
-  return (node);
+	return (node);
 }
 
 /*
@@ -122,60 +122,62 @@ path2node_make (char *path)
 	probably not the best way.. but..
 */
 
-char *
-node2path (Node * node)
+char *node2path (Node *node)
 {
-  static char path[512];
-  int pos=0;
-  int levels = nodes_left (node);
-  int cnt;
+	static char path[512];
+	int pos = 0;
+	int levels = nodes_left (node);
+	int cnt;
 
-  path[pos]='/';path[++pos]=0;
+	path[pos] = '/';
+	path[++pos] = 0;
 
-  for (cnt = levels; cnt >= 0 ; cnt--){
-      int cnt2;
-	  Node *tnode=node;
+	for (cnt = levels; cnt >= 0; cnt--) {
+		int cnt2;
+		Node *tnode = node;
 
-      for (cnt2 = 0; cnt2 < cnt; cnt2++)
-	      tnode = node_left(tnode);
+		for (cnt2 = 0; cnt2 < cnt; cnt2++)
+			tnode = node_left (tnode);
 
-	  strcpy(&path[pos], tnode->data);
-	  pos=strlen(path);
-	  path[pos]='/';path[++pos]=0;
-    };
-	
-	path[--pos]=0;
+		strcpy (&path[pos], tnode->data);
+		pos = strlen (path);
+		path[pos] = '/';
+		path[++pos] = 0;
+	};
 
-  return(path);
+	path[--pos] = 0;
+
+	return (path);
 }
 
 
-char *
-node2no_path (Node * node)
+char *node2no_path (Node *node)
 {
-  static char path[512];
-  int pos=0;
-  int levels = nodes_left (node);
-  int cnt;
+	static char path[512];
+	int pos = 0;
+	int levels = nodes_left (node);
+	int cnt;
 
-  path[pos]='/';path[++pos]=0;
+	path[pos] = '/';
+	path[++pos] = 0;
 
-  for (cnt = levels; cnt >= 0 ; cnt--){
-      int cnt2;
-	  Node *tnode=node;
+	for (cnt = levels; cnt >= 0; cnt--) {
+		int cnt2;
+		Node *tnode = node;
 
-      for (cnt2 = 0; cnt2 < cnt; cnt2++)
-	      tnode = node_left(tnode);
+		for (cnt2 = 0; cnt2 < cnt; cnt2++)
+			tnode = node_left (tnode);
 
-	  /*strcpy(&path[pos], tnode->data);*/
-	  sprintf(&path[pos], "%i", nodes_up(tnode));
-	  pos=strlen(path);
-	  path[pos]='/';path[++pos]=0;
-    };
-	
-	path[--pos]=0;
+		/*strcpy(&path[pos], tnode->data); */
+		sprintf (&path[pos], "%i", nodes_up (tnode));
+		pos = strlen (path);
+		path[pos] = '/';
+		path[++pos] = 0;
+	};
 
-  return(path);
+	path[--pos] = 0;
+
+	return (path);
 }
 
 /*
@@ -190,44 +192,45 @@ node2no_path (Node * node)
 		/ go right
 */
 
-Node *
-no_path2node (char *path)
+Node *no_path2node (char *path, Node *root)
 {
-  char *token;
-  Node *node; /* should perhaps be a relative start node?*/
+	char *token;
+	Node *node;					/* should perhaps be a relative start node? */
 
-  node=tree_root();
+	node = root;
 
-  token_seperator='/';	
+	token_seperator = '/';
 
-  token=tokenize(path);
-  if(!strcmp(token,"/")){
-  	node = tree_root();
-    token=tokenize("");
-	if(token[0]!=0){
-		int no=atoi(token);
-		for(;no>0;no--)
-			node=node_down(node);
+	token = tokenize (path);
+	if (!strcmp (token, "/")) {
+		node = root;
+		token = tokenize ("");
+		if (token[0] != 0) {
+			int no = atoi (token);
+
+			for (; no > 0; no--)
+				node = node_down (node);
+		};
+
+	} else {
+		int no = atoi (token);
+
+		for (; no > 0; no--)
+			node = node_down (node);
+	};
+	token = tokenize ("");
+
+	while (token[0] != 0) {
+		if (node_right (node))
+			node = node_right (node);
+		if (strcmp (token, "/")) {	/* it is not the lonely / at the end */
+			int no = atoi (token);
+
+			for (; no > 0; no--)
+				node = node_down (node);
+		};
+		token = tokenize ("");
 	};
 
-  } else{
-	int no=atoi(token);
-	for(;no>0;no--)
-		node=node_down(node);
-  };
-    token=tokenize("");
-
-  while(token[0]!=0)
-    { if(node_right(node))
-    	node=node_right(node);
-      if(strcmp(token,"/")) /* it is not the lonely / at the end*/
-	{
-		int no=atoi(token);
-		for(;no>0;no--)
-			node=node_down(node);
-	};	 
-      token=tokenize("");
-    };
-
-  return (node);
+	return (node);
 }

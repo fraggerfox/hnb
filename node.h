@@ -1,3 +1,8 @@
+/*
+  flags used, not all are in use,.. all code should reference the defines
+  not the numbers
+*/
+
 #define F_hidden	1
 #define F_readonly	2
 #define F_temp		4
@@ -12,6 +17,9 @@
 #define F_2048		2048
 #define F_visible	4096
 
+/* Structure of a node,.. don't acces them directly use the other functions
+   in this file to acces them.
+*/
 
 typedef struct Node {
 	struct Node *up,*down,*left,*right;
@@ -35,4 +43,3 @@ char *node_getdata(Node *node);
 
 Node *node_alloc();
 void node_free(Node *node);
-
