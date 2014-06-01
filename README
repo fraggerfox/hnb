@@ -37,33 +37,30 @@ CHANGELOG
 	0.5
 		help item's update
 		added insert capability to insert a node below the current
-	0.5a
+	0.6b 11 april 2001
 		the guadec hacked fixes on strics computer
 		
 		added search functionality, still not added real keyboard bindings, nor input of needle for the search, but the callbacks are in place
 		fixed the display of confirm mode in curses ui.
 		implemented reparenting
 		cleaned up node remove
-	0.6b 11 april 2001
 		something went wrong in the versioning,.. but what the heck..
 		 
 		added load,save and display of todo in standard file format
 		should be foolproof, and still keeps the file human readable
 		when adding a child by navigating,.. the parents node were reset to 0 for no apparent reason.
 		changed to bz2 format on distribution file
-	0.6d
+	0.7 13 april 2001
+		rearranged input structures
+		added todo checkboxes
+		added error mode to display modes
+		rewamped the helpline system
 		fixed resizing
 		added input of search term in find
 		made search case insensitive
 		refined search control interface
 		made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
-	0.6c
-		rearranged input structures
-		added todo checkboxes
-		added error mode to display modes
-		rewamped the helpline system
-	0.7 13 april 2001
-	0.7a
+	0.8 15 april 2001
 		making autoupdate of higher level todo work properly
 			recursively move towards root
 			only check nodes with visible todo boxes
@@ -83,16 +80,14 @@ CHANGELOG
 			won't work in win32 latex export fails and latex dvips etc,.. is unix stuff
 		made the default(and only behaviour be to display percentage complete on partially done todo items,.. shouldn't incurr too much overhead,,.. (altough it recalculates for all visible nodes for each character input)
 		loading(insertion) of an external file into the data
-	0.8 15 april 2001
-	0.8a
+	0.9 15 april 2001 end of easter holdidays
 		undefined keyboard debugging in win32 port
 		added in-binary tutorial, and export mode for the include file
 		changed curses mode to raw, to avoid ctrl+c, ctrl+s, ctrl+z ctrl+q etc.. aborting the app.
 		upon request from Marck Rintsch, ctrl+s now saves the file
 		added more visual feedback when saving, quitting and such
 		added an standard bullet on all entries.
-	0.9 15 april 2001 end of easter holdidays
-	0.9a
+	1.0 21 april 2001
 		bloat
 		changed the bullet/indentation system, the bullets are now aligned, children are no longer indicated by trailing dots but by a + bullet instead of - bullet, [ ] removed from nodes which children are partially done.
 		when moving a node, the moving is now displayed graphically to give a better feedback to the user.
@@ -100,12 +95,10 @@ CHANGELOG
 		fixed a bug, with checkbox not inherited where it should be.
 		changed ctrl+space for marking to ctrl+g in win32 port, I think the win32 port now is fully usable.
 		fixed a bug, pertaining to startup with files that don't exist,.. tutorial would show.. even tough it shouldn't
-	1.0 released 21 april 2001
-	1.1b
+	1.1 10 may 2001
 		changed the way children are indicated in the tree to be bold, instead of +/- bullets
 		fixed the dragging of nodes,.. uneccesary code prevented moving to the children of the node below the marked
 		lots of fixes to the underlying code,.. removed unnecesary reference to tree,.. made it possible to eventually have more than one tree in memory at the same time. this also fixed some bugs with exporting after sorting the main level.
-	1.1c
 		ran all the files through the following indent filter:
 			indent -bad -bap -br -ts4 -ce -ci4 -i4 -cli4 -cbi0 -ss -di0 -nbc -npsl -T Node -brs -ip4 -bbo --line-length78 
 		changed the editor cursor
@@ -115,7 +108,10 @@ CHANGELOG
 		fixed segfault due to buggines in mark/move/copy
 		added manpage provieded by Andras BALI
 		added comments around in the code.
-	1.1 released May 10 2001
+	1.2 12 may 2001
+		changed the editing, and the cursor even further towards 'standard' use, fixed a editing bug as well.
+		added mouse navigation, and 'shortcut-emulation'
+		code cleanups
 BUGS
 	as soon as I find them, and am able to fix them, I remove them from this file,.. so no bugs :P
 TODO
@@ -154,5 +150,6 @@ TODO
 		bulletmodes
 			bullet, number, abcd, ABCD, checkbox, none
 	curses interface
-		change the cursor in edit mode, the code around edit mode seems really ugly when I look back at it,.. I'll have to reimplement it and document it for my own sake.
+		"context" menu for mouse mode
+		pageup/pagedown implementation with pushing of up/down
 author: Øyvind Kolås / pippin@users.sourceforge.net

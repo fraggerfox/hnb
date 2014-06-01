@@ -68,7 +68,6 @@ Node *pos;
 #endif
 
 
-
 void app_edit ()
 {
 	int c;
@@ -82,7 +81,7 @@ void app_edit ()
 	strcpy (&input[0], data_backup);
 	pos->data = &input[0];
 	cursor_pos = strlen (input);
-	input[cursor_pos] = '_';
+	input[cursor_pos] = ' ';
 	input[cursor_pos + 1] = 0;
 	input[cursor_pos + 2] = 0;
 	c = 0;
@@ -92,48 +91,26 @@ void app_edit ()
 		c = ui_input ();
 		switch (c) {
 			case UI_RIGHT:
-				if (cursor_pos < (strlen (input) - 1)) {
-					char tmp;
-
-					tmp = input[cursor_pos + 1];
-					input[cursor_pos + 1] = '_';
-					input[cursor_pos++] = tmp;
-				};
+				if (cursor_pos < (strlen (input) - 1))
+					cursor_pos++;
 				break;
 			case UI_LEFT:
-				if (cursor_pos) {
-					char tmp;
-
-					tmp = input[cursor_pos - 1];
-					input[cursor_pos - 1] = '_';
-					input[cursor_pos--] = tmp;
-				};
+				if (cursor_pos)
+					cursor_pos--;
 				break;
 			case UI_TOP:
 			case UI_PUP:
-				while (cursor_pos) {
-					char tmp;
-
-					tmp = input[cursor_pos - 1];
-					input[cursor_pos - 1] = '_';
-					input[cursor_pos--] = tmp;
-				};
+				cursor_pos=0;
 				break;
 			case UI_BOTTOM:
 			case UI_PDN:
-				while (cursor_pos < (strlen (input) - 1)) {
-					char tmp;
-
-					tmp = input[cursor_pos + 1];
-					input[cursor_pos + 1] = '_';
-					input[cursor_pos++] = tmp;
-				};
+				cursor_pos=strlen(input)-1;
 				break;
 			case UI_ESCAPE:
 				strcpy (&input[0], data_backup);
 				pos->data = &input[0];
 				cursor_pos = strlen (input);
-				input[cursor_pos] = '_';
+				input[cursor_pos] = ' ';
 				input[cursor_pos + 1] = 0;
 				stop = 1;
 				break;
@@ -146,9 +123,9 @@ void app_edit ()
 			case UI_BACKSPACE2:
 			case UI_BACKSPACE3:
 				if (cursor_pos) {
-					memmove (&input[cursor_pos], &input[cursor_pos + 1],
+					memmove (&input[cursor_pos-1], &input[cursor_pos],
 							 strlen (input) - cursor_pos);
-					input[cursor_pos - 1] = '_';
+					input[strlen(input)-1]=0;
 					cursor_pos--;
 				};
 				break;
@@ -159,9 +136,7 @@ void app_edit ()
 				if (c > 31 && c < 255) {	/*  input for buffer */
 					memmove (&input[cursor_pos + 1], &input[cursor_pos],
 							 strlen (input) - cursor_pos + 1);
-					input[cursor_pos] = c;
-
-					cursor_pos++;
+					input[cursor_pos++] = c;
 				} else {		/* undefined keycode */
 					undefined_key ("edit", c);
 				}
@@ -169,14 +144,7 @@ void app_edit ()
 		};
 	};
 
-	/* position our cursor at the end */
-	while (cursor_pos < (strlen (input) - 1)) {
-		char tmp;
-
-		tmp = input[cursor_pos + 1];
-		input[cursor_pos + 1] = '_';
-		input[cursor_pos++] = tmp;
-	};
+	cursor_pos= (strlen (input) - 1);
 	input[cursor_pos] = 0;
 
 	pos->data = data_backup;
@@ -185,131 +153,13 @@ void app_edit ()
 }
 
 
-void old_app_edit ()
-{
-	int c;
-	int stop = 0;
-	static int cursor_pos;
-	static char *data_backup;
-	static char input[BUFFERLENGTH];
-
-	data_backup = pos->data;
-	input[0] = 0;
-	strcpy (&input[0], data_backup);
-	pos->data = &input[0];
-	cursor_pos = strlen (input);
-	input[cursor_pos] = '_';
-	input[cursor_pos + 1] = 0;
-	input[cursor_pos + 2] = 0;
-	c = 0;
-
-	while (!stop) {
-		ui_draw (pos, (char *) cursor_pos, UI_MODE_EDIT);
-		c = ui_input ();
-		switch (c) {
-			case UI_RIGHT:
-				if (cursor_pos < (strlen (input) - 1)) {
-					char tmp;
-
-					tmp = input[cursor_pos + 1];
-					input[cursor_pos + 1] = '_';
-					input[cursor_pos++] = tmp;
-				};
-				break;
-			case UI_LEFT:
-				if (cursor_pos) {
-					char tmp;
-
-					tmp = input[cursor_pos - 1];
-					input[cursor_pos - 1] = '_';
-					input[cursor_pos--] = tmp;
-				};
-				break;
-			case UI_TOP:
-			case UI_PUP:
-				while (cursor_pos) {
-					char tmp;
-
-					tmp = input[cursor_pos - 1];
-					input[cursor_pos - 1] = '_';
-					input[cursor_pos--] = tmp;
-				};
-				break;
-			case UI_BOTTOM:
-			case UI_PDN:
-				while (cursor_pos < (strlen (input) - 1)) {
-					char tmp;
-
-					tmp = input[cursor_pos + 1];
-					input[cursor_pos + 1] = '_';
-					input[cursor_pos++] = tmp;
-				};
-				break;
-			case UI_ESCAPE:
-				strcpy (&input[0], data_backup);
-				pos->data = &input[0];
-				cursor_pos = strlen (input);
-				input[cursor_pos] = '_';
-				input[cursor_pos + 1] = 0;
-				stop = 1;
-				break;
-			case UI_UP:
-			case UI_DOWN:
-			case UI_ENTER:
-				stop = 1;
-				break;
-			case UI_BACKSPACE:
-			case UI_BACKSPACE2:
-			case UI_BACKSPACE3:
-				if (cursor_pos) {
-					memmove (&input[cursor_pos], &input[cursor_pos + 1],
-							 strlen (input) - cursor_pos);
-					input[cursor_pos - 1] = '_';
-					cursor_pos--;
-				};
-				break;
-				/*ignored keypresses.. */
-			case UI_INSERT:
-				break;
-			default:
-				if (c > 31 && c < 255) {	/*  input for buffer */
-					memmove (&input[cursor_pos + 1], &input[cursor_pos],
-							 strlen (input) - cursor_pos + 1);
-					input[cursor_pos] = c;
-
-					cursor_pos++;
-				} else {		/* undefined keycode */
-					undefined_key ("edit", c);
-				}
-				break;
-
-
-		};
-	};
-
-	/* position our cursor at the end */
-	while (cursor_pos < (strlen (input) - 1)) {
-		char tmp;
-
-		tmp = input[cursor_pos + 1];
-		input[cursor_pos + 1] = '_';
-		input[cursor_pos++] = tmp;
-	};
-	input[cursor_pos] = 0;
-
-	pos->data = data_backup;
-	node_setdata (pos, input);
-	stop = 0;
-}
-
-
+/* code duplication warning, this function and it's helping variables is
+  also defined in file.c */
 
 Node *npos;
 int tstartlevel;
 
-static void						/* this is the same function I use in file,
-								   perhaps I could make it and populate function
-								   in tree.c instead,.. */ import_node (int level, int flags, char *data)
+static void	import_node (int level, int flags, char *data)
 {
 	level = level + tstartlevel;
 
@@ -624,6 +474,68 @@ rm hnb.tmp.*", filename);
 }
 
 
+void app_import ()
+{
+	char filename[100];
+
+	strcpy ((char *) filename, "File to import:");
+	ui_draw (pos, (char *) filename, UI_MODE_IMPORT);
+	if (strlen (filename))
+		pos = ascii_import (pos, filename);
+}
+
+void app_flag_toggle(Node *node, int flag){
+	if (node_getflags (node) & flag) {
+		node_setflags (node, node_getflags (node) - flag);
+	} else {
+		node_setflags (node, node_getflags (node) + flag);
+	}
+}
+
+Node *app_lower(Node *node)
+{
+	if (node_left (node)) {
+		Node *tnode;
+
+		while (node_down (node)) {
+			tnode = node_insert_down (node_left (node));
+			node_swap (tnode, node_bottom (node));
+			node_remove (node_bottom (node));
+		};
+		tnode = node_insert_down (node_left (node));
+		node_swap (tnode, node_bottom (node));
+		node_remove (node_bottom (node));
+		return(tnode);
+	}
+	return(node);
+}
+
+Node *app_raise(Node *node)
+{
+	if (node_up (node)) {
+		Node *tnode, *first_moved;
+
+		node = node_up (node);	/* go up  */
+
+		if (!(tnode = node_right (node))) {	/* must install a child */
+			tnode = node_insert_right (node);
+		} else {
+			tnode = node_insert_down (node_bottom (tnode));
+		}
+
+		node_swap (node_down (node), tnode);
+		node_remove (node_down (node));
+		first_moved = tnode;
+		while (node_down (node)) {
+			tnode =	node_insert_down (node_bottom (node_right (node)));
+			node_swap (node_down (node), tnode);
+			node_remove (node_down (node));
+		};
+		return first_moved;
+	};
+	return pos;
+}
+
 void app_navigate ()
 {
 	int help_level = 1;
@@ -651,23 +563,15 @@ void app_navigate ()
 			case UI_MARK:
 				app_mark ();
 				break;
-			case UI_IMPORT:{
-				char filename[100];
-
-				strcpy ((char *) filename, "File to import:");
-				ui_draw (pos, (char *) filename, UI_MODE_IMPORT);
-				if (strlen (filename))
-					pos = ascii_import (pos, filename);
-			}
+			case UI_IMPORT:
+				app_import();
 				break;
-
 			case UI_SAVE:
 				if (db_file[0] != (char) 255) {
 					ascii_export ((Node *) node_root (pos), db_file);
 					infof (" wrote stuff to '%s'", db_file);
 				}
 				break;
-
 			case UI_HELP:
 				help_level++;
 				if (help_level >= 3)
@@ -675,62 +579,21 @@ void app_navigate ()
 				break;
 
 			case UI_TOGGLE_TODO:
-				if (node_getflags (pos) & F_todo) {
-					node_setflags (pos, node_getflags (pos) - F_todo);
-				} else {
-					node_setflags (pos, node_getflags (pos) + F_todo);
-				}
-				node_update_parents_todo (pos);
+				app_flag_toggle(pos,F_todo);
+				node_update_parents_todo(pos);
 				break;
 			case UI_TOGGLE_DONE:
-				if (node_getflags (pos) & F_done) {
-					node_setflags (pos, node_getflags (pos) - F_done);
-				} else {
-					node_setflags (pos, node_getflags (pos) + F_done);
-				};
-				node_update_parents_todo (pos);
+				app_flag_toggle(pos,F_done);
+				node_update_parents_todo(pos);
 				break;
 			case UI_SORT:
 				pos = node_sort_siblings (pos);
 				break;
 			case UI_LOWER:
-				if (node_left (pos)) {
-					Node *tnode;
-
-					while (node_down (pos)) {
-						tnode = node_insert_down (node_left (pos));
-						node_swap (tnode, node_bottom (pos));
-						node_remove (node_bottom (pos));
-					};
-					tnode = node_insert_down (node_left (pos));
-					node_swap (tnode, node_bottom (pos));
-					node_remove (node_bottom (pos));
-					pos = tnode;
-				};
+				pos = app_lower(pos);
 				break;
 			case UI_RAISE:
-				if (node_up (pos)) {
-					Node *tnode, *first_moved;
-
-					pos = node_up (pos);	/* go up  */
-
-					if (!(tnode = node_right (pos))) {	/* must install a child */
-						tnode = node_insert_right (pos);
-					} else {
-						tnode = node_insert_down (node_bottom (tnode));
-					}
-					node_swap (node_down (pos), tnode);
-					node_remove (node_down (pos));
-					first_moved = tnode;
-
-					while (node_down (pos)) {
-						tnode =
-							node_insert_down (node_bottom (node_right (pos)));
-						node_swap (node_down (pos), tnode);
-						node_remove (node_down (pos));
-					};
-					pos = first_moved;
-				};
+				pos = app_raise(pos);
 				break;
 			case UI_TOP:
 				if (node_getflags (pos) & F_temp)
@@ -763,7 +626,7 @@ void app_navigate ()
 						if (node_down (pos))
 							pos = node_down (pos);
 				};				/* kan ikke få pg_up/pg_dn mengde fra ui,.. (ikke nå iallefall,..)
-								   modul skillet er for godt definert */
+								   modul skillet er for godt definert, push til stack istedenfor */
 				break;
 			case UI_PUP:
 				if (node_getflags (pos) & F_temp)
@@ -822,8 +685,6 @@ void app_navigate ()
 							pos=node_right(pos);
 							node_update_parents_todo (pos);
 						}
-
-						
 					}
 					input[0] = 0;
 				} else {
@@ -962,7 +823,6 @@ int main (int argc, char **argv)
 
 	if ((!node_right (pos)) && (!node_down (pos)) && (!node_up (pos))
 		&& def_db) pos = help_import (pos);
-
 
 	ui_init ();
 

@@ -65,7 +65,7 @@
 			<LI>help item's update
 			<LI>added insert capability to insert a node below the current
 		  </UL>
-		<LI>0.5a
+		<LI>0.6b 11 april 2001
 		  <UL>
 			<LI>the guadec hacked fixes on strics computer
 			<BR><BR>
@@ -73,9 +73,6 @@
 			<LI>fixed the display of confirm mode in curses ui.
 			<LI>implemented reparenting
 			<LI>cleaned up node remove
-		  </UL>
-		<LI>0.6b 11 april 2001
-		  <UL>
 			<LI>something went wrong in the versioning,.. but what the heck..
 			<LI> 
 			<LI>added load,save and display of todo in standard file format
@@ -83,23 +80,19 @@
 			<LI>when adding a child by navigating,.. the parents node were reset to 0 for no apparent reason.
 			<LI>changed to bz2 format on distribution file
 		  </UL>
-		<LI>0.6d
+		<LI>0.7 13 april 2001
 		  <UL>
+			<LI>rearranged input structures
+			<LI>added todo checkboxes
+			<LI>added error mode to display modes
+			<LI>rewamped the helpline system
 			<LI>fixed resizing
 			<LI>added input of search term in find
 			<LI>made search case insensitive
 			<LI>refined search control interface
 			<LI>made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
 		  </UL>
-		<LI>0.6c
-		  <UL>
-			<LI>rearranged input structures
-			<LI>added todo checkboxes
-			<LI>added error mode to display modes
-			<LI>rewamped the helpline system
-		  </UL>
-		<LI>0.7 13 april 2001
-		<LI>0.7a
+		<LI>0.8 15 april 2001
 		  <UL>
 			<LI>making autoupdate of higher level todo work properly
 			  <UL>
@@ -131,8 +124,7 @@
 			<LI>made the default(and only behaviour be to display percentage complete on partially done todo items,.. shouldn't incurr too much overhead,,.. (altough it recalculates for all visible nodes for each character input)
 			<LI>loading(insertion) of an external file into the data
 		  </UL>
-		<LI>0.8 15 april 2001
-		<LI>0.8a
+		<LI>0.9 15 april 2001 end of easter holdidays
 		  <UL>
 			<LI>undefined keyboard debugging in win32 port
 			<LI>added in-binary tutorial, and export mode for the include file
@@ -141,8 +133,7 @@
 			<LI>added more visual feedback when saving, quitting and such
 			<LI>added an standard bullet on all entries.
 		  </UL>
-		<LI>0.9 15 april 2001 end of easter holdidays
-		<LI>0.9a
+		<LI>1.0 21 april 2001
 		  <UL>
 			<LI>bloat
 			<LI>changed the bullet/indentation system, the bullets are now aligned, children are no longer indicated by trailing dots but by a + bullet instead of - bullet, [ ] removed from nodes which children are partially done.
@@ -152,15 +143,11 @@
 			<LI>changed ctrl+space for marking to ctrl+g in win32 port, I think the win32 port now is fully usable.
 			<LI>fixed a bug, pertaining to startup with files that don't exist,.. tutorial would show.. even tough it shouldn't
 		  </UL>
-		<LI>1.0 released 21 april 2001
-		<LI>1.1b
+		<LI>1.1 10 may 2001
 		  <UL>
 			<LI>changed the way children are indicated in the tree to be bold, instead of +/- bullets
 			<LI>fixed the dragging of nodes,.. uneccesary code prevented moving to the children of the node below the marked
 			<LI>lots of fixes to the underlying code,.. removed unnecesary reference to tree,.. made it possible to eventually have more than one tree in memory at the same time. this also fixed some bugs with exporting after sorting the main level.
-		  </UL>
-		<LI>1.1c
-		  <UL>
 			<LI>ran all the files through the following indent filter:
 			  <UL>
 				<LI>indent -bad -bap -br -ts4 -ce -ci4 -i4 -cli4 -cbi0 -ss -di0 -nbc -npsl -T Node -brs -ip4 -bbo --line-length78 
@@ -173,7 +160,12 @@
 			<LI>added manpage provieded by Andras BALI
 			<LI>added comments around in the code.
 		  </UL>
-		<LI>1.1 released May 10 2001
+		<LI>1.2 12 may 2001
+		  <UL>
+			<LI>changed the editing, and the cursor even further towards 'standard' use, fixed a editing bug as well.
+			<LI>added mouse navigation, and 'shortcut-emulation'
+			<LI>code cleanups
+		  </UL>
 	  </UL>
 	<LI>BUGS
 	  <UL>
@@ -237,7 +229,8 @@
 		  </UL>
 		<LI>curses interface
 		  <UL>
-			<LI>change the cursor in edit mode, the code around edit mode seems really ugly when I look back at it,.. I'll have to reimplement it and document it for my own sake.
+			<LI>"context" menu for mouse mode
+			<LI>pageup/pagedown implementation with pushing of up/down
 		  </UL>
 	  </UL>
 	<LI>author: Øyvind Kolås / pippin@users.sourceforge.net
