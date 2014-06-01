@@ -18,7 +18,7 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "tree.h"
@@ -288,3 +288,10 @@ Node *no_path2node (char *path, Node *root)
 
 	return (node);
 }
+
+
+typedef struct Path {
+	struct Path *parent;
+	struct Node *node;
+} Path;
+

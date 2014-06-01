@@ -1,7 +1,7 @@
 HIERARCHICAL NOTEBOOK
 	
 	hierarchical notebook (hnb) is program to organize, many kinds of data
-	in one place, for example adresses, todo lists, ideas, book "reviews",
+	in one place, for example addresses, to-do lists, ideas, book "reviews",
 	brainstorming, organizing a speech, making a  structured packing list 
 	random notes, and probably many more I  haven't thought of yet..
 	
@@ -18,13 +18,13 @@ INSTALLING hnb
 	Windows
 		the windows binary distribution, is a .zip file	containing the
 		executable, this readme file, an sample database, and the 
-		licence for hnb's use. the binary is standalone, so you can 
+		license for hnb's use. the binary is stand alone, so you can 
 		just copy it wherever you'd like it to reside.
 	Linux 
-		the linux binary distribution is a .tar.gz file	containing the
+		the Linux binary distribution is a .tar.gz file	containing the
 		executable, this readme file, a an sample database, and the
-		licence for hnb's use. The binary is dynamically linked 
-		against ncurses just place it anywere in your path.. like
+		license for hnb's use. The binary is dynamically linked 
+		against ncurses just place it anywhere in your path.. like
 		/usr/bin, /usr/local/bin or /home/user/bin
 		
 COMPILING hnb
@@ -44,20 +44,33 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.9.4-1.9.10 feb 2003
+		re-implementation of positioning of selection bar in non fixed mode
+		massive code cleanup and seperation
+		separation of variables from prefs.* to static variables in the code modules where they belonged
+		integration with spell checker (ispell, but through prefs it could easily be made apsell instead)
+		new preferences format
+		ability to execute commands and running mail-client / web-browser if a node or it's children contain url's / mail addresses
+		OPML import and export
+		postscript export
+		htmlcss export
+		save_state and restore_state for single level undo where needed
+		new xml tokenizer
+		cut/paste functionality
 	1.9.3 jan 2003
 		stabilizing of the code
 		ability to use default terminal colors, (patch from NN)
 	1.9.1 oct 2002
 		option to remember current position in hnb file when saving/loading
-		cleaned up most of the helpsystem code
-		further code seperation
+		cleaned up most of the help-system code
+		further code separation
 	1.9.0 oct 2002
-		fixed the movement behaviour when going to the parent node,.. the screen jumped too much
-		seperated the various export and load filters into own files
+		fixed the movement behavior when going to the parent node,.. the screen jumped too much
+		separated the various export and load filters into own files
 		used my new libcli for the cli code, and as "glue" in some code spots
 		reverted to a manual makefile instead of autoconf/automake
-		improvements to dynamic keybindings, multiple keybindings for each action, all keybindings in various context got their own choice in the preferences.
-		The first of the actual keybindings shown as help
+		improvements to dynamic key-bindings, multiple key-bindings for each action, all key-bindings in various context got their own choice in the preferences.
+		The first of the actual key-bindings shown as help
 		added some more bindings for the node editor, (skip word and bskip word, hooks for even more)
 	1.8 30 aug 2001
 		changed the default window scrolling behaviour to move the cursorbar instead of the whole screen when possible
@@ -196,7 +209,7 @@ AUTHORS
 		libxml2 import/export
 BUGS
 	slashes (/) inside nodes are not escaped correctly in cli mode
-	bullets/todo boxes, doesn't check that the line is writeable (top of screen on multiline nodes)
+	bullets/todo boxes, doesn't check that the line is writable (top of screen on multi-line nodes)
 TODO
 	buffer limits
 		they are high,.. but a really long node might crash it

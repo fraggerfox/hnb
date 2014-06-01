@@ -20,6 +20,7 @@
 
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "tree.h"
 #include "tree_todo.h"
@@ -34,6 +35,8 @@
 
 char inputbuf[BUFFERLENGTH];
 
+static int forced_up=0;
+static int forced_down=0;
 
 int hnb_nodes_down;
 int hnb_nodes_up;
@@ -46,84 +49,81 @@ const char *collapse_names[] = {
 	""
 };
 
+/*  removes *pos if it is a temporary node, then returns 1
+ *  otherwize returns 0
+ */
+static int remove_temp(Node **pos){
+	if (node_getflag(*pos,F_temp)){
+		*pos = node_remove ((*pos));
+		node_update_parents_todo ((*pos));
+		return 1;
+	}
+	return 0;
+}
+
 Node *evilloop (Node *pos)
 {
-
-#define chktemp		if (node_getflag(pos,F_temp)){\
-					pos = node_remove (pos);\
-					node_update_parents_todo (pos);\
-					prevpos=pos;\
-					prevpos=NULL;\
-				}
-
-#define chktemp2	if (node_getflag(pos,F_temp)){\
-					pos = node_remove (pos);\
-					node_update_parents_todo (pos);\
-					prevpos=NULL;\
-				}
-
 	int stop = 0;
-	Node *prevpos = pos;		/* which node we visited previous time */
 
 	cli_outfun=set_status;
 
 	while (!stop) {
 		Tbinding *binding;
 
-		ui_draw (pos, prevpos, inputbuf, 0);
-		prevpos = pos;
+		ui_draw (pos, inputbuf, 0);
 		binding = parsekey (ui_input (), ui_current_scope);
 		do{ 		
 
 			switch (binding->action) {
 			case ui_action_quit:
+				remove_temp(&pos);
 				stop=1;
 				break;	
 			case ui_action_command:
+				remove_temp(&pos);
 				pos=docmd(pos,binding->action_param);
 				inputbuf[0]=0;
-				prevpos = pos;
 				break;
 			case ui_action_top:
-				chktemp;
+				remove_temp(&pos);
 				inputbuf[0] = 0;
-				pos = node_root (pos);
+				pos = node_top (pos);
 				break;
 			case ui_action_bottom:
-				chktemp;
+				remove_temp(&pos);			
 				inputbuf[0] = 0;
 				pos = node_bottom (pos);
 				break;
 			case ui_action_up:
-				chktemp
-			else {
-				if (node_up (pos))
-					pos = node_up (pos);
-				else if (prefs.forced_up) {
-					if (node_left (pos))
-						pos = node_left (pos);
+				if(!remove_temp(&pos)){
+					if (node_up (pos))
+						pos = node_up (pos);
+					else if (forced_up) {
+						if (node_left (pos))
+							pos = node_left (pos);
+					}
 				}
-			}
 				inputbuf[0] = 0;
 				break;
 			case ui_action_down:
-				chktemp
-				else
-			if (node_down (pos))
-				pos = node_down (pos);
-			else if (prefs.forced_down) {
-				while (node_left (pos)) {
-					if (node_down (pos)) {
-						break;
+				if(!remove_temp(&pos)){
+					if (node_down (pos)){
+						pos = node_down (pos);
+					} else if (forced_down) {
+						while (node_left (pos)) {
+							if (node_down (pos)) {
+								break;
+							}
+							pos = node_left (pos);
+						}
+						if (node_down (pos))
+							pos = node_down (pos);
 					}
-					pos = node_left (pos);
+					inputbuf[0] = 0;
+					break;
 				}
-				if (node_down (pos))
-					pos = node_down (pos);
-			}
-				inputbuf[0] = 0;
-				break;
 			case ui_action_pagedown:
+				remove_temp(&pos);
 				inputbuf[0] = 0;
 				{
 					int n;
@@ -135,7 +135,7 @@ Node *evilloop (Node *pos)
 				}
 				break;
 			case ui_action_pageup:
-				chktemp;
+				remove_temp(&pos);
 				inputbuf[0] = 0;
 				{
 					int n;
@@ -146,11 +146,10 @@ Node *evilloop (Node *pos)
 				}
 				break;
 			case ui_action_left:
-				chktemp2
-			else {				/* FIXME: hva er problemet her?,.. noder forsvinner */
-				if (node_left (pos))
-					pos = node_left (pos);
-			}
+				if(!remove_temp(&pos)){
+					if (node_left (pos))
+						pos = node_left (pos);
+				}
 				inputbuf[0] = 0;
 				break;
 			case ui_action_right:
@@ -205,7 +204,7 @@ Node *evilloop (Node *pos)
 					inputbuf[strlen (inputbuf) - 1] = 0;
 					if (node_getflag (pos, F_temp))
 						if (node_up (pos))
-							prevpos = pos = node_remove (pos);
+							pos = node_remove (pos);
 				}
 				break;
 			case ui_action_unbound:
@@ -244,4 +243,13 @@ Node *evilloop (Node *pos)
 		}
 	}
 	return pos;
+}
+
+/*
+!init_evilloop();
+*/
+
+void init_evilloop(){
+	cli_add_int("forced_up",  &forced_up,  "wether movement upwards is forced beyond first sibling" );
+	cli_add_int("forced_down",&forced_down,"wether movement downwards is forced beyond last sibling" );
 }

@@ -19,20 +19,22 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#include <string.h>
 #include "tree.h"
 #include "prefs.h"
 #include "ui.h"
 #include <cli.h>
 
+static char query[100];
+
 /************** search ************************/
 
 static int next_match_cmd(char *params,void *data){
 	Node *pos=(Node *)data;
-	pos = node_recursive_match ((char *) prefs.query, pos);
+	pos = node_recursive_match ((char *) query, pos);
 
 	if(pos==NULL){
-		docmdf(pos,"status reached bottom of tree and '%s' not found", prefs.query);
+		docmdf(pos,"status reached bottom of tree and '%s' not found", query);
 		return (int)data;
 	}
 	return (int)pos;
@@ -40,10 +42,10 @@ static int next_match_cmd(char *params,void *data){
 
 static int prev_match_cmd(char *params,void *data){
 	Node *pos=(Node *)data;
-	pos = node_backrecursive_match ((char *) prefs.query, pos);
+	pos = node_backrecursive_match ((char *) query, pos);
 
 	if(pos==NULL){
-		docmdf(pos,"status reached top of tree and '%s' not found", prefs.query);
+		docmdf(pos,"status reached top of tree and '%s' not found", query);
 		return (int)data;
 	}
 	return (int)pos;
@@ -51,8 +53,8 @@ static int prev_match_cmd(char *params,void *data){
 
 static int getquery_cmd(char *params,void *data){
 	Node *pos=(Node *)data;
-	strcpy(prefs.query,"");
-	ui_getstr("Search for:",&prefs.query[0]);
+	strcpy(query,"");
+	ui_getstr("Search for:",&query[0]);
 	return (int)pos;
 }
 /*
@@ -65,4 +67,5 @@ void init_search(){
 	cli_add_help("prev_match","Moves backwards in the tree to the prior match");
 	cli_add_command ("next_match", next_match_cmd, "");
 	cli_add_help("next_match","Moves forward in the tree to the next match");
+	cli_add_string("query",query,"");
 }

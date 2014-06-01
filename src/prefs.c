@@ -36,26 +36,12 @@ const char *format_name[format_terminator] = {
 
 
 Tprefs prefs = {
-	0,							/*default_help_level; */
-	0,							/*help_level; */
-	0,							/*forced_up; */
-	0,							/*forced_down; */
-	COLLAPSE_ALL,				/*default_collapse_mode; */
-	COLLAPSE_ALL,				/*collapse_mode; */
-	format_hnb,					/*def_format; */
 	format_hnb,					/*format; */
-	0,							/*xml_cuddle; */
-	0,							/*xml_highlight; */
 	0,							/*tutorial; */
-	0,							/*debug;    */
 	"",							/*rc_file[100]; */
 	"",							/*db_file[100]; */
 	"",							/*default_db_file[100]; */
-	"",							/*query*/
-	"  -",						/*leaf bullet */
-	"  +",						/*parent bullet */
 	1,							/*showpercent */
-	0,							/*keep whitespace */
 	0,							/*fixed focusbar */
 	0							/*save position */
 };
@@ -79,34 +65,18 @@ void init_prefs ()
 	sprintf (prefs.default_db_file, "C:\\hnb_data");
 #endif
 
-cli_add_int("help_level", &prefs.help_level, "amount of help cluttering screen" );
-cli_add_int("forced_up",  &prefs.forced_up,  "wether movement upwards is forced beyond first sibling" );
-cli_add_int("forced_down",&prefs.forced_down,"wether movement downwards is forced beyond last sibling" );
-
-cli_add_int("collapse_mode",&prefs.collapse_mode,"");
-
-cli_add_int("xml_cuddle",&prefs.xml_cuddle,"");
-cli_add_int("xml_highlight",&prefs.xml_highlight,"");
-
-cli_add_int ("helplvl", &prefs.help_level,  "level og help provided to user");
-cli_add_int ("debug", &prefs.debug, "view debug information");
-/*str*/cli_add_int ("format", &prefs.format, "the format of this file");
-cli_add_int ("default_format", &prefs.def_format, "default format (and format of default db)");
+/*str*/cli_add_int ("format", &prefs.format, "the format of the current file");
 
 cli_add_string("rc_file",prefs.rc_file,"");
 cli_add_string("db_file",prefs.db_file,"");
 cli_add_string("default_db_file",prefs.default_db_file,"");
-cli_add_string("query",prefs.query,"");
-cli_add_string("bullet_leaf",  prefs.bullet_leaf,"");
-cli_add_string("bullet_parent",prefs.bullet_parent,"");
 
 cli_add_int("showpercent",&prefs.showpercent,"");
-cli_add_int("keepwhitespace",&prefs.keepwhitespace,"");
 cli_add_int("fixedfocus",&prefs.fixedfocus,"");
 cli_add_int("savepos",&prefs.savepos,"");
 
 #ifdef NCURSES_VERSION
-	cli_add_int("escdelay",&ESCDELAY,"curses variable");
+	cli_add_int("escdelay",&ESCDELAY,"how long does curses wait before it decides ESC is ESC and not a coded key sequence");
 #endif
 }
 

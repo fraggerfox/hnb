@@ -20,26 +20,12 @@ extern const char *format_name[format_terminator];
 /* global struct used to remeber user preferences
 */
 typedef struct {
-	int def_help_level;
-	int help_level;
-	int forced_up;
-	int forced_down;
-	int def_collapse_mode;
-	int collapse_mode;
-	int def_format;
 	int format;
-	int xml_cuddle;
-	int xml_highlight;
 	int tutorial;
-	int debug;
 	char rc_file[100];
 	char db_file[100];
 	char default_db_file[100];
-	char query[100];
-	char bullet_leaf[4];
-	char bullet_parent[4];
 	int showpercent;
-	int keepwhitespace;
 	int fixedfocus;
 	int savepos;
 } Tprefs;

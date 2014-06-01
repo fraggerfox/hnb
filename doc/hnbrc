@@ -17,7 +17,6 @@ bullet_leaf   -
 #bullet_leaf   *
 #bullet_leaf   ·
 
-
 ########
 # default format to use available parameters:
 # 0 - xml using hnb DTD
@@ -25,7 +24,7 @@ bullet_leaf   -
 # 2 - xml using no DTD (xml editor)
 # 3 - xml using OPML DTD
 
-default_format 0
+format 0
 
 #########
 #
@@ -51,16 +50,21 @@ display_format i4- d
 # 
 # * is subsituted for the url
 #
-#web_command opera -remote 'openURL(*)'
-#web_command opera -remote 'openURL(*,new-window)'
-#web_command netscape -remote 'openURL(*)'
-#web_command netscape -remote 'openURL(*,new-window)'
-#web_command mozilla -remote 'openURL(*)'
-#web_command mozilla -remote 'openURL(*,new-window)'
-#web_command konqueror *
+# the X ones have their error and standard output redirected to dev/null
+# and are put into the background to keep hnb running afterwards
 
-web_command galeon -n *
+#web_command opera -remote 'openURL(*)'			> /dev/null 2>&1 &
+#web_command netscape -remote 'openURL(*)'		> /dev/null 2>&1 &
+#web_command netscape -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
+#web_command mozilla -remote 'openURL(*)'		> /dev/null 2>&1 &
+#web_command mozilla -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
+#web_command konqueror *				> /dev/null 2>&1 &
+#web_command galeon -n					> /dev/null 2>&1 &
+#web_command w3m *
+#web_command lynx *
+#web_commend rxvt -fn fixed -rv +sb -e w3m *		> /dev/null 2>&1 &
 
+web_command opera -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
 
 #########
 # what command is executed when a user wants a action performed on a
@@ -68,9 +72,18 @@ web_command galeon -n *
 # 
 # * is subsituted for the mailaddress
 #
-#mail_command xterm -rv pine *
+#mail_command xterm -rv pine *				> /dev/null 2>&1 &
+#mail_command xterm -rv +sb -e mutt *			> /dev/null 2>&1 &
+#mail_command pine *
 
-mail_command xterm -rv +sb mutt *
+mail_command mutt *
+
+
+########
+# the spellchecker used
+#
+#spell_command aspell
+spell_command ispell
 
 
 ##########
@@ -153,6 +166,7 @@ context main
 	bind	right		right
 	bind 	npage		pagedown
 	bind  	ppage		pageup
+	bind	home	go_root
 
 	bind  	return  	edit
 	bind  	del		remove
@@ -198,8 +212,15 @@ context main
 	bind	^Z		restore_state
 	bind	^A		action
 
+	bind	f6		context spellcheck
+	bind	..		spell
+	bind	..		save_state
+	
+	bind	f10		context user
+
 	bind	f1		status Take a look at ~/.hnbrc to check out the configuration
 	bind	..		status there you will also find details about the available keybindings.
+	bind	..		status please feel free to contribute more useful keybindings and helptexts...
 
 context quitsave
 	helptext Save on exit? |    | Y |es | J |a || | N |o || |ESC| cancel
@@ -220,6 +241,19 @@ context quitsave
 	bind	esc	context main
 	bind	any unbound
 
+context spellcheck
+	helptext Spellchecking |   |Space| next node |ESC| cancel |F6,Return| confirm changes
+	bind	space	go_recurse
+	bind	..		spell
+	bind	down	go_recurse
+	bind	..		spell
+	bind	up		go_backrecurse
+	bind	..		spell
+	bind	return		context main
+	bind	f6		context main
+	bind	esc		restore_state
+	bind	..		context main
+	bind	any		unbound
 
 context grab
 	helptext Node grabbed |  |return| |space| drop here || |ESC| cancel
@@ -234,7 +268,6 @@ context grab
 	bind	down		movenode down
 
 	bind	any		unbound
-
 
 context search
 	helptext Searching |  |ESC| cancel || | n |ext || | p |revious || |space|/|return| go
@@ -295,7 +328,41 @@ context nodeedit
 	bind	tab		complete
 	bind	esc		cancel
 
+context user
+	helptext Usermenu | |ESC| cancel |F1| ispell language |F2| browser command
+	bind	esc		context main
+	bind	f1		context user_ispell
+	bind	f2		context user_browser
+	bind	any		unbound
+
+context user_ispell
+	helptext Language for ispell: | |F1| Br.english  |F2| Am.english  |F3| Norwegian bokmål  |F4| Norwegian nynorsk
+	bind	f1		spell_command ispell -damerican
+	bind	..		context main
+	bind	f2		spell_command ispell -dbritish
+	bind	..		context main
+	bind	f3		spell_command ispell -dbokmål
+	bind	..		context main
+	bind	f4		spell_command ispell -dnynorsk
+	bind	..		context main
+	bind	esc		context main
+	bind	any		unbound
+
+context user_browser
+	helptext Browser action: | |F1| w3m replace hnb  |F2| w3m in rxvt  |F3| Opera, new tab  |F4| Mozilla new window
+	bind	f1		browser_command w3m *
+	bind	..		context main
+	bind	f2		web_commend rxvt -T "w3m spawned from hnb" -fn fixed -rv +sb -e w3m * > /dev/null 2>&1 &
+	bind	..		context main
+	bind	f3		web_command opera -remote 'openURL(*,new-window)' > /dev/null 2>&1 &
+	bind	..		context main
+	bind	f4		web_command mozilla -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
+	bind	..		context main
+	bind	esc		context main
+	bind	any		unbound
+
 context main
+
 
 status hnb - hierarchical notebook   http://hnb.sourceforge.net/
 status (c) Øyvind Kolås 2001-2003    pippin@users.sourceforge.net

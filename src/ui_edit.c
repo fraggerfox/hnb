@@ -18,13 +18,12 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
- #include <ctype.h>
+#include <ctype.h>
 #include <string.h>
 
 #include "tree.h"
 #include "ui.h"
 #include "prefs.h"
-#include "ui_style.h"
 #include "ui_overlay.h"
 #include "evilloop.h"
 #include <stdlib.h>
@@ -51,7 +50,7 @@ static int ui_edit_cmd (char *params, void *data)
 			node_setflag (pos, F_temp, 0);
 		} else {
 			pos = node_insert_down (node_bottom (pos));
-			node_setdata (pos, input);
+			node_setdata (pos, inputbuf);
 			if (node_getflag (node_left (pos), F_todo)) {
 				node_setflag (pos, F_todo, 1);
 			}
@@ -73,7 +72,7 @@ static int ui_edit_cmd (char *params, void *data)
 	input[cursor_pos + 2] = 0;
 
 	while (!stop) {
-		ui_draw (pos, pos, (char *) cursor_pos, 1);
+		ui_draw (pos, (char *) cursor_pos, 1);
 		c = parsekey (ui_input (), ui_scope_nodeedit);
 		switch (c->action) {
 			case ui_action_right:

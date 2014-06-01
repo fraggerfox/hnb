@@ -21,6 +21,7 @@
 /**************/
 #include "tree.h"
 #include "cli.h"
+#include "ui.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -32,6 +33,7 @@ static char mail_command[255]="rxvt -rv +sb -e mutt *";
 static int action_node(Node *node){
 	char cmdline[512]="";
 	char *start=NULL;
+	int ui_was_inited=ui_inited;
 
 	if(!strncmp("exec ",node_getdata( node ),5)){
 		sprintf(cmdline,"%s > /dev/null 2>&1 &", node_getdata( node ) +5 );
@@ -53,7 +55,7 @@ static int action_node(Node *node){
 				strcat(cd,url);
 				strcat(cd,cs+1);
 				cli_outfunf("shelling out: %s",cmdline);
-				strcat(cd,"> /dev/null 2>&1 &");
+				//strcat(cd,"> /dev/null 2>&1 &");
 				break;
 			} else {
 				*cd=*cs;
@@ -83,7 +85,7 @@ static int action_node(Node *node){
 				strcat(cd,mail_address);
 				strcat(cd,cs+1);
 				cli_outfunf("shelling out: %s",cmdline);
-				strcat(cd,"> /dev/null 2>&1 &");
+				//strcat(cd,"> /dev/null 2>&1 &");
 				break;
 			} else {
 				*cd=*cs;
@@ -93,9 +95,10 @@ static int action_node(Node *node){
 		 }
 		}	}
 	
-	
 	if(cmdline[0]){
+		if(ui_was_inited)ui_end();
 		system(cmdline);
+		if(ui_was_inited)ui_init();
 		return 0; 
 	}
 	return -1;

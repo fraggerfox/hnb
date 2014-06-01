@@ -3,6 +3,7 @@
 
 #include "ui_binding.h"
 #include <curses.h>
+#include "ui_style.h"
 #include "ui_draw.h"
 #include "ui_cli.h"
 
@@ -14,25 +15,6 @@
   #define UI_BACKSPACE2 KEY_BACKSPACE
   #define UI_BACKSPACE3 8mencoder stream.dump -ovc lavc -lavcopts vcodec=mpeg4:vpass=2:vbitrate=905:vhq:v4mv:keyint=120 -oac copy -o spawn_p2.avi
 */
-
-/* different display modes of the curses interface */
-
-/* collapse modes */
-enum {
-	COLLAPSE_ALL = 0,
-	COLLAPSE_ALL_BUT_CHILD,
-	COLLAPSE_NONE,
-	COLLAPSE_PATH,
-	COLLAPSE_END,
-	COLLAPSE_ONLY_SIBLINGS
-};
-
-enum {
-	BULLET_NONE = 0,
-	BULLET_PLUSMINUS,
-	BULLET_STAR,
-	BULLET_MINUS
-};
 
 /* initializes the curses ui sets keyboard mode etc.
 */
@@ -55,7 +37,7 @@ int ui_input ();
 extern int hnb_edit_posup;
 extern int hnb_edit_posdown;
 
-extern int curses_activated;
+extern int ui_inited;
 
 void ui_getstr(char *prompt, char *datastorage);
 

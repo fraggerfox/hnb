@@ -8,6 +8,7 @@ clean:
 	(cd src;make clean)
 	(cd util;make clean)
 	rm -f *~
+rcupdate: updaterc
 updaterc:
 	(cd util;make)
 	echo -n "\"">src/hnbrc.inc

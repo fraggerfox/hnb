@@ -26,7 +26,7 @@ typedef struct Node {
 } Node;
 
 /* convenience macro for the rest of this header*/
-#define if_node(a,b)		(a?b:0)
+#define if_node(a,b)		((a)?(b):0)
 
 /*	macros to determine if there is a node immedieatly next to the
    specified in a driection, returns 0 if there isn't the node if
@@ -34,33 +34,33 @@ typedef struct Node {
    
 	Returns: node,  0 if none   
 */
-#define node_up(node)		if_node(node,node->up)
-#define node_down(node)		if_node(node,node->down)
-#define node_right(node)	if_node(node,node->right)
-#define node_left(node)		if_node(node,node->left)
+#define node_up(node)		if_node((node),(node)->up)
+#define node_down(node)		if_node((node),(node)->down)
+#define node_right(node)	if_node((node),(node)->right)
+#define node_left(node)		if_node((node),(node)->left)
 
 /* sets all the flags of a node, if it exists
 	Returns: New flags, or 0 if node didn't exist
 */
-#define node_setflags(node,tflags)	if_node(node,node->flags=tflags)
+#define node_setflags(node,tflags)	if_node((node),(node)->flags=(tflags))
 
 /* gets all the flags of a node, if it exists
 	Returns: flags, or 0 if node didn't exist
 */
-#define node_getflags(node)			if_node(node,(node->flags))
+#define node_getflags(node)			if_node((node),((node)->flags))
 
 
 /* returns the state of the specified flag
 	Returns: 1 if flag is set 0 if not
 */
-#define node_getflag(node,flag)	if_node(node,(node->flags&flag?1:0))
+#define node_getflag(node,flag)	if_node((node),((node)->flags&(flag)?1:0))
 
 /*	sets the specified flag if state is 1, turns of the flag if state is 0
 
 */
 #define node_setflag(node,flag,state)\
-	{if(state){node_setflags(node,node->flags|flag);}\
-	else	{node_setflags(node, node->flags & ( flag  ^0xffff));}}
+	{if(state){node_setflags((node),(node)->flags|(flag));}\
+	else	{node_setflags((node), (node)->flags & ( (flag)  ^0xffff));}}
 
 /* ansi c complained too much about value computed not used 
    so I reverted to a new macro function above not returinging flags
@@ -74,7 +74,7 @@ typedef struct Node {
 
 	Returns: 1 if flag were set 0 if flag were turned of
 */
-#define node_toggleflag(node,flag) (   node_setflags(node, node->flags^flag )   &flag)
+#define node_toggleflag(node,flag) (   node_setflags((node), (node)->flags^(flag) )   &flag)
 
 
 /** sets and gets the data for a node, does neccesary allocating

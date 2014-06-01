@@ -32,6 +32,8 @@
 #include <config.h>
 #endif
 
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "tree.h"
@@ -91,7 +93,6 @@ int main (int argc, char **argv)
 		int format;
 		int ui;
 		int tutorial;
-		int debug;
 		char *dbfile;
 		char *rcfile;
 		char *cmd;
@@ -102,8 +103,7 @@ int main (int argc, char **argv)
 			-1,					/*format to load by default */
 			1,					/* ui */
 			0,					/* tutorial */
-			0,					/*debug */
-	0, 0, 0};
+	NULL, NULL, NULL};
 	{							/*parse commandline */
 		for (argno = 1; argno < argc; argno++) {
 			if (!strcmp (argv[argno], "-h")
@@ -157,8 +157,6 @@ int main (int argc, char **argv)
 					cmdline.def_db = 1;
 					cmdline.dbfile = (char *) -1;
 				}
-			} else if (!strcmp (argv[argno], "-d")) {
-				cmdline.debug = 1;
 			} else {
 				if (argv[argno][0] == '-') {
 					fprintf (stderr, "unknown option %s\n", argv[argno]);
@@ -206,16 +204,12 @@ int main (int argc, char **argv)
 
 
 	/* ovveride the prefs with commandline specified options */
-	if (cmdline.debug)
-		prefs.debug = 1;
 	if (cmdline.tutorial)
 		prefs.tutorial = 1;
 	if (cmdline.format != -1) {	/* format specified */
 		prefs.format = cmdline.format;
-	} else {
-		prefs.format = prefs.def_format; 
-	}
-
+	} 
+	
 	if (cmdline.def_db) {
 		strcpy (prefs.db_file, prefs.default_db_file);
 		if (!file_check (prefs.db_file))
@@ -229,7 +223,7 @@ int main (int argc, char **argv)
 	if (!prefs.tutorial) {
 		int oldpos = -1;
 
-		if (prefs.format == format_hnb) {
+		if (prefs.format == format_hnb || prefs.format == format_xml || prefs.format==format_opml) {
 
 			if (!xml_check (prefs.db_file)) {
 				fprintf (stderr, "%s does not seem to be a xml file, aborting.\n",prefs.db_file);
@@ -260,7 +254,6 @@ int main (int argc, char **argv)
 
 	switch (cmdline.ui) {
 		case 1:
-/*			load_prefs();*/
 			pos = evilloop (pos);
 			ui_end ();
 			break;

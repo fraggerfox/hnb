@@ -25,6 +25,7 @@
 #include "tree.h"
 #include "curses.h"
 #include "ui_overlay.h"
+#include "ui.h"
 #include "prefs.h"
 #include "cli.h"
 
@@ -34,7 +35,7 @@
 int nodes_above;
 int active_line;
 int nodes_below;
-int curses_activated=0;
+int ui_inited=0;
 
 void ui_init ()
 {
@@ -45,7 +46,12 @@ void ui_init ()
 	nonl ();
 	raw ();						/* enable binding ctl+c,ctrl+q,ctrl+z .. */
 	noecho ();
-	active_line = LINES / 3;
+	
+	if(prefs.fixedfocus){
+		active_line = LINES / 3;
+	} else {
+		active_line = 1;
+	}
 
 	#ifdef NCURSES_VERSION
 	/* 20021129 RVE - assign terminal default colors to color number -1 */
@@ -83,13 +89,14 @@ void ui_init ()
 		define_key("\033[d",KEY_SLEFT);
 	#endif	
 
-	curses_activated=1;
+	ui_inited=1;
 	cli_width=COLS;
 
 	if (has_colors ()) {
 		start_color ();
 	}
 
+	ui_style_restore_color();
 	nodes_above = active_line;
 	nodes_below = LINES - active_line;
 }
@@ -100,7 +107,7 @@ void ui_end ()
 	clear ();
 	refresh ();
 	endwin ();
-	curses_activated=0;
+	ui_inited=0;
 }
 
 
@@ -114,9 +121,9 @@ int ui_input ()
 	switch (c) {
 #ifdef KEY_RESIZE
 		case KEY_RESIZE:
-			active_line = LINES / 3;
-			nodes_above = active_line;
-			nodes_below = LINES - active_line;
+			if(prefs.fixedfocus){
+				active_line = LINES / 3;
+			}
 			cli_width=COLS;
 			c = getch ();
 			return ui_action_ignore;

@@ -2,7 +2,7 @@ LIBS=-lcurses libcli/libcli.a
 CFLAGS=-I.. -Ilibcli -DHAVE_CONFIG_H -Wall -O2
 
 hnb: libcli/libcli.a Makefile *.c init_subsystems.c *.h *.inc
-	cc -o hnb *.c $(LIBS) $(CFLAGS)
+	gcc -o hnb *.c $(LIBS) $(CFLAGS)
 libcli/libcli.a: libcli/*.c
 	(cd libcli;make)
 libcli/libcli_p.a: libcli/*.c

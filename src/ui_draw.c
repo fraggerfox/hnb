@@ -33,7 +33,6 @@
 #define UI_C
 #include "ui.h"
 #include "ui_draw.h"
-#include "ui_style.h"
 #include "cli.h"
 #include <stdlib.h>
 #include <ctype.h>
@@ -42,9 +41,24 @@ int nodes_above;
 int active_line;
 int nodes_below;
 
+
+/* collapse modes */
+enum {
+	COLLAPSE_ALL = 0,
+	COLLAPSE_ALL_BUT_CHILD,
+	COLLAPSE_NONE,
+	COLLAPSE_PATH,
+	COLLAPSE_END,
+	COLLAPSE_ONLY_SIBLINGS
+};
+
+static int collapse_mode=COLLAPSE_ALL;
+
+
+
 static Node *up (Node *sel, Node *node)
 {
-	switch (prefs.collapse_mode) {
+	switch (collapse_mode) {
 		case COLLAPSE_ALL:
 		case COLLAPSE_ALL_BUT_CHILD:
 			if (node_up (node))
@@ -70,7 +84,7 @@ static Node *up (Node *sel, Node *node)
 
 static Node *down (Node *sel, Node *node)
 {
-	switch (prefs.collapse_mode) {
+	switch (collapse_mode) {
 		case COLLAPSE_ALL_BUT_CHILD:
 			if ((node == sel) && (node_right (node)))
 				return node_right (node);
@@ -295,7 +309,8 @@ static int draw_spacing(int line, int col, int width, Node *node, int drawmode){
 	return width;
 }
 
-
+static char bullet_leaf[4]="  -";
+static char bullet_parent[4]="  +";
 
 static int draw_bullet(int line, int col, int width, Node *node,int drawmode){
 	int asize;
@@ -312,7 +327,7 @@ static int draw_bullet(int line, int col, int width, Node *node,int drawmode){
 			switch(perc){
 				case -1:
 					if(drawmode!=drawmode_test)
-						addstr( (node_right(node)) ? prefs.bullet_parent: prefs.bullet_leaf);
+						addstr( (node_right(node)) ? bullet_parent: bullet_leaf);
 					break;
 				case 0:
 					if(drawmode!=drawmode_test)
@@ -615,49 +630,58 @@ static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
 extern int hnb_nodes_up;
 extern int hnb_nodes_down;
 
-void ui_draw (Node *node, Node *lastnode, char *input, int edit_mode)
+void ui_draw (Node *node, char *input, int edit_mode)
 {
-
-/*	static Node *lastnode;*/
 	int lines;
+	
 	static struct {
-		int parent;
-		int child;
-		int up;
-		int down;
-	} lines2 = {
-	1, 1, 1, 1};
-	/*FIXME?: calculate .. startlevel,.. making the interface move right if the  nodes are deeply nested */
-	/* do some magic to figure out which line is the active one */
+		int self;
+		int prev_left;
+		int prev_right;
+		int prev_up;
+		int prev_down;
+		int prev;
+	} node_numb={1,1,1,1,1,1};
 	
 	if (!prefs.fixedfocus) {
-#define KEEPLINES 5
-
-		int maxline =
-			LINES - (prefs.help_level ? prefs.help_level ==
-					 1 ? 6 : 1 : 2) - KEEPLINES;
-		if (node_up (node) == lastnode) {
-			active_line += lines2.down;
-		} else if (node_down (node) == lastnode) {
-			if (active_line > KEEPLINES)
-				active_line -= lines2.up;
-		} else if (node_left (node) == lastnode) {
-			active_line += 1/*lines2.child is unneccesary,.. since it always will be */;
-		} else if (node_right (node)
-				   && node_right (node) == node_top (lastnode)) {
-			active_line -= lines2.parent;
-		}
-		if (!lastnode)
+		node_numb.prev=node_numb.self;
+		node_numb.self=node_no(node);
+	
+		if(node_numb.self==node_numb.prev_up){
 			active_line--;
+		} else if(node_numb.self==node_numb.prev_down){
+			active_line++;
+		} else if(node_numb.self==node_numb.prev_right){
+			active_line++;
+		} else if(node_numb.self==node_numb.prev_left){
+			int skip_amt=1;
+			Node *tnode=node_right(node);
+			while(tnode && node_no(tnode)<node_numb.prev){
+				skip_amt++;
+				tnode=node_down(tnode);
+			}
+			active_line-=skip_amt;
+		} else if(node_numb.self==1){	/* jumped to root */
+			active_line=1;
+		} else if(node_numb.self>node_numb.prev){
+			active_line++;
+		} else if(node_numb.self<node_numb.prev){
+			active_line--;
+		}
+
+		node_numb.prev_down=node_no(node_down(node));
+		node_numb.prev_up=node_no(node_up(node));
+		node_numb.prev_left=node_no(node_left(node));
+		node_numb.prev_right=node_no(node_right(node));	
+		
+		#define KEEPLINES 3
+		{int maxline=LINES-KEEPLINES;		
 		if (active_line > maxline)	/*if we overlap with help,.. move up */
 			active_line = maxline;
 		if (active_line < KEEPLINES)
 			active_line = KEEPLINES;
-	}
-	lines2.down = 0;
-	lines2.up = 0;
-	lines2.parent = 0;
-	lines2.child = 0;
+		}
+	};
 
 	nodes_above = active_line;
 	nodes_below = LINES - active_line;
@@ -675,11 +699,6 @@ void ui_draw (Node *node, Node *lastnode, char *input, int edit_mode)
 
 				while (tnode) {
 					draw_item (line -= draw_item (0, 0, tnode, drawmode_test), 0, tnode, drawmode_normal);
-					if (!lines2.up && node_down (tnode) == node)
-						lines2.up = active_line - line;
-					if (!lines2.parent && node_right (tnode)
-						&& node_right (tnode) == node_top (node))
-						lines2.parent = active_line - line;
 
 					if (node_down (tnode) == prev_down) {
 						hnb_nodes_up++;
@@ -690,9 +709,6 @@ void ui_draw (Node *node, Node *lastnode, char *input, int edit_mode)
 					if (active_line - nodes_above >= line)
 						tnode = 0;
 				}
-
-				if (!lines2.parent)
-					lines2.parent = active_line;
 			}
 /* draw the currently selected item */
 
@@ -711,9 +727,6 @@ void ui_draw (Node *node, Node *lastnode, char *input, int edit_mode)
 				if (lines >= LINES)
 					tnode = 0;
 				while (tnode) {
-					if (!lines2.down && node_up (tnode) == node)
-						lines2.down = lines - active_line;
-
 					lines += draw_item (lines, 0, tnode, drawmode_normal);
 
 					if (node_up (tnode) == prev_up) {
@@ -743,6 +756,7 @@ void ui_draw (Node *node, Node *lastnode, char *input, int edit_mode)
 !init_ui_draw();
 */
 void init_ui_draw(){
+	cli_add_int("collapse_mode",&collapse_mode,"");
 	cli_add_command ("display_format", display_format_cmd, "<format string>");
 	cli_add_help("display_format","\
 defines how each node is displayed, the display string syntax is \
@@ -752,4 +766,7 @@ d means the real data of the node, x is a temporary placeholder for \
 upcoming columntypes,. (for debugging only) \
 i and x can take an argument specifying how many characters wide \
 the field should be");
+	cli_add_string("bullet_leaf",  	bullet_leaf,"");
+	cli_add_string("bullet_parent",	bullet_parent,"");
+
 }

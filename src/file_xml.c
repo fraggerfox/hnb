@@ -44,6 +44,8 @@
 							break;\
 						}\
 
+static int xml_cuddle=0;
+
 /* converts special chars into entities */
 static char *xml_quote (const char *in)
 {
@@ -363,7 +365,7 @@ static int import_xml (char *params, void *data)
 	if (node_getflag (node, F_temp))
 		node = node_remove (node);	/* remove temporary node, if tree was empty */
 
-	if (prefs.xml_cuddle)
+	if (xml_cuddle)
 		node = xml_cuddle_nodes (node);
 
 	cli_outfunf ("xml import - imported \"%s\"", filename);
@@ -380,4 +382,7 @@ void init_file_xml(){
 	cli_add_help("export_xml","Exports the current node, it's siblings and all sublevels to 'filename' as if it was xml markup.\
 (load an xml file with import_xml or hnb -x file.xml to see how it should be inside hnb.");	
 	cli_add_help("import_xml","Imports 'filename' and inserts it's contents at the current level.");
+	cli_add_int("xml_cuddle",&xml_cuddle,"join the data with nodes if no tags within tag");
+
+
 }

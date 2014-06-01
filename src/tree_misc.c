@@ -19,6 +19,7 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
 #include "tree.h"
 #include "node.h"
 #include "prefs.h"
@@ -71,6 +72,37 @@ static int cmd_movenode(char *params,void *data){
 void init_movenode(){
 	cli_add_command ("movenode", cmd_movenode, "<up|left|right|down>");
 }
+
+static int cmd_go_root(char *params,void *data){
+	if(node_backrecurse((Node*)data))
+		return (int)node_root((Node*)data);
+	return (int)data;
+}
+
+static int cmd_go_recurse(char *params,void *data){
+	if(node_recurse((Node*)data))
+		return (int)node_recurse((Node*)data);
+	return (int)data;
+}
+
+static int cmd_go_backrecurse(char *params,void *data){
+	return (int)node_backrecurse((Node*)data);
+}
+
+
+/*
+!init_go_root();
+*/
+void init_go_root(){
+	cli_add_command ("go_root", cmd_go_root, "");
+	cli_add_help("go_root","skip to the root of the tree");
+	cli_add_command ("go_recurse", cmd_go_recurse, "");
+	cli_add_help("go_recurse","go to the next node recursively");
+	cli_add_command ("go_backrecurse", cmd_go_backrecurse, "");
+	cli_add_help("go_backrecurse","go to the previous node recursively");
+
+}
+
 
 
 static int cmd_outdent (char *params, void *data)
@@ -137,7 +169,7 @@ static int remove_cmd(char *params,void *data){
 		int tempscope=ui_current_scope;
 		ui_current_scope=ui_scope_confirm;
 		docmdf (pos, "status node has children, really remove?");
-		ui_draw(pos,pos,"",0 );
+		ui_draw(pos,"",0 );
 		ui_current_scope=tempscope;
 		c = parsekey (ui_input (), ui_scope_confirm);
 		if (c->action == ui_action_confirm ){
@@ -167,7 +199,7 @@ static int commandline_cmd (char *params, void *data){
 
 	do{
 		strcpy(commandline,"");
-		ui_draw(pos,pos,"",0);		
+		ui_draw(pos,"",0);		
 		ui_getstr("commandline interface, enter blank command to cancel",commandline);
 
 		if(commandline[0])

@@ -14,5 +14,6 @@ enum {
 };
 
 void ui_style(int style_no);
+void ui_style_restore_color();
 
 #endif /*UI_STYLE_H*/

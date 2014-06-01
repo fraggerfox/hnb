@@ -26,25 +26,26 @@
 #include "tree.h"
 #include "prefs.h"
 #include "ui.h"
-#include "ui_style.h"
 
 #include "cli.h"  
 
 typedef struct {
 	char name[16];
+	short fg;
+	short bg;
 	int att;
 } styleitm;
 
 static styleitm styledb[]={
-	{"reserved", 0},
-	{"menuitem",   A_REVERSE},
-	{"menutext",   A_NORMAL},
-	{"node",       A_NORMAL},
-	{"parentnode", A_BOLD},
-	{"bullet",     A_NORMAL},
-	{"selected",   A_REVERSE},
-	{"parentselected", A_REVERSE|A_BOLD},
-	{"background", A_NORMAL},
+	{"reserved", 		 0, 0,0},
+	{"menuitem",   		-1,-1,A_REVERSE},
+	{"menutext",   		-1,-1,A_NORMAL},
+	{"node",       		-1,-1,A_NORMAL},
+	{"parentnode", 		-1,-1,A_BOLD},
+	{"bullet",     		-1,-1,A_NORMAL},
+	{"selected",   		-1,-1,A_REVERSE},
+	{"parentselected", 	-1,-1,A_REVERSE|A_BOLD},
+	{"background", 		-1,-1,A_NORMAL},
 };
 
 void ui_style(int style_no){
@@ -103,6 +104,13 @@ static int string2style(char *str){
 	return -1;
 }
 
+void ui_style_restore_color(){
+	int no;
+	for(no=1;no<=8;no++){
+		init_pair(no, styledb[no].fg , styledb[no].bg);
+	}
+}
+
 static int ui_style_cmd(char *params, void *data){
 	char item[40];
 	char colors[40];
@@ -129,6 +137,8 @@ static int ui_style_cmd(char *params, void *data){
 		color2++;
 
 		init_pair(style_no, name2color(colors),name2color(color2));
+		styledb[style_no].fg=name2color(colors);
+		styledb[style_no].bg=name2color(color2);
 		styledb[style_no].att=A_NORMAL | COLOR_PAIR(style_no);
 
 		if(strstr(atts,"standout"))styledb[style_no].att |=  A_STANDOUT;

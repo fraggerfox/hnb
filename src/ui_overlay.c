@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include "tree.h"
 #include "ui.h"
-#include "ui_style.h"
 #include "ui_binding.h"
 #include "evilloop.h"
 
@@ -50,7 +49,7 @@ static int ui_helptext_cmd(char *params,void *data){
 	return (int)data;
 }
 
-#define MAX_STATUS_LINES 12
+#define MAX_STATUS_LINES 100
 
 static char status_line[MAX_STATUS_LINES][128]={""};
 
@@ -64,6 +63,10 @@ static void status(char *message, int ttl){
 	status_ttl+=ttl;
 	if(status_ttl>=MAX_STATUS_LINES)
 		status_ttl=MAX_STATUS_LINES-1;
+	if(status_ttl>=LINES-2)
+		status_ttl=LINES-3;
+
+
 }
 
 void set_status(char *message){
@@ -148,7 +151,7 @@ void status_draw(void)
 
 void help_draw (int scope)
 {
-	if(!curses_activated)return;
+	if(!ui_inited)return;
 	status_draw();
 
 	move(LINES-1,0);
