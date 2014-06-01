@@ -164,6 +164,7 @@ void init_ui_style(){
 	cli_add_command ("style", ui_style_cmd, "<element> <foreground/background> <attributes>");
 	cli_add_help("style","Changes the drawing style of 'element' available colors: \
 black, blue, cyan, red, green, magenta, yellow, white and default which uses the standard colors \
-of the terminal. Attrbutes are one or more of: standout, underline, reverse, blink, dim and bold.");
+of the terminal. Attrbutes are one or more of: standout, underline, reverse, blink, dim and bold. \
+Available elements are: menuitem, menutext, parentnode, node, bullet, selected, parentselected and background.");
 }
 

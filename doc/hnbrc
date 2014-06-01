@@ -1,7 +1,7 @@
 ##########
 # configuration file for hnb,
 #
-# use a tabspacing of 8 when editing this file
+# use a tab-spacing of 8 when editing this file
 #
 # (please be aware that this is the configuration file for a development version,
 #  things might change drastically soon,.. or perhaps later)
@@ -9,18 +9,25 @@
 ########## 
 # what kind of bullets are displayed before each item
 #
-bullet_parent   +
 #bullet_parent   -
 #bullet_parent   *
 #bullet_parent   ·
-bullet_leaf   -
+#bullet_parent_expanded   +
+#bullet_parent_expanded   *
+#bullet_parent_expanded   ·
 #bullet_leaf   *
-#bullet_leaf   ·
+#bullet_leaf   -
+
+bullet_leaf   ·
+bullet_parent   +
+bullet_parent_expanded   -
+
+
 
 ########
 # default format to use available parameters:
 # 0 - xml using hnb DTD
-# 1 - tab indented ascii
+# 1 - tab indented ASCII
 # 2 - xml using no DTD (xml editor)
 # 3 - xml using OPML DTD
 
@@ -33,23 +40,25 @@ format 0
 #
 #   spaces turn into real spaces, i means indentation, - means bullet,
 #   d means the real data of the node, x is a temporary placeholder for
-#   upcoming columntypes,. (for debugging only)
+#   upcoming column-types,. (for debugging only)
 #
 #   i and x can take an argument specifying how many characters wide
 #   the field should be
 #
 #   until further features are added, only the multiplier after
 #   indentation actually does something
-#   # indicates node number
+#   # indicates node number (would be line number in a folding editor)
 #
 # 
+
 display_format i4- d
+#display_format # i4- d
 
 #########
 # what command is executed when a user wants a action performed on a
-# entry containing an url
+# entry containing an URL
 # 
-# * is subsituted for the url
+# * is substituted for the URL
 #
 # the X ones have their error and standard output redirected to dev/null
 # and are put into the background to keep hnb running afterwards
@@ -69,9 +78,9 @@ web_command opera -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
 
 #########
 # what command is executed when a user wants a action performed on a
-# entry containing a mailaddress
+# entry containing a mail-address
 # 
-# * is subsituted for the mailaddress
+# * is substituted for the mail-address
 #
 #mail_command xterm -rv pine *				> /dev/null 2>&1 &
 #mail_command xterm -rv +sb -e mutt *			> /dev/null 2>&1 &
@@ -81,21 +90,10 @@ mail_command mutt *
 
 
 ########
-# the spellchecker used
+# the spell-checker used
 #
 #spell_command aspell
 spell_command ispell -x
-
-
-##########
-# amount of tree displayed
-#
-# 0 all anchesteral levels expanded
-# 1 same as 0, but expand first level of children of current item (buggy)
-# 2 expand whole tree
-# 3 hide everything but the "anchestral path" (buggy)
-#
-collapse_mode	0
 
 ##########
 # lock the position of the selected node to upper half of the screen 
@@ -115,12 +113,6 @@ forced_up	0
 # value given is in ms (1/1000seconds)
 #
 escdelay 100
-
-
-#########
-# keep whitespace as is when loading file from xml
-#
-keepwhitespace	0
 
 ##########
 # save current position when saving a database
@@ -146,13 +138,13 @@ style parentselected	yellow/red	bold
 style background	default/default	normal
 
 ##########
-# keybindings
+# key-bindings
 #
 # syntax: 
-#   "bindkey <scope[,scope[...]]>  <key>   <action>"
+#   "bind <scope[,scope[...]]>  <key>   <action>"
 #
 # multiple actions can be chained together by using the virtual key ".."
-# as the following keybinding
+# as the following key-binding
 #
 ##################################################
 
@@ -219,6 +211,9 @@ context main
 	bind	..		save_state
 	
 	bind	f10		context user
+	
+	bind	+		expand
+	bind	-		collapse
 
 	bind	f1		status Take a look at ~/.hnbrc to check out the configuration
 	bind	..		status there you will also find details about the available keybindings.
@@ -331,10 +326,14 @@ context nodeedit
 	bind	esc		cancel
 
 context user
-	helptext Usermenu | |ESC| cancel |F1| ispell language |F2| browser command
+	helptext Usermenu | |ESC| cancel |F1| ispell language |F2| browser command |F3| expand all  |F4|  collapse all
 	bind	esc		context main
 	bind	f1		context user_ispell
 	bind	f2		context user_browser
+	bind	f3		expand_all
+	bind	..		context main
+	bind	f4		collapse_all
+	bind	..		context main
 	bind	any		unbound
 
 context user_ispell

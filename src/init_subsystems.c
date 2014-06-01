@@ -3,6 +3,7 @@ void init_clipboard();
 void init_commandline();
 void init_evilloop();
 void init_exec_cmd();
+void init_expanded();
 void init_file();
 void init_file_ascii();
 void init_file_help();
@@ -37,6 +38,7 @@ void init_subsystems(){
  init_commandline();
  init_evilloop();
  init_exec_cmd();
+ init_expanded();
  init_file();
  init_file_ascii();
  init_file_help();

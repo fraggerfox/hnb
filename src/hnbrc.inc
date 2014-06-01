@@ -1,7 +1,7 @@
 "##########\n\
 # configuration file for hnb,\n\
 #\n\
-# use a tabspacing of 8 when editing this file\n\
+# use a tab-spacing of 8 when editing this file\n\
 #\n\
 # (please be aware that this is the configuration file for a development version,\n\
 #  things might change drastically soon,.. or perhaps later)\n\
@@ -9,18 +9,25 @@
 ########## \n\
 # what kind of bullets are displayed before each item\n\
 #\n\
-bullet_parent   +\n\
 #bullet_parent   -\n\
 #bullet_parent   *\n\
 #bullet_parent   ·\n\
-bullet_leaf   -\n\
+#bullet_parent_expanded   +\n\
+#bullet_parent_expanded   *\n\
+#bullet_parent_expanded   ·\n\
 #bullet_leaf   *\n\
-#bullet_leaf   ·\n\
+#bullet_leaf   -\n\
+\n\
+bullet_leaf   ·\n\
+bullet_parent   +\n\
+bullet_parent_expanded   -\n\
+\n\
+\n\
 \n\
 ########\n\
 # default format to use available parameters:\n\
 # 0 - xml using hnb DTD\n\
-# 1 - tab indented ascii\n\
+# 1 - tab indented ASCII\n\
 # 2 - xml using no DTD (xml editor)\n\
 # 3 - xml using OPML DTD\n\
 \n\
@@ -33,23 +40,25 @@ format 0\n\
 #\n\
 #   spaces turn into real spaces, i means indentation, - means bullet,\n\
 #   d means the real data of the node, x is a temporary placeholder for\n\
-#   upcoming columntypes,. (for debugging only)\n\
+#   upcoming column-types,. (for debugging only)\n\
 #\n\
 #   i and x can take an argument specifying how many characters wide\n\
 #   the field should be\n\
 #\n\
 #   until further features are added, only the multiplier after\n\
 #   indentation actually does something\n\
-#   # indicates node number\n\
+#   # indicates node number (would be line number in a folding editor)\n\
 #\n\
 # \n\
+\n\
 display_format i4- d\n\
+#display_format # i4- d\n\
 \n\
 #########\n\
 # what command is executed when a user wants a action performed on a\n\
-# entry containing an url\n\
+# entry containing an URL\n\
 # \n\
-# * is subsituted for the url\n\
+# * is substituted for the URL\n\
 #\n\
 # the X ones have their error and standard output redirected to dev/null\n\
 # and are put into the background to keep hnb running afterwards\n\
@@ -69,9 +78,9 @@ web_command opera -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &\n\
 \n\
 #########\n\
 # what command is executed when a user wants a action performed on a\n\
-# entry containing a mailaddress\n\
+# entry containing a mail-address\n\
 # \n\
-# * is subsituted for the mailaddress\n\
+# * is substituted for the mail-address\n\
 #\n\
 #mail_command xterm -rv pine *				> /dev/null 2>&1 &\n\
 #mail_command xterm -rv +sb -e mutt *			> /dev/null 2>&1 &\n\
@@ -81,21 +90,10 @@ mail_command mutt *\n\
 \n\
 \n\
 ########\n\
-# the spellchecker used\n\
+# the spell-checker used\n\
 #\n\
 #spell_command aspell\n\
 spell_command ispell -x\n\
-\n\
-\n\
-##########\n\
-# amount of tree displayed\n\
-#\n\
-# 0 all anchesteral levels expanded\n\
-# 1 same as 0, but expand first level of children of current item (buggy)\n\
-# 2 expand whole tree\n\
-# 3 hide everything but the \"anchestral path\" (buggy)\n\
-#\n\
-collapse_mode	0\n\
 \n\
 ##########\n\
 # lock the position of the selected node to upper half of the screen \n\
@@ -115,12 +113,6 @@ forced_up	0\n\
 # value given is in ms (1/1000seconds)\n\
 #\n\
 escdelay 100\n\
-\n\
-\n\
-#########\n\
-# keep whitespace as is when loading file from xml\n\
-#\n\
-keepwhitespace	0\n\
 \n\
 ##########\n\
 # save current position when saving a database\n\
@@ -146,13 +138,13 @@ style parentselected	yellow/red	bold\n\
 style background	default/default	normal\n\
 \n\
 ##########\n\
-# keybindings\n\
+# key-bindings\n\
 #\n\
 # syntax: \n\
-#   \"bindkey <scope[,scope[...]]>  <key>   <action>\"\n\
+#   \"bind <scope[,scope[...]]>  <key>   <action>\"\n\
 #\n\
 # multiple actions can be chained together by using the virtual key \"..\"\n\
-# as the following keybinding\n\
+# as the following key-binding\n\
 #\n\
 ##################################################\n\
 \n\
@@ -219,6 +211,9 @@ context main\n\
 	bind	..		save_state\n\
 	\n\
 	bind	f10		context user\n\
+	\n\
+	bind	+		expand\n\
+	bind	-		collapse\n\
 \n\
 	bind	f1		status Take a look at ~/.hnbrc to check out the configuration\n\
 	bind	..		status there you will also find details about the available keybindings.\n\
@@ -331,10 +326,14 @@ context nodeedit\n\
 	bind	esc		cancel\n\
 \n\
 context user\n\
-	helptext Usermenu | |ESC| cancel |F1| ispell language |F2| browser command\n\
+	helptext Usermenu | |ESC| cancel |F1| ispell language |F2| browser command |F3| expand all  |F4|  collapse all\n\
 	bind	esc		context main\n\
 	bind	f1		context user_ispell\n\
 	bind	f2		context user_browser\n\
+	bind	f3		expand_all\n\
+	bind	..		context main\n\
+	bind	f4		collapse_all\n\
+	bind	..		context main\n\
 	bind	any		unbound\n\
 \n\
 context user_ispell\n\

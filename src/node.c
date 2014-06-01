@@ -28,14 +28,8 @@
 Node *node_new ()
 {
 	Node *node = (Node *) malloc (sizeof (Node));
+	memset(node, 0, (sizeof(Node)));
 
-	node->up = 0;
-	node->down = 0;
-	node->right = 0;
-	node->left = 0;
-	node->attrib=NULL;
-
-	node->flags = 0;
 	node->percent_done = -1;
 	node->size=-1;	
 	return node;

@@ -44,6 +44,9 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.9.14
+		bugfix: The new sort and shuffle functions could result in dataloss when saved.
+		new feature: expand/collapse and expand_all/collapse_all are new bindable functions, expand/collapse is bound to +/- in the default config file, they force portions of the tree to stay open even when you leave it.
 	1.9.13
 		Apparently I broke the nasty quick-sort I had implemented, when I changed the way the tree was stored. Implemented a Merge-sort which is faster anyways.
 		Improved the behavior of non fixed navigation when the whole tree is displayed.
@@ -240,41 +243,9 @@ TODO
 			details dialog for each node to modify such things
 			cronological id
 	purge todo items on lower levels
-	shuffle action
 	curses interface
 		"context" menu for mouse mode
-	cli interface
-		make '/' inside node names appear correctly in pwd, and prompt
-		maybe avoiding static buffers is even more important here than in the curses version (due to possible scripted input),.. but then I'd have to fix path.c as well.. <g>
 	gtk 2.0
 		start
-	how to implement cloning
-		linked list
-			add a flag called ghost
-			add a Node *ghost; var to all nodes.
-			the node that sets up the symlink is set F_ghost, and Node *Right points to the children of the original node.
-			the destination points it's Node *ghost to the node that referred to it.
-			if a new ghost is made of any of the two other nodes, it sets it's own F_ghost attribute. Follows the links to the originating ghost, (->child -> parent) sets it's *right node pointing to it, follows the *ghost link until the 0, and hooks itself in there.
-			when removing the original node you reparent the children to the next node in the link list, and removes the F_ghost attribute from that node.
-			when removing one of the ghosts, you must tidy up the ghost link list, and free that node(but none of it's data)
-		in the ascii data format just say node_no(link) is linked here
-		the userinterface should have no notion of it's path,.. but perhaps a node history...
-		functions that must be changed
-			node_swap
-				if a node with F_ghost is moved, don't reparent children.
-			subtree_copy
-				nahh, tough one,.. just make a duplicate that isn't linked with the rest? TBD
-			node_recurse
-				ignore ghosts thereby avoiding loops
-			node_backrecurse
-			node_insert_up
-			node_insert_down
-			node_remove
 	make a dead tree copy of the source for examination
 		enscript *.h *.c -E  --output uts.ps -U 2 -j
-	backspace/delete behaviour, experiment to find good solution
-	win32 port
-		make sure it works
-		check key behaviour
-	html export
-		make the html legal,.. ( <li> overnode <ul> <li>hei </li><li>der</li> </li> )

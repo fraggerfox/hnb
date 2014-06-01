@@ -4,6 +4,9 @@ CFLAGS=-I.. -Ilibcli -DHAVE_CONFIG_H -Wall -O2
 CFILES=$(wildcard *.c)
 OBJS=$(patsubst %.c,%.o,$(CFILES))
 
+%.o: %.c *.h
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
+
 hnb: libcli/libcli.a Makefile $(OBJS) init_subsystems.c *.h *.inc
 	cc -o hnb $(OBJS) $(LIBS) $(CFLAGS)
 libcli/libcli.a: libcli/*.c

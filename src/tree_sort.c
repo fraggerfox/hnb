@@ -44,7 +44,7 @@ static int cmp_descdata (Node *a, Node *b)
 #endif
 
 static int cmp_random(Node *b,Node *a){
-	return (random()%10)-5;
+	return (random()%3)-1;
 }
 
 static int cmp_todo (Node *a, Node *b)
@@ -142,14 +142,18 @@ static Node *mergesort ( Node *head, int size, int (*cmp) (Node *a, Node *b)){
 static int sort_cmd (char *params, void *data)
 {
 	Node *pos = (Node *) data;
-	pos=mergesort(node_top(pos), nodes_down(node_top(pos))+1  , cmp_todo);
+	mergesort(node_top(pos), nodes_down(node_top(pos))+1  , cmp_todo);
+	if(node_left(pos))
+		node_left(pos)->right=node_top(pos);
 	return (int) pos;
 }
 
 static int shuffle_cmd (char *params, void *data)
 {
 	Node *pos = (Node *) data;
-	pos=mergesort(node_top(pos), nodes_down(node_top(pos))+1  , cmp_random);
+	mergesort(node_top(pos), nodes_down(node_top(pos))+1  , cmp_random);
+	if(node_left(pos))
+		node_left(pos)->right=node_top(pos);
 	return (int) pos;
 }
 

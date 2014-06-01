@@ -217,7 +217,7 @@ fprintf (file, "\n</body></html>\n");
 	if (file != stdout)
 		fclose (file);
 
-	cli_outfunf ("html export, saved output in \"%s\"", filename);
+	cli_outfunf ("html css export, saved output in \"%s\"", filename);
 	return (int) node;
 }
 

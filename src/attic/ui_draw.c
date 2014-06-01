@@ -633,8 +633,12 @@ void ui_draw (Node *node, char *input, int edit_mode)
 	
 	static struct {
 		int self;
+		int prev_left;
+		int prev_right;
+		int prev_up;
+		int prev_down;
 		int prev;
-	} node_numb={1,1};
+	} node_numb={1,1,1,1,1,1};
 	
 	if (!prefs.fixedfocus) {
 
@@ -658,6 +662,11 @@ void ui_draw (Node *node, char *input, int edit_mode)
 		if(node_numb.self==1){	/* jumped to root, always bring nodes to top of screen*/
 			active_line=1;
 		}
+
+		node_numb.prev_down=node_no(node_down(node));
+		node_numb.prev_up=node_no(node_up(node));
+		node_numb.prev_left=node_no(node_left(node));
+		node_numb.prev_right=node_no(node_right(node));	
 
 		{int i;
 		for(i=0;i<((LINES<MAXLINES)?LINES:MAXLINES);i++)

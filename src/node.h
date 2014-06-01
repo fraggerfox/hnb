@@ -29,11 +29,13 @@ typedef struct Node_AttItem {
 
 typedef struct Node {
 	struct Node *up, *down, *left, *right;
-	unsigned int flags;
+	unsigned int flags;		/* FIXME: todo/done should be todo attrib,.. checked="true" checked="false" implied:cheched="void"*/
 	Node_AttItem *attrib;
 
- 	int percent_done;
-	int size;
+	int expanded;
+						
+ 	int percent_done;	/* FIXME: due to be made attribute */
+	int size;           /* FIXME: due to be made attribute */
 } Node;
 
 
