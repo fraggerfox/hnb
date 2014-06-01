@@ -12,11 +12,20 @@
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 
+/* Define if you have the <libxml/parser.h> header file.  */
+#undef HAVE_LIBXML_PARSER_H
+
+/* Define if you have the <libxml/tree.h> header file.  */
+#undef HAVE_LIBXML_TREE_H
+
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
 /* Define if you have the curses library (-lcurses).  */
 #undef HAVE_LIBCURSES
+
+/* Define if you have the xml2 library (-lxml2).  */
+#undef HAVE_LIBXML2
 
 /* Name of package */
 #undef PACKAGE

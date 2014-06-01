@@ -1,6 +1,10 @@
 #ifndef FILE_H
 #define FILE_H
 
+#if HAVE_LIBXML2==1 && HAVE_LIBXML_PARSER_H==1 && HAVE_LIBXML_TREE_H==1
+#define USE_LIBXML
+#endif
+
 /* imports file *filename below specified node, if tree was empty
    return first node imported.
 */
@@ -39,5 +43,13 @@ void html_export(Node *node,char *filename);
 
 Node *xml_import (Node *node, char *filename);
 void xml_export (Node *node, char *filename);
+
+#ifdef USE_LIBXML
+void libxml_export(Node *node,char *filename);
+Node *libxml_import(Node *node,char *filename);
+#endif
+
+extern void (* ptr_export)(Node *,char *);
+extern Node * (* ptr_import)(Node *,char *);
 
 #endif /* FILE_H*/

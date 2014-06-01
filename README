@@ -44,6 +44,9 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.6.1 25 may 2001
+		integrated Andrew J. Webers libxml2 import/export filters
+		bold mode colors configurable
 	1.6 25 may 2001
 		generic xml import and export filter
 		preferences
@@ -158,6 +161,8 @@ AUTHORS
 		pipe export
 	Martin van Beilen  <bln@simlab.dhs.org>
 		various todo/done issues in the code
+	Andrew J Weber     <orang@imonk.com>
+		libxml2 import/export
 BUGS
 	slashes (/) inside nodes are not escaped correctly in cli mode
 TODO
@@ -188,6 +193,8 @@ TODO
 			right says yes
 		"context" menu for mouse mode
 		go away from centerline centric display approach
+		bullet modes
+		indentation level
 	cli interface
 		make '/' inside node names appear correctly in pwd, and prompt
 		maybe avoiding static buffers is even more important here than in the curses version (due to possible scripted input),.. but then I'd have to fix path.c as well.. <g>

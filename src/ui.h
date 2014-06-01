@@ -92,11 +92,12 @@
 #define COLLAPSE_ONLY_SIBLINGS 4
 
 /*color pairs used*/
-#define UI_COLOR_MENU		1
-#define UI_COLOR_NODE		2
-#define UI_COLOR_NODEC		3
-#define UI_COLOR_BULLET		4
-#define UI_COLOR_BG			5
+#define UI_COLOR_MENUITM	1
+#define UI_COLOR_MENUTXT	2
+#define UI_COLOR_NODE		3
+#define UI_COLOR_NODEC		4
+#define UI_COLOR_BULLET		5
+#define UI_COLOR_BG			6
 
 
 

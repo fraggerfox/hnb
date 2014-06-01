@@ -50,15 +50,22 @@ FORMAT_HNB,		/*format;*/
 "",		/*rc_file[100];*/
 "",		/*db_file[100];*/
 "",		/*default_db_file[100];*/
-COLOR_YELLOW,	/*fg_menu,*/
-COLOR_BLACK,	/*bg_menu,*/
+COLOR_BLACK,	/*fg_menuitm,*/
+COLOR_YELLOW,	/*bg_menuitm,*/
+0,				/*bold		*/
+COLOR_YELLOW,	/*fg_menutxt,*/
+COLOR_BLACK,	/*bg_menutxt,*/
+0,				/*bold		*/
 COLOR_BLACK,	/*bg,*/
 COLOR_WHITE,	/*fg_node,*/
 COLOR_BLACK,	/*bg_node */
+0,				/*bold		*/
 COLOR_WHITE,	/*fg_nodec,*/
 COLOR_BLACK,	/*bg_nodec */
+0,				/*bold		*/
 COLOR_CYAN,		/*fg_bullet,*/
-COLOR_BLACK		/*bg_bullet */
+COLOR_BLACK,	/*bg_bullet */
+0				/*bold		*/
 };
 
 typedef struct{
@@ -160,14 +167,21 @@ void apply_prefs(Node *node){
 
 /* colors */	
 	string( "/int/col/back/",color);prefs.bg=name2color(color);
-	string( "/int/col/men/",color);prefs.fg_menu=name2color(color);
-	string2("/int/col/men/",color);prefs.bg_menu=name2color(color);
+	string( "/int/col/menu item/",color);prefs.fg_menuitm=name2color(color);
+	string2("/int/col/menu item/",color);prefs.bg_menuitm=name2color(color);
+	check("/int/col/menu item/bold",prefs.bold_menuitm);
+	string( "/int/col/menu text/",color);prefs.fg_menutxt=name2color(color);
+	string2("/int/col/menu text/",color);prefs.bg_menutxt=name2color(color);
+	check("/int/col/menu text/bold",prefs.bold_menutxt);
 	string( "/int/col/node witho/",color);prefs.fg_node=name2color(color);
 	string2("/int/col/node witho/",color);prefs.bg_node=name2color(color);
+	check("/int/col/node witho/bold",prefs.bold_node);
 	string( "/int/col/node with /",color);prefs.fg_nodec=name2color(color);
 	string2("/int/col/node with /",color);prefs.bg_nodec=name2color(color);
+	check("/int/col/node with/bold",prefs.bold_nodec);
 	string( "/int/col/bull/",color);prefs.fg_bullet=name2color(color);
 	string2("/int/col/bull/",color);prefs.bg_bullet=name2color(color);
+	check("/int/col/bull/bold",prefs.bold_bullet);
 
 	check("/nav/forced up",prefs.forced_up);
 	check("/nav/forced do",prefs.forced_down);
@@ -186,6 +200,7 @@ void apply_prefs(Node *node){
 	radio("/file/default file format/xml",prefs.def_format,FORMAT_XML);
 	radio("/file/default file format/hnb",prefs.def_format,FORMAT_HNB);
 	radio("/file/default file format/asc",prefs.def_format,FORMAT_ASCII);	
+	radio("/file/default file format/lib",prefs.def_format,FORMAT_LIBXML);	
 
 	check("/file/xml/cudd",prefs.xml_cuddle);
 

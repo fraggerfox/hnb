@@ -201,7 +201,7 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 cli.o: cli.c ../config.h tree.h node.h file.h path.h prefs.h
-file.o: file.c ../config.h tree.h node.h prefs.h tutorial.inc
+file.o: file.c ../config.h tree.h node.h prefs.h file.h tutorial.inc
 hnb.o: hnb.c ../config.h tree.h node.h ui.h file.h path.h prefs.h cli.h
 node.o: node.c node.h
 path.o: path.c tree.h node.h tokenizer.h

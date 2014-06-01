@@ -79,7 +79,8 @@ void ui_init (){
 	{
 		start_color();
 
-		init_pair(UI_COLOR_MENU,	 prefs.fg_menu,prefs.bg_menu);
+		init_pair(UI_COLOR_MENUITM,	 prefs.fg_menuitm,prefs.bg_menuitm);
+		init_pair(UI_COLOR_MENUTXT,	 prefs.fg_menutxt,prefs.bg_menutxt);
 		init_pair(UI_COLOR_NODE,	 prefs.fg_node,prefs.bg_node);
 		init_pair(UI_COLOR_NODEC,	 prefs.fg_nodec,prefs.bg_nodec);
 		init_pair(UI_COLOR_BULLET,   prefs.fg_bullet,prefs.bg_bullet);
@@ -92,14 +93,14 @@ void ui_init (){
 	bkgdset(' '+COLOR_PAIR(UI_COLOR_BG));
 }
 
-#define att_menuitem	{attrset(A_REVERSE);attron(COLOR_PAIR(UI_COLOR_MENU));}
-#define att_menutext	{attrset(A_NORMAL);attron(COLOR_PAIR(UI_COLOR_MENU));}
+#define att_menuitem	{attrset(A_NORMAL);if(prefs.bold_menuitm)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_MENUITM));}
+#define att_menutext	{attrset(A_NORMAL);if(prefs.bold_menutxt)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_MENUTXT));}
 #define att_normal		{attrset(A_NORMAL);attron(COLOR_PAIR(UI_COLOR_BG));}
 
-#define att_node		{attron(COLOR_PAIR(UI_COLOR_NODE));}
-#define att_nodec		{attron(A_BOLD);attron(COLOR_PAIR(UI_COLOR_NODEC));}
+#define att_node		{if(prefs.bold_node)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_NODE));}
+#define att_nodec		{if(prefs.bold_nodec)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_NODEC));}
 
-#define att_bullet		{attron(COLOR_PAIR(UI_COLOR_BULLET));}
+#define att_bullet		{if(prefs.bold_bullet)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_BULLET));}
 
 
 Node *up (Node *sel,Node *node){
@@ -398,6 +399,7 @@ void help_draw (int mode, char *message){
 			i (" H ", " html");md('h');
 			i (" X ", " xml");md('x');
 			i (" G ", " general xml");md('g');
+			i (" S ", " stylized xml");md('s');
 			i (" | ", " pipe");md('|');
 			pos=5;
 			i ("Esc,C", " Cancel");md('c');
@@ -460,6 +462,7 @@ void help_draw (int mode, char *message){
 /*			i (" H ", " html");md('h');*/
 			i (" X ", " xml");md('x');
 			i (" G ", " general xml");md('g');
+			i (" S ", " stylized xml");md('s');
 /*			i (" | ", " pipe");md('|');*/
 			pos=5;
 			i ("Esc,C", " Cancel");md('c');

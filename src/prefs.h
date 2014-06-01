@@ -5,6 +5,7 @@
 #define FORMAT_ASCII	1
 #define FORMAT_XML		2
 #define FORMAT_HTML		3
+#define FORMAT_LIBXML	4
 
 /* global struct used to remeber user preferences
 */
@@ -28,15 +29,22 @@ typedef struct{
 	char rc_file[100];
 	char db_file[100];
 	char default_db_file[100];
-	int fg_menu;
-	int bg_menu;
+	int fg_menuitm;
+	int bg_menuitm;
+	int bold_menuitm;
+	int fg_menutxt;
+	int bg_menutxt;
+	int bold_menutxt;
 	int bg;
 	int fg_node;
 	int bg_node;
+	int bold_node;
 	int fg_nodec;
 	int bg_nodec;
+	int bold_nodec;
 	int fg_bullet;
 	int bg_bullet;
+	int bold_bullet;
 }Tprefs;
 
 extern Tprefs prefs;

@@ -59,17 +59,7 @@ Node* eCho(Node *pos, char *params){
 
 Node* save(Node *pos, char *params){
 	if (prefs.db_file[0] != (char) 255) {
-		switch(prefs.format){
-			case FORMAT_ASCII:
-				ascii_export ((Node *) node_root (pos), prefs.db_file);
-				break;
-			case FORMAT_HNB:
-				hnb_export ((Node *) node_root (pos), prefs.db_file);
-				break;
-			case FORMAT_XML:
-				xml_export ((Node *) node_root (pos), prefs.db_file); 
-				break;
-			} 
+		ptr_export ((Node *) node_root (pos), prefs.db_file);
 		fprintf (stderr,"wrote stuff to '%s'\n", prefs.db_file);
 	} 
 	return pos;
@@ -83,40 +73,35 @@ Node* export(Node *pos, char *params){
 		int j=0;
 		while(params[j]!=0 && params[j]!=' '){
 			j++;
-			if(params[j]=='a' || params[j]=='A')
+			switch(params[j]){
+			case 'a':
 				format=FORMAT_ASCII;
-			if(params[j]=='h' || params[j]=='H')
+				break;
+			case 'h':
 				format=FORMAT_HTML;
-			if(params[j]=='s' || params[j]=='S')
+				break;
+			case 's':
 				format=FORMAT_HNB;
-			if(params[j]=='x' || params[j]=='X' || params[j]=='g')
+				break;
+			case 'x':
 				format=FORMAT_XML;
+				break;
+			case 'l':
+				format=FORMAT_LIBXML;
+				break;
+			}	
 		}
 		params= &params[j];
 		if(params[0]==' ')
 			params++;
 	}
-	
+
 	if(!params[0]){
 		fprintf(stderr,"just must specify a file to write the exported data to.\n");
 		return pos;
 	}
 	
-	switch(format){
-		case FORMAT_ASCII:
-			ascii_export (node_top (pos), params);
-			break;
-		case FORMAT_HTML:
-			html_export (node_top (pos), params);		
-			break;
-		case FORMAT_HNB:
-			hnb_export(node_top(pos),params);
-			break;
-		case FORMAT_XML:
-			xml_export(node_top(pos),params);
-			break;			
-	}
-	
+	ptr_export ((Node *) node_top (pos), params);	
 	return pos;
 }
 
@@ -128,12 +113,20 @@ Node* import(Node *pos, char *params){
 		int j=0;
 		while(params[j]!=0 && params[j]!=' '){
 			j++;
-			if(params[j]=='a' || params[j]=='A')
+			switch(params[j]){
+			case 'a':
 				format=FORMAT_ASCII;
-			if(params[j]=='s' || params[j]=='S')
+				break;
+			case 's':
 				format=FORMAT_HNB;
-			if(params[j]=='x' || params[j]=='X' || params[j]=='g')
+				break;
+			case 'x':
 				format=FORMAT_XML;
+				break;
+			case 'l':
+				format=FORMAT_LIBXML;
+				break;
+			}	
 		}
 		params= &params[j];
 		if(params[0]==' ')
@@ -144,18 +137,7 @@ Node* import(Node *pos, char *params){
 		fprintf(stderr,"just must specify a file to import\n");
 		return pos;
 	}
-	
-	switch(format){
-		case FORMAT_ASCII:
-			pos=ascii_import (node_bottom (pos), params);
-			break;
-		case FORMAT_HNB:
-			pos=hnb_import(node_bottom(pos),params);
-			break;
-		case FORMAT_XML:
-			pos=xml_import(node_bottom(pos),params);
-			break;
-	}
+	ptr_import ((Node *) node_top (pos), params);
 	
 	return pos;
 }
@@ -379,7 +361,6 @@ typedef struct{
 VariableT Variable[]={
 	{"debug",	&prefs.debug,		NULL,"view debug information"},
 	{"format",	&prefs.format,		NULL,"the format of this file"},
-	{"f dn",	&prefs.forced_down,		NULL,"test"},
 	{"def_format",&prefs.def_format,NULL,"default format (and format of default db)"},
 	{NULL,NULL,NULL,NULL}/*termination*/
 };
@@ -476,13 +457,13 @@ CommandT Command[]={
 		"echo <string>",
 		"echo's the string to screen."},	
 	{"export",	export,
-		"export [-ahsx] <file>\n\noptions: a = ascii, h = html, s = standard(default), x = general xml",
+		"export [-ahsx(l)] <file>\n\noptions: a = ascii, h = html, s = standard(default), x = general xml, (l= libxml2)",
 		"exports the database from the current level and down to a file."},	
 	{"help"	,help,
 		"help [command]",
 		"displays available commands and help for them"},
 	{"import",	import,
-		"import [-asx] <file>\n\noptions: a = ascii, s = standard(default), x = general xml",
+		"import [-asx(l)] <file>\n\noptions: a = ascii, s = standard(default), x = general xml, (l = libxml2)",
 		"imports the specified file, at the current level."},	
 	{"ls"	,	ls,
 		"ls [-Rst] [path]\n\noptions: R = recurse, s = indicate subnodes, t = indicate todo status",

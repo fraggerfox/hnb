@@ -1,3 +1,6 @@
+1.6.1 25 may 2001
+	integrated Andrew J. Webers libxml2 import/export filters
+	bold mode colors configurable
 1.6 25 may 2001
 	generic xml import and export filter
 	preferences

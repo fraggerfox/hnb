@@ -35,28 +35,32 @@
 #include "prefs.h"
 #include "cli.h"
 
-static void usage (const char *av0){
+static void usage (const char *av0)
+{
 	fprintf (stderr, "\nusage: %s [database] [options] [command [command] ..]\n", av0);
 	fprintf (stderr, "\n\
 Hierarchical NoteBook by Øyvind Kolås <pippin@users.sourceforge.net>\n\
 It is distributed under the GNU General Public License\n\
 \n\
-default database: '%s'\n\
-\n\
+default database: '%s'\n",prefs.default_db_file);
+	fprintf(stderr,"\n\
 Options:\n\
 \n\
-\t-h  or --help     this message\n\
-\t-v  or --version  prints the version\n\
-\t-t  or --tutorial loads the tutorial instead of a database\n\
+\t-h --help     this message\n\
+\t-v --version  prints the version\n\
+\t-t --tutorial loads the tutorial instead of a database\n\
 \n\
-\t-a  or --ascii    load ascii ascii\n\
-\t       --hnb      load hnb DTD\n\
-\t-x or  --xml      load general xml\n\
-\n\
+\t-a --ascii    load ascii ascii\n\
+\t   --hnb      load hnb DTD\n\
+\t-x --xml      load general xml\n");
+#ifdef USE_LIBXML
+fprintf(stderr,"\t-s --stylized load stylized xml (using libxml2)\n");
+#endif
+fprintf(stderr,"\n\
 \t-rc <file>        specify other config file\n\
 \t-ui <interface>   interface to use, ( curses(default) or cli)\n\
 \t-e                execute commands\n\
-\n\n", prefs.default_db_file);
+\n\n");
 }
 
 #define BUFFERLENGTH 4096
@@ -377,20 +381,8 @@ int app_quit (){	/* returns 1 when user says quit */
 		case 'X':
 		case UI_QUIT:
 			if (prefs.db_file[0] != (char) 255) {
-				switch(prefs.format){
-					case FORMAT_ASCII:
-						ascii_export ((Node *) node_root (pos), 
-							prefs.db_file);
-						break;
-					case FORMAT_HNB:
-						hnb_export ((Node *) node_root (pos), 
-							prefs.db_file);
-						break;
-					 case FORMAT_XML:
-						xml_export ((Node *) node_root (pos),
-							prefs.db_file);                       
-						break; 
-				}				
+				ptr_export ((Node *) node_root (pos), 
+					prefs.db_file);
 				ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 				infof (" wrote stuff to '%s'", prefs.db_file);
 			}
@@ -403,20 +395,8 @@ int app_quit (){	/* returns 1 when user says quit */
 		case 's':
 		case 'S':
 			if (prefs.db_file[0] != (char) 255) { /* fixme eehh? */
-				switch(prefs.format){
-					case FORMAT_ASCII:
-						ascii_export ((Node *) node_root (pos), 
-							prefs.db_file);
-						break;
-					case FORMAT_HNB:
-						hnb_export ((Node *) node_root (pos), 
-							prefs.db_file);				
-						break;
-					case FORMAT_XML:
-						xml_export ((Node *) node_root (pos),
-							prefs.db_file);	
-						break;
-				}
+				ptr_export ((Node *) node_root (pos), 
+					prefs.db_file);
 				ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 				infof (" wrote stuff to '%s'", prefs.db_file);
 			}
@@ -546,6 +526,16 @@ void app_export (){
 					xml_export (node_top (pos), filename);
 				stop = 1;
 				break;
+#ifdef USE_XML
+			case 's':
+			case 'S':
+				strcpy ((char *) filename, "File to save stylized xml output in:");
+				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				if (strlen (filename))
+					libxml_export (node_top (pos), filename);
+				stop = 1;
+				break;
+#endif
 			case '|':
 				strcpy ((char *) filename, "command line (%s for file):");
 				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
@@ -603,6 +593,16 @@ void app_import (){
 					pos=xml_import (node_top (pos), filename);
 				stop = 1;
 				break;
+#ifdef USE_LIBXML
+			case 's':
+			case 'S':
+				strcpy ((char *) filename, "stylized xml file to import:");
+				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				if (strlen (filename))
+					pos=libxml_import (node_top (pos), filename);
+				stop = 1;
+				break;
+#endif
 			case 'c':
 			case 'C':
 			case UI_ESCAPE:
@@ -728,20 +728,8 @@ void app_navigate (){
 				break;
 			case UI_SAVE:
 				if (prefs.db_file[0] != (char) 255) {
-					switch(prefs.format){
-						case FORMAT_ASCII:
-						ascii_export ((Node *) node_root (pos), 
-							prefs.db_file);
-						break;
-						case FORMAT_HNB:
-						hnb_export ((Node *) node_root (pos), 
-							prefs.db_file);
-						break;
-						case FORMAT_XML:
-						xml_export ((Node *) node_root (pos), 
-							prefs.db_file);
-						break;
-						}
+					ptr_export ((Node *) node_root (pos), 
+						prefs.db_file);
 					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
 					infof (" wrote stuff to '%s'", prefs.db_file);
 				}
@@ -1014,6 +1002,11 @@ int main(int argc,char **argv){
 			} else if (!strcmp(argv[argno], "-x") || !strcmp(argv[argno], "-gx") 
 					|| !strcmp (argv[argno], "--xml")) {
 				cmdline.format=FORMAT_XML;
+#ifdef USE_LIBXML
+			} else if (!strcmp(argv[argno], "-s") || !strcmp(argv[argno], "-sx") 
+					|| !strcmp (argv[argno], "--stylized")) {
+				cmdline.format=FORMAT_LIBXML;
+#endif
 			} else if (!strcmp(argv[argno], "-ui") ) {
 				if(!strcmp(argv[++argno],"curses")){
 					cmdline.ui=1;
@@ -1104,28 +1097,42 @@ int main(int argc,char **argv){
 	} else {
 		strcpy(prefs.db_file,cmdline.dbfile);
 	}
+
+	switch(prefs.format){
+		case FORMAT_ASCII:
+			ptr_import = ascii_import;
+			ptr_export = ascii_export;
+			break;
+		case FORMAT_HNB:
+			ptr_import = hnb_import;
+			ptr_export = hnb_export;
+			break;
+		case FORMAT_XML:
+			ptr_import = xml_import;			
+			ptr_export = xml_export;
+			break;
+#ifdef USE_LIBXML
+		case FORMAT_LIBXML:
+			ptr_import = libxml_import;			
+			ptr_export = libxml_export;
+			break;
+#endif
+	}
 	
 	input[0] = 0;
 	pos = tree_new ();
 	
 	if(!prefs.tutorial){
-		switch(prefs.format){
-			case FORMAT_ASCII:
-				pos = ascii_import (pos, prefs.db_file);
-				break;
-			case FORMAT_HNB:
-				if(!xml_check(prefs.db_file)){
-					fprintf(stderr,"%s does not seem to be a xml file, aborting.\n\
+		if(FORMAT_HNB == prefs.format)
+		{
+			if(!xml_check(prefs.db_file)){
+				fprintf(stderr,"%s does not seem to be a xml file, aborting.\n\
 if this is an old ascii hnb file, you can convert it with:\n\
 \thnb -a \"%s\" \"export -x %s\"\n", prefs.db_file, prefs.db_file, prefs.db_file);
-					exit(1);
-				}
-				pos = hnb_import (pos, prefs.db_file);			
-				break;
-			case FORMAT_XML:
-				pos = xml_import (pos, prefs.db_file);			
-				break;				
+				exit(1);
+			}
 		}
+		pos = ptr_import (pos, prefs.db_file);
 	}
 	
 	if(prefs.tutorial){
