@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "node.h"
 #include "tree.h"
 #include "ui.h"
@@ -39,6 +40,15 @@ Options include:\n\
 
 char input[BUFFERLENGTH];
 Node *pos;
+
+
+#define undefined_key(a,c)\
+		    {if(c!=UI_IGNORE){char msg[50];\
+	  	    sprintf(msg," No action assigned to '%s'(%id) in %s-mode",keyname(c),c,a);\
+		    ui_draw(pos, msg, UI_MODE_ERROR);\
+			sleep(1);}}\
+
+
 
 void
 app_edit ()
@@ -222,12 +232,7 @@ app_mark ()  /* add visual cue in this one? */
 	    stop = 1;
 	  break;
 	  default:
-	{   /* undefined keycode */
-	    char msg[50];
-  	    sprintf(msg," No action assigned to '%s'(%id) in mark-mode",keyname(c),c);
-	    ui_draw(pos, msg, UI_MODE_ERROR);
-		sleep(1);
-	  }
+			undefined_key("edit",c);
 	  break;
 	  };
       };
@@ -265,53 +270,13 @@ app_quit ()
 	case UI_ESCAPE:
 		return(0);
     default:
-		{/* undefined keycode */
-	    char msg[50];
-  	    sprintf(msg," No action assigned to '%s'(%id) in quit-mode",keyname(c),c);
-	    ui_draw(pos, msg, UI_MODE_ERROR);
-		sleep(1);
-	    }
-	
+		undefined_key("quit",c);	
       return (0);
     };
-}
-/* bubble sorts the siblings of the current node, returns the same node as the 
-prior */
-
-Node *node_sort_siblings(Node *node){
-	Node *pos;
-	int pass,passes;
-	int changes;
-	int item;
-	pos=node_top(node);
-
-	passes=nodes_down(pos);
-
-	for(pass=0;pass<passes;pass++){
-		pos=node_top(pos);	
-		changes=item=0;
-		while(item<passes-pass){
-			item++;
-			if(strcmp(node_getdata(pos),node_getdata(node_down(pos)))>0){
-			    if(pos==node){
-				  node=node_down(pos);
-				} else {
-				  if(node_down(pos)==node)
-				     node=pos;
-				}  
-				node_swap(pos,node_down(pos));
-				changes++;
-			};
-			pos=node_down(pos);
-		};
-		if(!changes)return(node);
-	};
-	return(node);
 }
 
 void app_search(){
   char *query[100];  
-#warning somehow I must input this, but it kinda works now, yahoo!  
   Node *query_start=pos;
   int query_start_level=nodes_left(pos);
   strcpy((char *)query,"Find: ");
@@ -345,12 +310,7 @@ void app_search(){
 		  pos=node_recursive_match((char *)query,pos);		
          break;
         default:
-		{/* undefined keycode */
-	    char msg[50];
-  	    sprintf(msg," No action assigned to '%s'(%id) in search-mode",keyname(c),c);
-	    ui_draw(pos, msg, UI_MODE_ERROR);
-		sleep(1);
-	    }
+			undefined_key("search",c);		
         break;
       };       
   };
@@ -369,6 +329,61 @@ void app_remove(){
 	  };
 }
 
+void app_export(){
+  int c,stop=0;char filename[100];
+  while(!stop){
+  ui_draw (pos, "", UI_MODE_EXPORT);  
+  c = ui_input ();
+  switch (c)
+    {
+	    case 'h':
+	    case 'H':
+		  strcpy((char *)filename,"Save output in:");
+		  ui_draw(pos,(char *)filename,UI_MODE_GETSTR);
+		  if(strlen(filename)) html_export ( node_top(pos), filename);		  
+		  stop=1;		
+		break;
+	    case 'a':
+	    case 'A':
+		  strcpy((char *)filename,"Save output in:");
+		  ui_draw(pos,(char *)filename,UI_MODE_GETSTR);
+		  if(strlen(filename)) ascii_export ( node_top(pos), filename);		  
+		  stop=1;		
+		break;
+	    case 'l':
+	    case 'L':
+		  strcpy((char *)filename,"Save output in:");
+		  ui_draw(pos,(char *)filename,UI_MODE_GETSTR);
+   		  if(strlen(filename))latex_export ( node_top(pos), filename);		  
+		  stop=1;		
+		break;
+	    case 'p':
+	    case 'P':
+		  strcpy((char *)filename,"Save output in:");
+		  ui_draw(pos,(char *)filename,UI_MODE_GETSTR);
+  		  if(!strlen(filename)) return;
+		  latex_export ( node_top(pos), "hnb.tmp.2.tex");
+		  {char cmd_buf[400];
+		sprintf(cmd_buf,
+"latex hnb.tmp.2.tex &&\
+dvips hnb.tmp.2.dvi -o %s &&\
+rm hnb.tmp.*",filename);
+		system(cmd_buf);
+			}
+		  ui_end();
+		  ui_init();
+		  stop=1;		
+		break;
+		case 'c':case 'C':case UI_ESCAPE:
+			stop=1;
+			break;
+	    default:
+			undefined_key("export",c);
+	    };
+	}
+}
+
+
 void
 app_navigate ()
 {
@@ -381,45 +396,39 @@ app_navigate ()
       c = ui_input ();
       switch (c)
 	{
+	case UI_EXPORT: app_export();    break;
+	case UI_QUIT:   stop=app_quit();   break;
+    case UI_FIND:   app_search();      break;
+	case UI_MARK:   app_mark ();  break;
+	case UI_IMPORT:{
+	   char filename[100];
+		  strcpy((char *)filename,"File to import:");
+		  ui_draw(pos,(char *)filename,UI_MODE_IMPORT);
+   		  if(strlen(filename))pos=ascii_import(pos,filename);
+	}
+		break;
+	
+
 	case UI_HELP:
 	   help_level++;
 	   if(help_level>=3)help_level=0;
 	   break;
-	case UI_QUIT:
-	   stop=app_quit();
-  	   break;
-    case UI_FIND:
-       app_search();      
-      break;
+	
 	case UI_TOGGLE_TODO:
 	  if(node_getflags(pos) & F_todo){
 	     node_setflags(pos,node_getflags(pos)-F_todo);
 	  }else{
 	     node_setflags(pos,node_getflags(pos)+F_todo);
 	  }
+	  node_update_parents_todo(pos);
 	  break;
 	case UI_TOGGLE_DONE:
 	  if(node_getflags(pos) & F_done){
 	     node_setflags(pos,node_getflags(pos)-F_done);		  
-		 if(node_left(pos) && (node_getflags(node_left(pos)) & F_done)){
-		 	Node *tnode=node_left(pos);
-		     node_setflags( tnode,node_getflags(tnode)-F_done);		  		 
-		 }
 	  }else{
 	     node_setflags(pos,node_getflags(pos)+F_done);
-		 if(node_left(pos) && !(node_getflags(node_left(pos)) & F_done)){
-		 	Node *tnode=node_top(pos);
-			int all_done=1;
-			while(tnode!=0){
-				if(!(node_getflags(tnode)&F_done))all_done=0;
-				tnode=node_down(tnode);
-			};
-			if(all_done){
-		 	Node *tnode=node_left(pos);
-		       node_setflags( tnode,node_getflags(tnode)+F_done);
-			}
-		 }
-	  }
+	  };
+	  node_update_parents_todo(pos);	  
 	  break;
 	case UI_SORT:
 		pos=node_sort_siblings(pos);
@@ -513,12 +522,14 @@ app_navigate ()
 		  node_setflags (pos, F_temp);
 		  if(node_getflags( node_left(pos)) & F_todo)
 		  	node_setflags(pos,F_temp+F_todo);
+  	      node_update_parents_todo(pos);
 		};
 	    };
 	  input[0] = 0;
 	  break;
 	case UI_REMOVE:
 	    app_remove();
+	    node_update_parents_todo(pos);		
 	  break;
 	case UI_COMPLETE:
 	  if (strcmp (input, node_getdata (pos)) == 0){
@@ -526,9 +537,11 @@ app_navigate ()
 		      pos = node_right (pos);
 		    } else {
 		      if (input[0] | (!(node_getflags (pos) & F_temp))) {
-				  node_setflags (pos, 0);
 				  pos = node_insert_right (pos);
 				  node_setflags (pos, F_temp);
+			  if(node_getflags( node_left(pos)) & F_todo)
+			  	node_setflags(pos,F_temp+F_todo);
+	  	      node_update_parents_todo(pos);
 			  };
 	    	};
 	  		input[0] = 0;	  
@@ -581,30 +594,17 @@ app_navigate ()
 	      if(node_left(pos))
 		  if(node_getflags( node_left(pos)) & F_todo)
 		  	node_setflags(pos,F_todo);
-			
-		 if(node_left(pos) && (node_getflags(node_left(pos)) & F_done)){
-		 	Node *tnode=node_left(pos);
-		     node_setflags( tnode,node_getflags(tnode)-F_done);		  		 
-		 }  /* unset parental node */
-			
+  	      node_update_parents_todo(pos);
 		
 	    app_edit();
 	  break;
-	case UI_MARK:
-	  app_mark ();
-	  break;
-	case UI_IGNORE:
-	 break;
+	
     default:
 	  if( c>31 && c<255){   /*  input for buffer */
 		  input[strlen (input) + 1] = 0;
 		  input[strlen (input)] = c;
-	  } else {              /* undefined keycode */
-	    char msg[50];
-  	    sprintf(msg," No action assigned to '%s'(%id) in navigation mode",keyname(c),c);
-	    ui_draw(pos, msg, UI_MODE_ERROR);
-		sleep(1);
-	  }
+	  } else undefined_key("navigation",c);
+	  
 	  break;
 	};
 
@@ -631,11 +631,7 @@ app_navigate ()
 	      if(node_left(pos))
 			  if(node_getflags( node_left(pos)) & F_todo)
 			  	node_setflags(pos,F_todo+F_temp);
-		 if(node_left(pos) && (node_getflags(node_left(pos)) & F_done)){
-		 	Node *tnode=node_left(pos);
-		     node_setflags( tnode,node_getflags(tnode)-F_done);		  		 
-		 }  /* unset parental node */				
-		  
+  	      node_update_parents_todo(pos);
 		  
 		};
 	    };

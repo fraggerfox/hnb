@@ -408,3 +408,99 @@ node_swap (Node * nodeA, Node * nodeB)
     };
 
 }
+
+void node_update_parents_todo(Node *pos){
+ 	Node *tnode=node_top(pos);
+	if(node_left(pos) && node_getflags(node_left(pos)) & F_todo ){
+		int all_done=1;
+		while(tnode!=0){
+			if((node_getflags(tnode)&F_todo) && !(node_getflags(tnode)&F_done))all_done=0;
+				tnode=node_down(tnode);
+			};
+
+		tnode=node_left(pos);
+		if(all_done){
+			   if( !(node_getflags(tnode)&F_done)){
+			   	node_setflags( tnode,node_getflags(tnode)+F_done);
+			   } 
+		} else {
+		   if( (node_getflags(tnode)&F_done)){
+			   	node_setflags( tnode,node_getflags(tnode)-F_done);
+		   } 
+			
+		}
+	  node_update_parents_todo(tnode);
+	}
+}
+
+/* bubble sorts the siblings of the current node, returns the same node as the 
+prior */
+
+Node *node_sort_siblings(Node *node){
+	Node *pos;
+	int pass,passes;
+	int changes;
+	int item;
+	pos=node_top(node);
+
+	passes=nodes_down(pos);
+
+	for(pass=0;pass<passes;pass++){
+		pos=node_top(pos);	
+		changes=item=0;
+		while(item<passes-pass){
+			item++;
+			if(strcmp(node_getdata(pos),node_getdata(node_down(pos)))>0){
+			    if(pos==node){
+				  node=node_down(pos);
+				} else {
+				  if(node_down(pos)==node)
+				     node=pos;
+				}  
+				node_swap(pos,node_down(pos));
+				changes++;
+			};
+			pos=node_down(pos);
+		};
+		if(!changes)return(node);
+	};
+	return(node);
+}
+
+/*
+	returns an number between 0 and 1000 showing the completion of this node,
+	computed as follows:
+		all children with todo boxes count as one part
+		if a child is done count+= 1000/parts
+		if a child is not done count+= node_calc_complete(child)/parts	
+*/
+
+int node_calc_complete(Node *node){
+	Node *tnode;int count=0,parts=0;
+
+	if(!(node_getflags(node)&F_todo))return -1;		/* node has no completion status */
+	if(node_getflags(node)&F_done)return 1000;		/* this node is done */
+	if(!nodes_right(node))return 0;					/* no undone children,.. completly undone*/
+
+	tnode=node_right(node);
+	tnode=node_top(tnode);
+	while(tnode){
+		if(node_getflags(tnode)&F_todo)parts++;	
+		tnode=node_down(tnode);
+	}
+
+	tnode=node_right(node);
+	tnode=node_top(tnode);
+
+	while(tnode){
+		if(node_getflags(tnode)&F_todo){
+			if(node_getflags(tnode)&F_done){
+				count+= 1000/parts;
+			} else {
+				count+= node_calc_complete(tnode)/parts;			
+			};
+		}
+		tnode=node_down(tnode);
+	}
+	return count;
+}

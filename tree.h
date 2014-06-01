@@ -23,3 +23,7 @@ Node *tree_init();
 Node *tree_root();
 int tree_free();
 void node_swap(Node *nodeA,Node *nodeB);
+void node_update_parents_todo(Node *pos);
+Node *node_sort_siblings(Node *node);
+
+int node_calc_complete(Node *node);

@@ -5,8 +5,8 @@ MINGW_PATH=/usr/local/cross-tools/i386-mingw32/bin
 
 C_FLAGS=-Wall -pedantic -ansi -O2
 
-BINFILES=hnb/hnb hnb/LICENSE hnb/README hnb/sample.hnb
-WINFILES=hnb/hnb.exe hnb/LICENSE hnb/README hnb/sample.hnb
+BINFILES=hnb/hnb hnb/LICENSE hnb/README hnb/sample.hnb hnb/README.html
+WINFILES=hnb/hnb.exe hnb/LICENSE hnb/README hnb/sample.hnb hnb/README.html
 
 hnb: hnb.o file.o node.o tree.o ui.o path.o tokenizer.o
 	gcc -o hnb hnb.o file.o node.o tree.o ui.o path.o tokenizer.o -lcurses

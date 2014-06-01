@@ -2,6 +2,7 @@
 #include "tree.h"
 #include "curses.h"
 #include "version.h"
+#include "stdio.h"
 #define UI_C
 #include "ui.h"
 
@@ -94,7 +95,9 @@ int line;
 		i("hnb",VERSION);
 		i("","");
 		i("","");
-
+		i("","");		
+		i("^E"," export");		
+		i("^L"," import");
 
 		line=LINES-4;pos=0;clr;
 		i("(c)"," Øyvind Kolås 2000/2001");
@@ -125,7 +128,7 @@ int line;
 		i("del"," remove");
 
 		i("^space"," move");
-		i(" TAB "," complete match");		
+		i(" TAB "," match completion");
 		break;
 	case UI_MODE_EDIT:
 		line=LINES-2;pos=0;clr;
@@ -159,6 +162,29 @@ int line;
 		i("Esc,C"," Cancel");
 		i("","");		
 		break;
+	case UI_MODE_EXPORT:
+		line=0;pos=0;clr;i("      "," The exported data is kind of fragile, no escaping is done of html data.");
+		line=1;pos=0;clr;i(" info "," postscript/latex doesn't allow deeper nesting of items than 4");
+		line=2;pos=0;clr;i("      ","");		
+		line=3;pos=0;clr;i("      "," the data from the current level and down are exported, not higher levels");		
+		line=4;pos=0;clr;i("                          ","");		
+				
+		line=LINES-2;pos=0;clr;
+		i("","");
+		i("","");		
+		i(" A "," Ascii");
+		i(" H "," html");
+		i(" L "," Latex");
+		i(" P "," PostScript");		
+		line=LINES-1;pos=0;clr;
+		i("Export menu"," select format");
+		i("","");
+		i("","");		
+		i("","");				
+		i("","");				
+		i("Esc,C"," Cancel");
+
+		break;
 	case UI_MODE_MARKED:
 		line=LINES-2;pos=0;clr;
 		i("","");i("","");i("","");
@@ -176,15 +202,22 @@ int line;
 	    line=LINES-1;pos=0;clr;
 		i(message," ");		
 	    break;
+	case UI_MODE_IMPORT:
+		line=0;pos=0;clr;i("      "," Enter the name of a file to be imported(inserted) into the tree at");
+		line=1;pos=0;clr;i(" info "," the current location, just press enter to cancel");
+		line=2;pos=0;clr;i("                      ","");		
+	    line=LINES-1;pos=0;clr;
+		i(message," ");		
+	    break;		
 	case UI_MODE_SEARCH:
 		line=LINES-2;pos=0;clr;
-		i("Searching for:","");i("","");i("","");
+		i("Searching for:",message);i("","");i("","");
 		i("Enter,S"," stop");
 		i("N,space"," next");
 		i("Esc,C"," cancel");
 		line=LINES-1;pos=0;clr;			
 		i("","");
-		i("",message);
+		i("","");
 		break;
   };
 }
@@ -206,7 +239,7 @@ int startlevel = 0;
 #define D_M_WRAP	2
 #define D_M_TEST	4
 
-int draw_node(int line_start, int col_start, char *data, int draw_mode, int flags){
+int draw_node(int line_start, int col_start, char *data, int draw_mode, int completion){
     int lines_used=0;
 	int col_end= COLS; /* -col_start-1; */
 	move(line_start, col_start);
@@ -221,13 +254,22 @@ int draw_node(int line_start, int col_start, char *data, int draw_mode, int flag
 
 	move(line_start,col);
 
-  if(flags&F_todo){
-  	  col=col_start=col_start+4;
-  	  if( ! (draw_mode & D_M_TEST))	  
-	    {if(flags&F_done)
- 		     addstr("[X] ");
-		  else 
-		     addstr("[ ] ");
+  if(completion!=-1){
+	    switch(completion){
+			case 0:
+		     if( ! (draw_mode & D_M_TEST))	  addstr("[ ] ");
+		  	  col=col_start=col_start+4;			 
+			 break;
+			case 1000:
+ 		     if( ! (draw_mode & D_M_TEST))	  addstr("[X] ");
+		  	  col=col_start=col_start+4;
+			 break;
+			default:{char str[10];
+		  	  col=col_start=col_start+6;
+			sprintf(str,"[%i%%]",completion/10);
+ 		     if( ! (draw_mode & D_M_TEST))	  addstr(str);
+			}
+			 break;
 		}
   }  
 
@@ -285,8 +327,8 @@ ui_draw (Node * node, char *input, int mode)
   Node *tnode = up (node);
   while (tnode != 0)
     {
-      draw_node( line -=  draw_node(0,indentlevel(tnode), node_getdata(tnode), D_M_TEST+D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_getflags(tnode))
-	  	, indentlevel(tnode), node_getdata(tnode), D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_getflags(tnode));
+      draw_node( line -=  draw_node(0,indentlevel(tnode), node_getdata(tnode), D_M_TEST+D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_calc_complete(tnode))
+	  	, indentlevel(tnode), node_getdata(tnode), D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_calc_complete(tnode));
 	
       tnode = up (tnode);
       if (middle_line - nodes_above >= line)
@@ -296,13 +338,11 @@ ui_draw (Node * node, char *input, int mode)
 
 {						    /* draw the selected node.. */
   attrset (A_REVERSE);
-  lines=draw_node(middle_line, indentlevel(node), node_getdata(node),D_M_WRAP+(node_right(node)?D_M_CHILD:0),node_getflags(node));
+  lines=draw_node(middle_line, indentlevel(node), node_getdata(node),D_M_WRAP+(node_right(node)?D_M_CHILD:0),node_calc_complete(node));
   attrset (A_BOLD);
-  if( mode != UI_MODE_CONFIRM   ) 
-	  if( mode != UI_MODE_ERROR   )   
-		  if( mode != UI_MODE_GETSTR   ) 
-			  if( mode != UI_MODE_SEARCH   )
-  draw_node(middle_line, indentlevel(node), input,D_M_WRAP,node_getflags(node));
+ 
+if(mode!=UI_MODE_GETSTR && mode !=UI_MODE_IMPORT && mode != UI_MODE_SEARCH && mode != UI_MODE_CONFIRM && mode != UI_MODE_ERROR )
+  draw_node(middle_line, indentlevel(node), input,D_M_WRAP,node_calc_complete(node));
   attrset (A_NORMAL);  
 }
 
@@ -316,7 +356,7 @@ ui_draw (Node * node, char *input, int mode)
 
   while (tnode != 0)
     {
-      line+=draw_node(line, indentlevel(tnode), node_getdata(tnode),D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_getflags(tnode));
+      line+=draw_node(line, indentlevel(tnode), node_getdata(tnode),D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_calc_complete(tnode));
     
       tnode = down (tnode);
       if (middle_line + nodes_below <= line)
@@ -330,7 +370,7 @@ ui_draw (Node * node, char *input, int mode)
 	
   refresh ();
 
-	if(mode==UI_MODE_GETSTR){
+	if(mode==UI_MODE_GETSTR || mode==UI_MODE_IMPORT){
 		move(LINES-1,strlen(input)+1);
 		echo();
 		getstr(&input[0]);

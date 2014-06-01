@@ -1,0 +1,202 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\begin{document}
+
+\begin{itemize}
+	\item HIERARCHICAL NOTEBOOK
+	\item  
+	\item hierarchical notebook (hnb) is program to organize, many kinds
+	\item of data in one place, for example adresses, todo lists, ideas,
+	\item book "reviews", brainstorming, organizing a speech, making a 
+	\item structured packing list random notes, and probably many more I 
+	\item haven't thought of yet..
+	  \begin{itemize}
+		\item 
+	  \end{itemize}
+
+	\item  
+	\item HOW TO GET hnb?
+	  \begin{itemize}
+		\item 
+		\item new releases of hnb will appear on the
+		\item sourceforge project page
+		  \begin{itemize}
+			\item http://sourceforge.net/projects/hnb
+		  \end{itemize}
+
+		\item 
+	  \end{itemize}
+
+	\item INSTALLING hnb
+	  \begin{itemize}
+		\item 
+		\item if you've got a source release you must first compile
+		\item hnb,.. see further down in this file for instructions.
+		\item 
+		\item Windows
+		  \begin{itemize}
+			\item the windows binary distribution, is a .zip file
+			\item containing the executable, this readme file, 
+			\item an sample database, and the licence for hnb's use.
+			\item 
+			\item the binary is standalone, so you can just
+			\item copy it wherever you'd like it to reside.
+			\item 
+		  \end{itemize}
+
+		\item Linux
+		  \begin{itemize}
+			\item the linux binary distribution is a .tar.gz file
+			\item containing the executable, this readme file, a
+			\item an sample database, and the licence for hnb's use.
+			\item 
+			\item the binary is dynamically linked against ncurses
+			\item just place it anywere in your path.. like
+			\item /usr/bin, /usr/local/bin or /home/user/bin
+			\item 
+		  \end{itemize}
+
+	  \end{itemize}
+
+	\item COMPILING hnb
+	  \begin{itemize}
+		\item 
+		\item I've only tried to compile hnb using linux, the only dependencies are
+		\item ncurses so it should compile on most any unix by just typing make.
+		\item 
+		\item I cross compile the win32 binary using mingw32, the Makefile is
+		\item probably a mess by most standards, but it works for me (tm), and
+		\item will be replaced by something more appropriate at some other time.
+		\item 
+	  \end{itemize}
+
+	\item USAGE DOCUMENTATION
+	  \begin{itemize}
+		\item 
+		\item hopefully hnb is quite selfdocumenting, but the file sample.hnb
+		\item contains some explaination of concepts and ideas behind hnb
+		\item invoke hnb like this to look at the file.
+		\item 
+		\item hnb sample.hnb
+		\item 
+	  \end{itemize}
+
+	\item TODO
+	  \begin{itemize}
+		\item moving
+		  \begin{itemize}
+			\item make the selected node, be dragged instead of warped
+		  \end{itemize}
+
+		\item buffer limits
+		  \begin{itemize}
+			\item is now increased to 2048, but is it enough?
+		  \end{itemize}
+
+		\item different collapse modes?
+		\item gtk 2.0
+		  \begin{itemize}
+			\item there is a new interface to bind things so I can use my own codestructue :))
+		  \end{itemize}
+
+		\item curses interface
+		  \begin{itemize}
+			\item in editing mode, use reverse video as cursor instead of underscorehack
+			\item copy node and substree
+		  \end{itemize}
+
+		\item todo
+		  \begin{itemize}
+			\item recursively fix parents
+			\item at tue moment this is implemented on all nodes,, todo nodes as well as ordinary nodes,.. should only todo nodes be considered?
+		  \end{itemize}
+
+	  \end{itemize}
+
+	\item CHANGELOG
+	  \begin{itemize}
+		\item 0.3b
+		  \begin{itemize}
+			\item added registry functions, and a small sample programed called reg
+			\item small bugfix for node recurse()  (go right, and to top)
+		  \end{itemize}
+
+		\item 0.3 15.oct 2000
+		  \begin{itemize}
+			\item fixed registry
+			\item implemented node2path
+			\item first rendition of cgi-bin browser
+			\item wordwrap
+			\item resize components when terminal is resized
+			\item changed display of help at the bottom
+			\item various interface cleanups,.. (ingoring keys etc..)
+			\item pageup/pagedown implemented (jumps a predefined 10 nodes by default)
+			\item changed menu/quit interface,.. there is one big menu now,.
+			\item which contains most of the thinkable options
+			\item it is activated by esc/f1/f10/ctrl+k
+		  \end{itemize}
+
+		\item 0.4 march 2001
+		  \begin{itemize}
+			\item fixed tab'ing into children of empty nodes bug
+			\item fixed first node bug of wordwrap
+			\item made wordwrap wrap at end instead of end-indent
+		  \end{itemize}
+
+		\item 0.5
+		  \begin{itemize}
+			\item help item's update
+			\item added insert capability to insert a node below the current
+		  \end{itemize}
+
+		\item 0.5a
+		  \begin{itemize}
+			\item the guadec hacked fixes on strics computer
+			\item 
+			\item added search functionality, still not added real keyboard bindings, nor input of needle for the search, but the callbacks are in place
+			\item fixed the display of confirm mode in curses ui.
+			\item implemented reparenting
+			\item cleaned up node remove
+		  \end{itemize}
+
+		\item 0.6b 11 april 2001
+		  \begin{itemize}
+			\item something went wrong in the versioning,.. but what the heck..
+			\item  
+			\item added load,save and display of todo in standard file format
+			\item should be foolproof, and still keeps the file human readable
+			\item when adding a child by navigating,.. the parents node were reset to 0 for no apparent reason.
+			\item changed to bz2 format on distribution file
+		  \end{itemize}
+
+		\item 0.6c
+		  \begin{itemize}
+			\item rearranged input structures
+			\item added todo checkboxes
+			\item added error mode to display modes
+			\item rewamped the helpline system
+		  \end{itemize}
+
+		\item 0.6d
+		  \begin{itemize}
+			\item fixed resizing
+			\item added input of search term in find
+			\item made search case insensitive
+			\item refined search control interface
+			\item made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
+		  \end{itemize}
+
+		\item 0.7 13 april 2001
+		\item 0.7a
+		  \begin{itemize}
+			\item fixed the todo structural thing
+		  \end{itemize}
+
+	  \end{itemize}
+
+	\item 
+	\item pippin@users.sourceforge.net
+\end{itemize}
+
+\end{document}

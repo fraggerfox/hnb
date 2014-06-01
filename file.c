@@ -180,8 +180,6 @@ ascii_export_node (FILE * file, int level, int flags, char *data)
       fprintf (file, "\t");
     };
 
-/*FIXME reading has limitations on size/content (newlines)*/
-  
   if(flags&F_todo){  /* print the flags of the current node */
 	if(flags&F_done)
 		fprintf (file, "[X]");
@@ -276,3 +274,132 @@ ascii_export (Node * node, char *filename)
 
   fclose (file);
 }
+
+
+void
+html_export (Node * node, char *filename)
+{
+  Node *tnode;
+  int level, flags, startlevel,lastlevel,cnt;
+  char *data;
+  FILE *file;
+
+  file = fopen (filename, "w");
+  startlevel = nodes_left (node);
+
+  tnode = node;
+  lastlevel=0;
+  fprintf (file, "<html>\n<head>\n\t<title>tree exported from hnb</title>\n</head>\n<body>\n<ul>\n");	  
+  while ((tnode != 0) & (nodes_left (tnode) >= startlevel))
+    {
+      level = nodes_left (tnode) - startlevel;
+      flags = node_getflags (tnode);
+      data = node_getdata (tnode);
+
+	  if(level>lastlevel){
+		  for (cnt = 0; cnt <= level-1; cnt++){fprintf (file, "\t");};
+		  fprintf (file, "  <ul>\n");
+	  }
+	  if(level<lastlevel){
+		  int level_diff=lastlevel-level;	  	
+	  	  
+		  for(;level_diff;level_diff--){
+			  for (cnt = 0; cnt <= level+level_diff-1; cnt++){fprintf (file, "\t");};
+			  fprintf (file, "  </ul>\n");
+
+		  };
+	  }
+	  for (cnt = 0; cnt <= level; cnt++){fprintf (file, "\t");};
+	  
+	  fprintf (file, "<li>%s%s\n",(flags&F_todo?(flags&F_done?"[X] ":"[&nbsp] "):""),data);	
+
+	  lastlevel=level;
+      tnode = node_recurse (tnode);
+    };
+	level=0;
+{	  int level_diff=lastlevel-level;	  	
+	  	  
+		  for(;level_diff;level_diff--){
+			  for (cnt = 0; cnt <= level+level_diff-1; cnt++){fprintf (file, "\t");};
+			  fprintf (file, "  </ul>\n");
+
+		  };
+}
+
+  fprintf (file, "</ul>\n</body></html>");
+  fclose (file);
+}
+
+void
+latex_export (Node * node, char *filename)
+{
+  Node *tnode;
+  int level, flags, startlevel,lastlevel,cnt;
+  char *data;
+  FILE *file;
+
+  file = fopen (filename, "w");
+  startlevel = nodes_left (node);
+
+  tnode = node;
+  lastlevel=0;
+  fprintf (file, "\\documentclass{article}\n\
+\\usepackage[T1]{fontenc}\n\
+\\usepackage[latin1]{inputenc}\n\
+\n\
+%%latex file exported from hnb\n\
+\n\
+\\begin{document}\n\
+\n\
+\\begin{itemize}\n");
+
+  while ((tnode != 0) & (nodes_left (tnode) >= startlevel))
+    {
+      level = nodes_left (tnode) - startlevel;
+      flags = node_getflags (tnode);
+      data = node_getdata (tnode);
+
+	  if(level>lastlevel){
+		  for (cnt = 0; cnt <= level-1; cnt++){fprintf (file, "\t");};
+		  fprintf (file, "  \\begin{itemize}\n");
+	  }
+	  if(level<lastlevel){
+		  int level_diff=lastlevel-level;	  	
+	  	  
+		  for(;level_diff;level_diff--){
+			  for (cnt = 0; cnt <= level+level_diff-1; cnt++){fprintf (file, "\t");};
+			  fprintf (file, "  \\end{itemize}\n\n");
+
+		  };
+	  }
+	  for (cnt = 0; cnt <= level; cnt++){fprintf (file, "\t");};
+	  
+	  fprintf (file, "\\item %s%s\n",(flags&F_todo?(flags&F_done?"(X) ":"(\\ ) "):""),data);	
+
+	  lastlevel=level;
+      tnode = node_recurse (tnode);
+    };
+	level=0;
+{	  int level_diff=lastlevel-level;	  	
+	  	  
+		  for(;level_diff;level_diff--){
+			  for (cnt = 0; cnt <= level+level_diff-1; cnt++){fprintf (file, "\t");};
+			  fprintf (file, "  \\end{itemize}\n\n");
+
+		  };
+}
+
+  fprintf (file, "\\end{itemize}\n\n\\end{document}");  
+  fclose (file);
+  
+  
+  {char cmd_buf[200];
+	sprintf(cmd_buf,
+"mv %s hnb.tmp.tex &&\
+cat hnb.tmp.tex | sed -e s/_/\\\\\\\\_/g -e \"s/&/\\\\\\\\&/g\"> %s&&\
+rm hnb.tmp.tex",filename,filename);
+  system(cmd_buf);
+  }   
+  
+}
+

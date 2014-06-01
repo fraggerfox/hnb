@@ -1,79 +1,25 @@
 HIERARCHICAL NOTEBOOK
- 
-hierarchical notebook (hnb) is program to organize, many kinds
-of data in one place, for example adresses, todo lists, ideas,
-book "reviews", brainstorming, organizing a speech, making a 
-structured packing list random notes, and probably many more I 
-haven't thought of yet..
-	
- 
+	hierarchical notebook (hnb) is program to organize, many kinds of data in one place, for example adresses, todo lists, ideas, book "reviews", brainstorming, organizing a speech, making a  structured packing list random notes, and probably many more I  haven't thought of yet..
 HOW TO GET hnb?
-	
-	new releases of hnb will appear on the
-	sourceforge project page
-		http://sourceforge.net/projects/hnb
-	
+	new releases of hnb will appear on the sourceforge project page http://sourceforge.net/projects/hnb/
 INSTALLING hnb
-	
-	if you've got a source release you must first compile
-	hnb,.. see further down in this file for instructions.
-	
+	if you've got a source release you must first compile hnb,.. see further down in this file for instructions.
 	Windows
-		the windows binary distribution, is a .zip file
-		containing the executable, this readme file, 
-		an sample database, and the licence for hnb's use.
-		
-		the binary is standalone, so you can just
-		copy it wherever you'd like it to reside.
-		
-	Linux
-		the linux binary distribution is a .tar.gz file
-		containing the executable, this readme file, a
-		an sample database, and the licence for hnb's use.
-		
-		the binary is dynamically linked against ncurses
-		just place it anywere in your path.. like
-		/usr/bin, /usr/local/bin or /home/user/bin
-		
+		the windows binary distribution, is a .zip file	containing the executable, this readme file, an sample database, and the licence for hnb's use.
+		the binary is standalone, so you can just copy it wherever you'd like it to reside.
+	Linux 
+		the linux binary distribution is a .tar.gz file	containing the executable, this readme file, a an sample database, and the licence for hnb's use.
+		the binary is dynamically linked against ncurses just place it anywere in your path.. like /usr/bin, /usr/local/bin or /home/user/bin
 COMPILING hnb
-	
-	I've only tried to compile hnb using linux, the only dependencies are
-	ncurses so it should compile on most any unix by just typing make.
-	
-	I cross compile the win32 binary using mingw32, the Makefile is
-	probably a mess by most standards, but it works for me (tm), and
-	will be replaced by something more appropriate at some other time.
-	
+	I've only tried to compile hnb using linux, the only dependencies are ncurses so it should compile on most any unix by just typing make.
+	I cross compile the win32 binary using mingw32, the Makefile is probably a mess by most standards, but it works for me (tm), and will be replaced by something more appropriate at some other time.
 USAGE DOCUMENTATION
-	
-	hopefully hnb is quite selfdocumenting, but the file sample.hnb
-	contains some explaination of concepts and ideas behind hnb
-	invoke hnb like this to look at the file.
-	
+	hopefully hnb is quite selfdocumenting, but the file sample.hnb contains some explaination of concepts and ideas behind hnb invoke hnb like this to look at the file.
 	hnb sample.hnb
-	
-TODO
-	[ ]moving
-		[ ]make the selected node, be dragged instead of warped
-	[ ]buffer limits
-		is now increased to 2048, but is it enough?
-	[ ]different collapse modes?
-	[ ]gtk 2.0
-		there is a new interface to bind things so I can use my own codestructue :))
-	[ ]curses interface
-		[ ]in editing mode, use reverse video as cursor instead of _ hack
-		[ ]copy node and substree
-	[ ]todo
-		[X]the autochecking of parental nodes kinda works for one level now,.. must create either an recursive maintainance routine,.. or something ingenious
-		[ ]the recurisive auto done tag matcher,..
-			if there is a parent
-				check wether all todo boxes in this level is checked
-				if they are. check parent, else uncheck parent
-					repeat until there is no parent
 CHANGELOG
 	0.3b
 		added registry functions, and a small sample programed called reg
-		small bugfix for node_recurse()  (go right, and to top)
+		small bugfix for node recurse()  (go right, and to top)
 	0.3 15.oct 2000
 		fixed registry
 		implemented node2path
@@ -99,7 +45,7 @@ CHANGELOG
 		added search functionality, still not added real keyboard bindings, nor input of needle for the search, but the callbacks are in place
 		fixed the display of confirm mode in curses ui.
 		implemented reparenting
-		cleaned up node_remove
+		cleaned up node remove
 	0.6b 11 april 2001
 		something went wrong in the versioning,.. but what the heck..
 		 
@@ -119,5 +65,38 @@ CHANGELOG
 		refined search control interface
 		made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
 	0.7 13 april 2001
-
-pippin@users.sourceforge.net
+	0.7a
+		making autoupdate of higher level todo work properly
+			recursively move towards root
+			only check nodes with visible todo boxes
+		ascii export
+			just saves the current sublevel of the tree to a file in hnbs standard file format
+		html export
+			makes an nicely formatted html file with unordered lists,
+			doesn't escape any html by itself
+		latex export
+			in a kind of hackish way, not entirely sure what I could use it for
+			requires sed for a nasty replace hack
+			doesn't work for deeper nesting levels than four
+			won't work in win32,.. (sed fails)
+		postscript export
+			based on the latex export
+			uses system calls and requires latex, and dvips
+			won't work in win32 latex export fails and latex dvips etc,.. is unix stuff
+		made the default(and only behaviour be to display percentage complete on partially done todo items,.. shouldn't incurr too much overhead,,.. (altough it recalculates for all visible nodes for each character input)
+		loading(insertion) of an external file into the data
+	0.8 15 april 2001
+TODO
+	moving
+		make the selected node, be dragged instead of warped
+	buffer limits
+		they are high,.. but somebody typing a biiig node could crash it
+	different collapse modes?
+	gtk 2.0
+		there is a new interface to bind things so I can use my own codestructue :))
+	curses interface
+		in editing mode, use reverse video as cursor instead of underscorehack
+		copy node and substree
+	make default format xml, and move the current format into an text export/import filter thing.
+		perhaps the text filter should be kind of enhanced from the current format,.. but backwards compatible,.. add bullets, and ability to use newline within a node?
+author: Øyvind Kolås / pippin@users.sourceforge.net

@@ -38,6 +38,8 @@ user instructions for Hiarchical NoteBook (hnb):
 		quit
 		save and quit,..
 		amongst other options
+	exporting data
+		the data hnb saves (a plain ascii file) is perhaps not always the easiest to print etc. by pressing ctrl+e a you can choose amongst other things to export the current level and it's sublevels as an html file.. suitable for printing thorugh a webbrowser.
 
 psst if this is your first time using hnb, the two periods
 after the topmost line, indicates that this entry have children
@@ -95,12 +97,14 @@ sample data:
 	cd's in my collection
 		none, it was stolen,
 		I surive on mp3's at the moment
-	[ ]things to pack
-		[X]clothes
+	[ ]packing for the journey there and back again
+		[ ]clothes
 			[X]4x underwear
-			[X]extra trousers
+			[ ]extra trousers
 			[X]3 shirts
+			[ ]winter clothes
+			[ ]extra pair of whoes
 		[ ]stuff
 			[ ]music
 			[ ]reading material
-			[ ]money
+			[X]money

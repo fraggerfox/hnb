@@ -31,6 +31,8 @@
 #define UI_COMPLETE 9 /* tab */
 #define UI_HELP		KEY_F(1)
 #define UI_QUIT		24/* ctrl+x */
+#define UI_EXPORT   5/* ctrl+e */
+#define UI_IMPORT   12/* ctrl+l */
 
 #define UI_SORT		15/* ctrl+o*/
 
@@ -51,7 +53,8 @@
 #define UI_MODE_HELP2	 9
 #define UI_MODE_GETSTR	 10
 #define UI_MODE_SEARCH   11
-
+#define UI_MODE_EXPORT   12
+#define UI_MODE_IMPORT 	13
 
 void ui_init();
 void ui_draw(Node *node,char *input, int mode);
