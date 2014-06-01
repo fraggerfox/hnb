@@ -909,7 +909,7 @@ void app_navigate (){
 			case UI_BACKSPACE2:
 			case UI_BACKSPACE3:
 				if (!strlen (input)) {
-					app_remove ();
+/*					app_remove ();*/
 				} else {
 					input[strlen (input) - 1] = 0;
 					if (node_getflag(pos,F_temp))	
@@ -1101,7 +1101,7 @@ int main(int argc,char **argv){
 	if(cmdline.def_db){
 		strcpy(prefs.db_file,prefs.default_db_file);
 		if(!file_check(prefs.db_file))
-			prefs.tutorial=1;
+			prefs.tutorial=2;
 	} else {
 		strcpy(prefs.db_file,cmdline.dbfile);
 	}
@@ -1144,7 +1144,8 @@ if this is an old ascii hnb file, you can convert it with:\n\
 	}
 	
 	if(prefs.tutorial){
-		prefs.db_file[0] = (char) 255; 	/* disable saving */
+		if(prefs.tutorial!=2)
+			prefs.db_file[0] = (char) 255; 	/* disable saving */
 		pos = help_import (pos);
 	}
 	

@@ -44,6 +44,8 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.6.4
+		made the tutorial saveable, if opened in place of the default db
 	1.6.3
 		fixed sorting segfault
 		compiles with bsd curses?
@@ -227,3 +229,4 @@ TODO
 			node_remove
 	make a dead tree copy of he source for examination
 		enscript *.h *.c -E  --output uts.ps -U 2 -j
+	backspace/delete behaviour, experiment to find good solution

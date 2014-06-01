@@ -1,3 +1,5 @@
+1.6.4
+	made the tutorial saveable, if opened in place of the default db
 1.6.3
 	fixed sorting segfault
 	compiles with bsd curses?

@@ -65,7 +65,7 @@ void ui_init (){
 	middle_line = LINES / 3;
 	#ifdef MOUSE
 	if(prefs.mouse)
-		mousemask(BUTTON1_CLICKED+BUTTON3_CLICKED+BUTTON1_DOUBLE_CLICKED,NULL);
+		mousemask(BUTTON1_PRESSED,NULL);
 	#endif	
 	
 	
@@ -946,14 +946,25 @@ int ui_input ()
 #ifdef MOUSE			
 	case KEY_MOUSE:
 		getmouse(&mouse);
-		if(mouse.bstate&BUTTON1_CLICKED 
+		if(mouse.bstate&BUTTON1_PRESSED 
 			|| mouse.bstate&BUTTON1_DOUBLE_CLICKED){/*button1*/
 			if (mouse.y >= LINES-5){
 				int line=(mouse.y-LINES)*-1;
 				int pos= (mouse.x/ (COLS/6));
 
-				if( mouse_codes[line][pos]!= -1 ) 
-					return mouse_codes[line][pos];
+/*				if( mouse_codes[line][pos]!= -1 ) */{
+					int x,y;
+					y=mouse.y;
+					x=pos*(COLS/6);
+					move(y,x);
+					chgat(10, A_REVERSE, UI_COLOR_MENUTXT, NULL);
+
+
+					refresh();				
+					sleep(1);					
+					return UI_IGNORE;
+					return mouse_codes[line][pos];					
+				}
 			}
 
 		if(mouse_warp){
