@@ -799,7 +799,7 @@ void ui_draw (Node *node, Node *lastnode,char *input, int mode){
 				node_getpriority(tnode));
 		if(!lines2.up && node_down(tnode)==node)
 				lines2.up=active_line-line;
-		if(!lines2.parent && node_right(node) && node_right(tnode)==node_top(node))
+		if(!lines2.parent && node_right(tnode) && node_right(tnode)==node_top(node))
 				lines2.parent=active_line-line;
 #ifdef MOUSE						   
 	if(prefs.mouse && line>0){

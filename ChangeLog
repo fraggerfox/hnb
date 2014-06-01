@@ -1,3 +1,5 @@
+1.8.1
+	fixed the movement behaviour when going to the parent node,.. the screen jumped too much
 1.8 30 aug 2001
 	changed the default window scrolling behaviour to move the cursorbar instead of the whole screen when possible
 	integrated libxml support changes from orang@imonk.com
@@ -119,3 +121,4 @@
 	added resize functionality
 	pageup/pagedown
 	changes to help/confirming interface
+1.8.1

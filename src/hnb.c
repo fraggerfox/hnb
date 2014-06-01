@@ -110,10 +110,11 @@ int key2action(int key, char mode){
 	ifk(KEY.BOTTOM  ,UI_BOTTOM);
 /* TOGGLE_VIEWMODE
 PREFS */
-
-	ifk(KEY.FIND     ,UI_FIND);
-
-	ifk(KEY.GRAB    ,UI_MARK);
+/*FIXME check some more of these */
+	if(mode!='e'){
+		ifk(KEY.FIND     ,UI_FIND);
+		ifk(KEY.GRAB    ,UI_MARK);
+	}
 	ifk(KEY.CONFIRM   ,UI_ENTER);
 	ifk(KEY.REMOVE  ,UI_REMOVE);
 	ifk(KEY.CANCEL	 ,UI_QUIT);

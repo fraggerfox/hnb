@@ -1,6 +1,6 @@
 AC_INIT(src/hnb.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(hnb,1.8.0)
+AM_INIT_AUTOMAKE(hnb,1.8.1)
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
