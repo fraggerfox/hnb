@@ -23,7 +23,7 @@
 #include <config.h>
 #endif
 
-#include <stdio.h> 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -76,9 +76,9 @@ Node *import_node (import_state_t * is, int level, Node *node)
 		is->npos = node_insert_down (is->npos);
 	if (node_level < level)
 		is->npos = node_insert_right (is->npos);
-		node_swap(node,is->npos);
-		node_free(is->npos);
-		is->npos=node;
+	node_swap (node, is->npos);
+	node_free (is->npos);
+	is->npos = node;
 	return is->npos;
 }
 
@@ -150,30 +150,56 @@ int file_check (char *filename)
 }
 
 
-static int cmd_save(char *params,void *data){
-	Node *pos=(Node *)data;
-					if (prefs.db_file[0] != (char) 255) {
-					{
-						char buf[4096];
+static int cmd_save (int argc,char **argv, void *data)
+{
+	Node *pos = (Node *) data;
 
-						if (prefs.format == format_hnb || prefs.format==format_opml) {
-							sprintf (buf, "export_%s %s %i",
-									 format_name[prefs.format], prefs.db_file,
-									 node_no (pos) - 1);
-						} else {
-							sprintf (buf, "export_%s %s",
-									 format_name[prefs.format],
-									 prefs.db_file);
-						}
-						docmd (node_root (pos), buf);
-					}
-				}
-	return (int)pos;
+	if (prefs.db_file[0] != (char) 255) { /* magic value of tutorial */
+		{
+			char buf[4096];
+
+			if (prefs.format == format_hnb || prefs.format == format_opml) {
+				sprintf (buf, "export_%s %s %i",
+						 format_name[prefs.format], prefs.db_file,
+						 node_no (pos) - 1);
+			} else {
+				sprintf (buf, "export_%s %s",
+						 format_name[prefs.format], prefs.db_file);
+			}
+			docmd (node_root (pos), buf);
+		}
+	}
+	return (int) pos;
 }
+
+static int cmd_revert (int argc,char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+
+	if (prefs.db_file[0] != (char) 255) {
+		{
+			char buf[4096];
+
+			sprintf (buf, "import_%s %s",
+				 format_name[prefs.format], prefs.db_file);
+			node_free(pos);
+			pos=tree_new();
+			
+			pos=docmd (pos, buf);
+		}
+	}
+	return (int) pos;
+}
+
+
 /*
 !init_file();
 */
-void init_file(){
+void init_file ()
+{
 	cli_add_command ("save", cmd_save, "");
-	cli_add_help("save","Saves the data");
+	cli_add_help ("save", "Saves the data");
+
+	cli_add_command ("revert", cmd_revert, "");
+	cli_add_help ("revert", "Revert to last saved version");
 }

@@ -43,6 +43,24 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.9.16
+		attempts to fix the compile on OSX
+			renaming mergesort to node_mergesort due to nameclash
+			only compiling the static lib
+		made indent and outdent only work when there is no data typed already, (thus making > and < allowed typed in navigation mode as long as they're not the first character typed.
+		removed errors appearing with -pedantic (at least here)
+			removing all macros with variable arguments replacing them with va_list
+			removing inline statements from libcli
+		created an utility function for string replacements, that I inserted into all the various import/export filters.
+		added a function "insert_cal <month> <year>" which inserts the specified month/year in a fashion that makes hnb useable as a simple timeplanner as well. (when I get around to adding support for clones, this might be interesting)
+		allowing the user to use <,>,+ and - when typing in new data without erratic behavior, and not the need to enter edit mode. (except if it is the first char of the data)
+		fixed an issue with creating the first child, and pressing insert, and various other commands,.. 
+		added rpm spec file from Asgeir Nilsen
+		made file_opml and file_hnb interpret all attributes
+		implemented buffered reading for the xml tokenizer
+		changed the function prototype for functions that register with libcli, they must now register with an int (int argc, char **argv, void *data) function
+			overhauled hnb to use this API, some more refinement might be needed in someplaces, but it seems to work OK for now.
+		added a menu that is accesed from F9
 	1.9.15
 		outdent fixed to be more efficient and work as intended
 		added export context
@@ -252,3 +270,4 @@ TODO
 		start
 	make a dead tree copy of the source for examination
 		enscript *.h *.c -E  --output uts.ps -U 2 -j
+	make it stop outdent when - is pressed without being in edit mode,.. and characters are typed.

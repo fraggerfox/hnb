@@ -28,37 +28,38 @@
 Node *node_new ()
 {
 	Node *node = (Node *) malloc (sizeof (Node));
-	memset(node, 0, (sizeof(Node)));
-
-	node->percent_done = -1;
-	node->size=-1;	
+	memset (node, 0, (sizeof (Node)));
+/*	node->flags=1<<3;*/
 	return node;
 }
 
-Node *node_duplicate(Node *node){
+Node *node_duplicate (Node *node)
+{
 	Node *newnode;
 	Node_AttItem *att;
 
-	assert(node);
-	if(!node)return NULL;
-	newnode= (Node *)malloc (sizeof(Node));
-	if(!newnode)return NULL;
-	memcpy(newnode,node,sizeof(Node));
-	
-	newnode->attrib=NULL;
-	att=node->attrib;
-	while(att){
-		node_set(newnode,att->name,att->data);
-		att=att->next;
+	assert (node);
+	if (!node)
+		return NULL;
+	newnode = (Node *) malloc (sizeof (Node));
+	if (!newnode)
+		return NULL;
+	memcpy (newnode, node, sizeof (Node));
+
+	newnode->attrib = NULL;
+	att = node->attrib;
+	while (att) {
+		node_set (newnode, att->name, att->data);
+		att = att->next;
 	}
-		
-	return newnode;	
+
+	return newnode;
 }
 
 void node_free (Node *node)
 {
-	while(node->attrib){
-		node_unset(node,node->attrib->name);
+	while (node->attrib) {
+		node_unset (node, node->attrib->name);
 	}
 	free (node);
 }
@@ -66,113 +67,138 @@ void node_free (Node *node)
 
 /* returns pointer to character data of attribute NULL if it isn't
    set */
-char *node_get(Node *node, char *name){
+char *node_get (Node *node,char *name)
+{
 	Node_AttItem *att;
-	
-	att=node->attrib;
-	while(att){
-		if(!strcmp(att->name,name)){
+
+	att = node->attrib;
+	while (att) {
+		if (!strcmp (att->name, name)) {
 			return att->data;
 		}
-		att=att->next;
+		att = att->next;
 	}
 	return NULL;
 }
 
 /* sets the named attribute to the value of *data
 */
-void node_set(Node *node, char *name, char *data){
+void node_set (Node *node, char *name, char *data)
+{
 	Node_AttItem *att;
-	
-	att=node->attrib;
-	while(att){
-		if(!strcmp(att->name,name)){
-			free(att->data);
-			att->data=strdup(data);
+
+	att = node->attrib;
+	while (att) {
+		if (!strcmp (att->name, name)) {
+			free (att->data);
+			att->data = strdup (data);
 			return;
 		}
-		att=att->next;
+		att = att->next;
 	}
-	
+
 	/* did not find the requested att, inserting new one, (stack wise) */
-	
-	att=(Node_AttItem *) malloc (sizeof( Node_AttItem));
-	att->next=node->attrib;
-	att->data=strdup(data);
-	att->name=strdup(name);
-	node->attrib=att;
+
+	att = (Node_AttItem *) malloc (sizeof (Node_AttItem));
+	att->next = node->attrib;
+	att->data = strdup (data);
+	att->name = strdup (name);
+	node->attrib = att;
 
 	return;
 }
 
-void node_unset(Node *node, char *name){
+void node_unset (Node *node, char *name)
+{
 	Node_AttItem *att;
 	Node_AttItem **prev;
-	
-	
-	prev=&(node->attrib);
-	att=node->attrib;
-	while(att){
-		if(!strcmp(att->name,name)){
-			free(att->data);
-			free(att->name);
-			*prev=att->next;
-			free(att);
+
+
+	prev = &(node->attrib);
+	att = node->attrib;
+	while (att) {
+		if (!strcmp (att->name, name)) {
+			free (att->data);
+			free (att->name);
+			*prev = att->next;
+			free (att);
 			return;
 		}
-		att=att->next;
-		prev=&(att->next);
+		prev = &(att->next);
+		att = att->next;
 	}
-	
+
 	/* no such node */
 	return;
 }
 
+/* FIXME: the rest of this file isn't actually used for anything but debugging yet,..*/
+
 #include "cli.h"
 #include <stdio.h>
+
+
+int cmd_att_set (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+
+	if(argc!=3){
+		cli_outfunf("usage: %s <attribute> <value>",argv[0]);
+		return (int) pos;
+	}
+		
+	node_set (pos, argv[1], argv[2]);
+	return (int) pos;
+}
+
+int cmd_att_get (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+	char *cdata;
+	
+	if(argc!=2){
+		cli_outfunf("usage: %s <attribute>",argv[0]);
+		return (int) pos;
+	}
+			
+	cdata = node_get (pos, argv[1]);
+
+	if (cdata)
+		cli_outfun (cdata);
+	return (int) pos;
+}
+
+int cmd_att_clear (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+	if(argc!=2){
+		cli_outfunf("usage: %s <attribute>",argv[0]);
+		return (int) pos;
+	}
+	node_unset (pos, argv[1]);
+	return (int) pos;
+}
+
+int cmd_att_list (int argc,char **argv, void *data)
+{
+	Node_AttItem *att;
+	Node *pos = (Node *) data;
+
+	att = pos->attrib;
+	while (att) {
+		cli_outfunf ("%s: [%s]", att->name, att->data);
+		att = att->next;
+	}
+	return (int) pos;
+}
 
 /*
 !init_nodetest();
 */
-
-int cmd_att_set(char *params, void *data){
-	char key[40];
-	Node *pos=(Node *)data;
-	cli_split(params, key, &params);
-	node_set(pos,key,params);
-	return (int)pos;
-}
-
-int cmd_att_get(char *params, void *data){
-	Node *pos=(Node *)data;
-	char *cdata=node_get(pos,params);
-	if(cdata)
-		cli_outfun(cdata);
-	return (int)pos;
-}
-
-int cmd_att_clear(char *params, void *data){
-	Node *pos=(Node *)data;
-	node_unset(pos,params);
-	return (int)pos;
-}
-
-int cmd_att_list(char *params, void *data){
-	Node_AttItem *att;
-	Node *pos=(Node *)data;
-	
-	att=pos->attrib;
-	while(att){
-		cli_outfunf("%s: %s",att->name,att->data);
-		att=att->next;
-	}
-	return (int)pos;
-}
-
-
-void init_nodetest(){
-	cli_add_command("att_set",cmd_att_set,"");
-	cli_add_command("att_get",cmd_att_get,"");
-	cli_add_command("att_clear",cmd_att_clear,"");
-	cli_add_command("att_list",cmd_att_list,"");
+void init_nodetest ()
+{
+	cli_add_command ("att_set", cmd_att_set, "");
+	cli_add_command ("att_get", cmd_att_get, "");
+	cli_add_command ("att_clear", cmd_att_clear, "");
+	cli_add_command ("att_list", cmd_att_list, "");
 }

@@ -27,53 +27,62 @@
 /************************* clipboard ************************************/
 
 
-static Node *clipboard=NULL;
+static Node *clipboard = NULL;
 
-static int copy_cmd (char *params, void *data)
+static int copy_cmd (int argc,char **argv, void *data)
 {
-	Node *pos=(Node *)data;
-	if(clipboard!=NULL){
-		tree_free(clipboard);
-	}
-	clipboard=node_new();
+	Node *pos = (Node *) data;
 
-	clipboard=tree_duplicate( pos, clipboard);
-	return (int)pos;
+	if (clipboard != NULL) {
+		tree_free (clipboard);
+	}
+	clipboard = node_new ();
+
+	clipboard = tree_duplicate (pos, clipboard);
+	return (int) pos;
 }
 
-static int cut_cmd (char *params, void *data)
+static int cut_cmd (int argc,char **argv, void *data)
 {
-	Node *pos=(Node *)data;
-	if(clipboard!=NULL){
-		tree_free(clipboard);
-	}
-	clipboard=node_new();
+	Node *pos = (Node *) data;
 
-	clipboard=tree_duplicate( pos, clipboard);
-	pos=node_remove(pos);
-	return (int)pos;
+	if (clipboard != NULL) {
+		tree_free (clipboard);
+	}
+	clipboard = node_new ();
+
+	clipboard = tree_duplicate (pos, clipboard);
+	pos = node_remove (pos);
+	return (int) pos;
 }
 
-static int paste_cmd (char *params, void *data)
+static int paste_cmd (int argc,char **argv, void *data)
 {
-	Node *pos=(Node *)data;
-	if(clipboard==NULL){
-		docmd(pos,"status no data in clipboard");
+	Node *pos = (Node *) data;
+
+	if (clipboard == NULL) {
+		docmd (pos, "status no data in clipboard");
 	} else {
 		Node *temp;
-		temp=node_insert_down(pos);
-		tree_duplicate( clipboard, temp);
+
+		temp = node_insert_down (pos);
+		tree_duplicate (clipboard, temp);
 	}
-	return (int)pos;
+	return (int) pos;
 }
+
 /*
 !init_clipboard();
 */
-void init_clipboard(){
+void init_clipboard ()
+{
 	cli_add_command ("copy", copy_cmd, "");
-	cli_add_help("copy","Stores the current node, and it's subtree in the clipboard");
+	cli_add_help ("copy",
+				  "Stores the current node, and it's subtree in the clipboard");
 	cli_add_command ("cut", cut_cmd, "");
-	cli_add_help("cut","Moves the current node, and it's subtree to the clipboard");
+	cli_add_help ("cut",
+				  "Moves the current node, and it's subtree to the clipboard");
 	cli_add_command ("paste", paste_cmd, "");
-	cli_add_help("paste","Inserts the contents of the clipboard at the current position in the tree.");
+	cli_add_help ("paste",
+				  "Inserts the contents of the clipboard at the current position in the tree.");
 }

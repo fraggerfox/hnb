@@ -2,7 +2,7 @@
 #define UI_STYLE_H
 
 enum {
-	ui_style_menuitem=1,
+	ui_style_menuitem = 1,
 	ui_style_menutext,
 	ui_style_node,
 	ui_style_parentnode,
@@ -13,7 +13,7 @@ enum {
 	ui_style_terminator
 };
 
-void ui_style(int style_no);
-void ui_style_restore_color();
+void ui_style (int style_no);
+void ui_style_restore_color ();
 
-#endif /*UI_STYLE_H*/
+#endif /*UI_STYLE_H */

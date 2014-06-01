@@ -17,7 +17,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
- 
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -81,7 +81,7 @@ char *c_ws = " \n\r\t";
 enum {
 	c_nil = 0,
 	c_eat = 1,					/* request that another char be used for the next state */
-	c_store = 2				/* store the current char in the output buffer */
+	c_store = 2					/* store the current char in the output buffer */
 };
 
 typedef struct {
@@ -99,8 +99,8 @@ typedef struct {
 
 state_entry state_table[s_error][max_entries];
 
-static void a (int state, char *chars, unsigned char r_start, unsigned char r_end,
-			   int charhandling, int next_state)
+static void a (int state, char *chars, unsigned char r_start,
+			   unsigned char r_end, int charhandling, int next_state)
 {
 	int no = 0;
 
@@ -256,19 +256,23 @@ static int is_oneof (char c, char *chars)
 	return 0;
 }
 
-int nextchar (xml_tok_state * t)
+static int nextchar (xml_tok_state * t)
 {
-	/* could easily update som global variable with
-	   current line, and position in line here,..
-	   according to wether char is \n or not,.. */
-	   
-	unsigned char tbuf[10];
-	int read;
+	int ret;
 
-	read = fread (tbuf, 1, 1, t->file_in);
-	if (!read)
-		return -1;
-	return (int) tbuf[0];
+	if(! (t->inbufpos<t->inbuflen) ){
+		t->inbuflen= fread(t->inbuf,1,inbufsize,t->file_in);
+		t->inbufpos=0;
+		if(!t->inbuflen)
+			return -1;
+	}
+	
+	ret=(int) t->inbuf[t->inbufpos++];
+	
+	if(ret=='\n')
+		t->line_no++;
+	
+	return ret;
 }
 
 int xml_tok_get (xml_tok_state * t, char **data)
@@ -290,6 +294,7 @@ int xml_tok_get (xml_tok_state * t, char **data)
 			int squote = 0;
 			int dquote = 0;
 			int abracket = 1;
+
 /*			int sbracket = 0;*/
 
 			t->rbuf[rbuflen++] = t->c;
@@ -378,7 +383,7 @@ char *endomission_tags[] = {
 	"li", "LI", "p", "P", "td", "TD", "tr", "TR", NULL
 };
 
-int string_is_oneof (char *s, char *ss[])
+int string_is_oneof (char *s, char **ss)
 {
 	while (*ss) {
 		if (!strcmp (s, *ss))
@@ -401,7 +406,7 @@ int html_tok_get (xml_tok_state * s, char **data)
 
 	if (got_a_stored_tag) {
 		got_a_stored_tag = 0;
-		*data = (char *)&stored_tag;
+		*data = (char *) &stored_tag;
 		return stored_type;
 	}
 

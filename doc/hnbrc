@@ -9,17 +9,17 @@
 ##### bullets
 	# what kind of bullets are displayed before each item
 	##### samples
-		#bullet_parent   -
-		#bullet_parent   *
-		#bullet_parent   ·
-		#bullet_parent_expanded   +
-		#bullet_parent_expanded   *
-		#bullet_parent_expanded   ·
-		#bullet_leaf   *
-		#bullet_leaf   -
-	bullet_leaf   ·
-	bullet_parent   +
-	bullet_parent_expanded   -
+		#bullet_parent "  -"
+		#bullet_parent "  *"
+		#bullet_parent "  ·"
+		#bullet_parent_expanded "  +"
+		#bullet_parent_expanded "  *"
+		#bullet_parent_expanded "  ·"
+		#bullet_leaf "  *"
+		#bullet_leaf "  -"
+	bullet_leaf "  ·"
+	bullet_parent "  +"
+	bullet_parent_expanded "  -"
 	
 ##### user interface
 	##### display format
@@ -37,12 +37,12 @@
 		#   indentation actually does something
 		#   # indicates node number (actually line number when used as a folding editor)
 		##### samples
-			#display_format # i4- d
-		display_format i4- d
+			#display_format # "i4- d"
+		display_format "i4- d"
 		
 	##### fixed focus
 		# lock the selection bar to a position 1/3 down the screen
-		fixedfocus	0
+		fixedfocus "0"
 		
 	
 ##### external commands
@@ -55,17 +55,17 @@
 		# the X ones have their error and standard output redirected to dev/null
 		# and are put into the background to keep hnb running afterwards
 		##### samples
-			#web_command opera -remote 'openURL(*)'			> /dev/null 2>&1 &
-			#web_command netscape -remote 'openURL(*)'		> /dev/null 2>&1 &
-			#web_command netscape -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
-			#web_command mozilla -remote 'openURL(*)'		> /dev/null 2>&1 &
-			#web_command mozilla -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
-			#web_command konqueror *				> /dev/null 2>&1 &
-			#web_command galeon -n					> /dev/null 2>&1 &
-			#web_command w3m *
-			#web_command lynx *
-			#web_commend rxvt -fn fixed -rv +sb -e w3m *		> /dev/null 2>&1 &
-		web_command opera -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
+			#web_command "opera -remote 'openURL(*)'			> /dev/null 2>&1 &"
+			#web_command "netscape -remote 'openURL(*)'		> /dev/null 2>&1 &"
+			#web_command "netscape -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &"
+			#web_command "mozilla -remote 'openURL(*)'		> /dev/null 2>&1 &"
+			#web_command "mozilla -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &"
+			#web_command "konqueror *				> /dev/null 2>&1 &"
+			#web_command "galeon -n					> /dev/null 2>&1 &"
+			web_command "w3m *"
+			#web_command "lynx *"
+			#web_commend "rxvt -fn fixed -rv +sb -e w3m *		> /dev/null 2>&1 &"
+			#web_command "opera -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &"
 		
 	##### mail@handler
 		# what command is executed when a user wants a action performed on a
@@ -74,22 +74,22 @@
 		# * is substituted for the mail-address
 		#
 		## samples
-			#mail_command xterm -rv pine *				> /dev/null 2>&1 &
-			#mail_command xterm -rv +sb -e mutt *			> /dev/null 2>&1 &
-			#mail_command pine *
-		mail_command mutt *
+			#mail_command "xterm -rv pine *				> /dev/null 2>&1 &"
+			#mail_command "xterm -rv +sb -e mutt *			> /dev/null 2>&1 &"
+			#mail_command "pine *"
+		mail_command "mutt *"
 		
 	##### spell checking
 		# the spell-checker used
 		#
 		## samples
-			#spell_command aspell -c
-			#spell_command ispell -x
-			#spell_command ispell -x -damerican
-			#spell_command ispell -x -dbritish
-			#spell_command ispell -x -dbokmål
-			#spell_command ispell -x -dnynorsk
-		spell_command ispell -x
+			#spell_command "aspell -c"
+			#spell_command "ispell -x"
+			#spell_command "ispell -x -damerican"
+			#spell_command "ispell -x -dbritish"
+			#spell_command "ispell -x -dbokmål"
+			#spell_command "ispell -x -dnynorsk"
+		spell_command "ispell -x"
 		
 	
 ##### file formats
@@ -98,19 +98,19 @@
 		# 1 - tab indented ASCII
 		# 2 - XML using no DTD (working as XML editor)
 		# 3 - XML using OPML DTD
-		format 0
+		format "0"
 		
 	##### Remember current position in tree
 		# wheter hnb remembers the current position in a file, (currently
 		# supported by the hnb DTD only, but might easily be extended since
 		# it fakes it with a XML comment) 1=true 0=false
-		savepos	1
+		savepos	"0"
 		
 	##### XML format
 		##### XML Cuddling
 			# When loading xml files, should data be allowed on 
 			# the same line as tags?
-			xml_cuddle 1
+			xml_cuddle "1"
 			
 		
 	
@@ -141,33 +141,41 @@
 	##################################################
 	
 	context main
-		helptext <ESC>| exit || |F2| save || |F5| commandline || |return| edit || | / | find || |^S| ort
+		helptext "<ESC>| exit || |F2| save || |F5| commandline || |return| edit || F9 | menu
 		
-		bind f1 status Take a look at ~/.hnbrc to check out the configuration
-		bind .. status there you will also find details about the available keybindings.
-		bind .. status please feel free to contribute more useful keybindings and helptexts...
+		bind f1 'status "Take a look at ~/.hnbrc to check out the configuration"'
+		bind .. 'status "there you will also find details about the available keybindings."'
+		bind .. 'status "please feel free to contribute more useful keybindings and helptexts..."'
 		
-		bind esc context quitsave
+		bind esc 'context quitsave'
 		
-		bind f5 commandline
-		bind .. status_clear
+		bind f5 'commandline'
+		bind .. 'status_clear'
 		
-		bind f6 context spellcheck
-		bind .. save_state
-		bind .. spell
+		bind f6 'macro m_spellcheck'
+			macro define m_spellcheck
+				context spellcheck
+				save_state
+				spell
+			end
 		
-		bind ^E context export
-		bind ^F context search
-		bind .. save_state
-		bind .. getquery enter keyword to search for
-		bind .. next_match
+		bind ^E 'context export'
+		bind ^L 'context import'
+		bind ^F 'macro m_search'
+			macro define m_search
+				context search
+				save_state
+				getquery "enter keyword to search for"
+				next_match
+			end
 		
-		bind f10 context user
+		bind f9  menu
+		bind f10 'context user'
 		
-		bind ^G context grab
-		bind .. save_state
+		bind ^G 'context grab'
+		bind .. 'save_state'
 		
-		bind ^A action
+		bind ^A 'action'
 		
 		bind up    up
 		bind down  down
@@ -204,10 +212,10 @@
 		bind backspace	backspace
 		bind backspace2	backspace
 		
-		bind sleft movenode left
-		bind sright	 movenode right
-		bind sprevious movenode up
-		bind snext movenode down
+		bind sleft "movenode left"
+		bind sright	 "movenode right"
+		bind sprevious "movenode up"
+		bind snext "movenode down"
 		
 		bind + expand
 		bind - collapse
@@ -215,7 +223,7 @@
 		bind ^Z restore_state
 		
 	context nodeedit
-		helptext editing node |  |ESC| revert || |return| confirm
+		helptext "editing node |  |ESC| revert || |return| confirm"
 		bind up    up
 		bind down  down
 		bind left  left
@@ -259,7 +267,7 @@
 		bind end  eol
 		
 	context confirm
-		helptext  y | | j | |return| confirm || |any key| cancel
+		helptext " y | | j | |return| confirm || |any key| cancel"
 		
 		bind y      confirm
 		bind j      confirm
@@ -268,7 +276,7 @@
 		bind any    cancel
 		
 	context quitsave
-		helptext Save on exit? |    | Y |es | J |a || | N |o || |ESC| cancel
+		helptext "Save on exit? |    | Y |es | J |a || | N |o || |ESC| cancel"
 		bind Y  save
 		bind .. quit
 		
@@ -284,11 +292,11 @@
 		bind N  quit
 		bind n  quit
 		
-		bind esc context main
+		bind esc "context main"
 		bind any unbound
 		
 	context spellcheck
-		helptext Spellchecking |   |Space| next node |ESC| cancel |F6,Return| confirm changes
+		helptext "Spellchecking |   |Space| next node |ESC| cancel |F6,Return| confirm changes"
 		
 		bind space go_recurse
 		bind ..    spell
@@ -299,65 +307,107 @@
 		bind up   go_backrecurse
 		bind ..   spell
 		
-		bind return context main
-		bind f6 context main
+		bind return "context main"
+		bind f6 "context main"
 		
 		bind esc restore_state
-		bind .. context main
+		bind .. "context main"
 		
 		bind any unbound
 	context grab
-		helptext Node grabbed |  |return| |space| drop here || |ESC| cancel
+		helptext "Node grabbed |  |return| |space| drop here || |ESC| cancel"
 		bind esc    restore_state
-		bind ..     context main
-		bind return context main
-		bind space  context main
-		bind left   movenode left
-		bind right  movenode right
-		bind up     movenode up
-		bind down   movenode down
+		bind ..     "context main"
+		bind return "context main"
+		bind space  "context main"
+		bind left   "movenode left"
+		bind right  "movenode right"
+		bind up     "movenode up"
+		bind down   "movenode down"
 		bind any    unbound
 	context export
-		helptext Export |  | A |scii || | H |tml  html| C |ss  | P |ostscript  |ESC| cancel
+		helptext "Export |  | A |scii || | H |tml  html| C |ss  | P |ostscript  | O |PML  |ESC| cancel "
+			macro define m_export_ascii
+				save_state
+				go_root
+				getquery 'what file should I save the ASCII output in?'
+				export_ascii *
+				restore_state
+				context main
+			end
+			macro define m_export_html
+				save_state
+				getquery 'what file should I save the HTML output in?'
+				export_html *
+				context main
+				restore_state
+			end
+			macro define m_export_htmlcss
+				save_state
+				getquery 'what file should I save the HTML/CSS output in?'
+				export_htmlcss *
+				context main
+				restore_state
+			end
+			macro define m_export_opml
+				save_state
+				getquery 'what file should I save the OPML output in?'
+				export_opml *
+				context main
+				restore_state
+			end
+			macro define m_export_ps
+				save_state
+				getquery 'what file should I save the PostScript output in?'
+				export_ps *
+				context main
+				restore_state
+			end
+		bind esc .. "context main"
+		bind A	"macro m_export_ascii"
+		bind a	"macro m_export_ascii"
+		bind H  "macro m_export_html"
+		bind h  "macro m_export_html"
+		bind C  "macro m_export_htmlcss"
+		bind c  "macro m_export_htmlcss"
+		bind O  "macro m_export_opml"
+		bind o  "macro m_export_opml"
+		bind P  "macro m_export_ps"
+		bind p  "macro m_export_ps"		
+		bind any unbound
+	context import
+		helptext "Import |  | A |scii | O |PML  | H |hnb   |ESC| cancel "
 		
-		bind esc
-			bind .. context main
-		bind A 
-			bind .. getquery what file should I save the ASCII output in?
-			bind .. export_ascii *
-			bind .. context main
-		bind a
-			bind .. getquery what file should I save the ASCII output in?
-			bind .. export_ascii *
-			bind .. context main
-		bind H
-			bind .. getquery what file should I save the HTML output in?
-			bind .. export_html *
-			bind .. context main
-		bind h
-			bind .. getquery what file should I save the HTML output in?
-			bind .. export_html *
-			bind .. context main
-		bind C
-			bind .. getquery what file should I save the HTML/CSS output in?
-			bind .. export_htmlcss *
-			bind .. context main
-		bind c
-			bind .. getquery what file should I save the HTML/CSS output in?
-			bind .. export_htmlcss *
-			bind .. context main
-		bind P
-			bind .. getquery what file should I save the Postscript output in?
-			bind .. export_ps *
-			bind .. context main
-		bind p
-			bind .. getquery what file should I save the Postscript output in?
-			bind .. export_ps *
-			bind .. context main
+		bind esc ..
+			bind .. "context main"
+		bind A ..
+			bind .. 'getquery "what file should I import ASCII from?"'
+			bind .. 'import_ascii *'
+			bind .. 'context main'
+		bind a ..
+			bind .. 'getquery "what file should I import ASCII from?"'
+			bind .. 'import_ascii *'
+			bind .. 'context main'
+		bind O ..
+			bind .. 'getquery "what file should I import OPML from?"'
+			bind .. 'import_opml *'
+			bind .. 'context main'
+		bind o ..
+			bind .. 'getquery "what file should I import OPML from?"'
+			bind .. 'import_opml *'
+			bind .. 'context main'
+		bind H ..
+			bind .. 'getquery "what file should I import HNB data from?"'
+			bind .. 'import_hnb *'
+			bind .. 'context main'
+		bind h ..
+			bind .. 'getquery "what file should I import HNB data from?"'
+			bind .. 'import_hnb *'
+			bind .. 'context main'
 		
 		bind any unbound
 	context search
-		helptext Searching |  |ESC| cancel || | n |ext || | p |revious || |space|/|return| go
+		helptext "Searching |  |ESC| cancel || | n |ext || | p |revious || |space|/|return| go"
 		bind down   next_match	
 		bind up     prev_match		
 		bind P      prev_match
@@ -365,58 +415,58 @@
 		bind n      next_match
 		bind N      next_match
 		
-		bind return context main
+		bind return "context main"
 		
-		bind esc    context main
+		bind esc    "context main"
 		bind ..     restore_state
 		
 		bind any    unbound
 	context user
-		helptext Usermenu | |ESC| cancel |F1| ispell language |F2| browser command |F3| expand all  |F4|  collapse all
-		bind esc context main
+		helptext "Usermenu | |ESC| cancel |F1| ispell language |F2| browser command |F3| expand all  |F4|  collapse all"
+		bind esc "context main"
 		
-		bind f1  context user_ispell
-		bind f2  context user_browser
-		bind f3  expand_all
-		bind ..  context main
+		bind f1  "context user_ispell"
+		bind f2  "context user_browser"
+		bind f3  "expand_all"
+		bind ..  "context main"
 		
-		bind f4  collapse_all
-		bind ..  context main
+		bind f4  "collapse_all"
+		bind ..  "context main"
 		
-		bind any unbound
+		bind any "unbound"
 		
 	context user_ispell
-		helptext Language for ispell: | |F1| Br.english  |F2| Am.english  |F3| Norwegian bokmål  |F4| Norwegian nynorsk
-		bind f1  spell_command ispell -x -damerican
-		bind ..  context main
+		helptext "Language for ispell: | |F1| Br.english  |F2| Am.english  |F3| Norwegian bokmål  |F4| Norwegian nynorsk"
+		bind f1  'spell_command "ispell -x -damerican"'
+		bind ..  'context main'
 		
-		bind f2  spell_command ispell -x -dbritish
-		bind ..  context main
+		bind f2  'spell_command "ispell -x -dbritish"'
+		bind ..  'context main'
 		
-		bind f3  spell_command ispell -x -dbokmål
-		bind ..  context main
+		bind f3  'spell_command "ispell -x -dbokmål"'
+		bind ..  'context main'
 		
-		bind f4  spell_command ispell -x -dnynorsk
-		bind ..  context main
+		bind f4  'spell_command "ispell -x -dnynorsk"'
+		bind ..  'context main'
 		
-		bind esc context main
+		bind esc 'context main'
 		bind any unbound
 		
 	context user_browser
-		helptext Browser action: | |F1| w3m replace hnb  |F2| w3m in rxvt  |F3| Opera, new tab  |F4| Mozilla new window
-		bind f1 browser_command w3m *
-		bind .. context main
+		helptext "Browser action: | |F1| w3m replace hnb  |F2| w3m in rxvt  |F3| Opera, new tab  |F4| Mozilla new window"
+		bind f1 'browser_command "w3m *"'
+		bind .. 'context main'
 		
-		bind f2 web_commend rxvt -T "w3m spawned from hnb" -fn fixed -rv +sb -e w3m * > /dev/null 2>&1 &
-		bind .. context main
+		bind f2 'web_commend "xterm -T \"w3m spawned from hnb\" -fn fixed -rv +sb -e w3m * > /dev/null 2>&1 &"'
+		bind .. 'context main'
 		
-		bind f3 web_command opera -remote 'openURL(*,new-window)' > /dev/null 2>&1 &
-		bind .. context main
+		bind f3 'web_command "opera -remote 'openURL(*,new-window)' > /dev/null 2>&1 &"'
+		bind .. 'context main'
 		
-		bind f4 web_command mozilla -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &
-		bind .. context main
+		bind f4 'web_command "mozilla -remote 'openURL(*,new-window)'	> /dev/null 2>&1 &"'
+		bind .. 'context main'
 		
-		bind esc context main
+		bind esc 'context main'
 		bind any unbound
 	
 		
@@ -430,7 +480,48 @@
 			# value given is in ms (1/1000seconds)
 			#
 			escdelay 100
+##### menu definition
+	##### file
+		menu "File" "------------" ""
+		menu "File" "save      F2" "save"
+		menu "File" "revert   " "revert"
+		menu "File" "quit      ^Q" "context quitsave"
+		menu "File" "------------" ""
+		menu "File" "export    ^E" "context export"
+		menu "File" "import    ^L" "context import"
+		menu "File" "------------" ""
+		menu "File" "spell chk F6" "macro m_spellcheck"
+		menu "File" "expand all"	    "expand_all"
+		menu "File" "collapse all"      "collapse_all"
+		menu "File" "statistics"	"stats"
+	##### edit
+		menu "Edit" "---------" ""
+		menu "Edit" "copy   ^C" "copy"
+		menu "Edit" "cut    ^X" "cut"
+		menu "Edit" "paste  ^V" "paste"
+		menu "Edit" "---------" ""
+		menu "Edit" "Search ^F" "macro m_search"
+	##### node
+		menu "Entry" "--------------" ""
+		menu "Entry" "edit    return" "edit"
+		menu "Entry" "delete     del" "remove"
+		menu "Entry" "--------------" ""
+		menu "Entry" "do action   ^A" "action"
+		menu "Entry" "indent      >" "indent"
+		menu "Entry" "outdent     <" "outdent"
+		menu "Entry" "toggle todo ^T" "toggle_todo"
+		menu "Entry" "toggle done ^D" "toggle_done"
+		menu "Entry" "expand      +" "expand"
+		menu "Entry" "collapse    -" "collapse"
+	##### level
+		menu "Level" "----------" ""
+		menu "Level" "sort    ^S" "sort"
+		menu "Level" "shuffle   " "shuffle"
 #####
 	context main
-	status hnb - hierarchical notebook   http://hnb.sourceforge.net/
-	status (c) Øyvind Kolås 2001-2003    pippin@users.sourceforge.net
+	macro define m_about
+		status "hnb - hierarchical notebook   http://hnb.sourceforge.net/"
+		status "(c) Øyvind Kolås 2001-2003    pippin@users.sourceforge.net"
+	end
+	
+	macro m_about

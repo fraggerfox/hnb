@@ -1,5 +1,5 @@
 /*
- * file_ascii.c -- html export filter for hnb
+ * file_html.c -- html export filter for hnb
  *
  * Copyright (C) 2001-2003 Øyvind Kolås <pippin@users.sourceforge.net>
  *
@@ -30,57 +30,39 @@
 #include "tree.h"
 #include "file.h"
 #include "query.h"
+#include "util_string.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
-#define transform(a,b) case a:\
-						{int j=0;const char * msg=b;\
-							while(msg[j])\
-								out[outpos++]=msg[j++];\
-							out[outpos]=0;\
-							inpos++;\
-							break;\
-						}\
+/* *INDENT-OFF* */
 
-static char *html_quote (const char *in)
-{
-	static char out[bufsize];
-	int inpos = 0;
-	int outpos = 0;
+static char *htmlquote[]={
+	"&", "&amp;",
+	"\"", "&#39;",
+	"<", "&lt;",
+	">", "&gt;",
+	"ø", "&oslash;",
+	"Ø", "&Oslash;",
+	"å", "&aring;",
+	"Å", "&Aring;",
+	"æ", "&aelig;",
+	"Æ", "&AElig;",NULL
+};
 
-	out[0] = 0;
-	while (in[inpos]) {
-		switch (in[inpos]) {
-				transform ('&', "&amp;");
-				transform ('\'', "&#39;");
-				transform ('<', "&lt;");
-				transform ('>', "&gt;");
-				transform ('ø', "&oslash;");
-				transform ('Ø', "&Oslash;");
-				transform ('å', "&aring;");
-				transform ('Å', "&Aring;");
-				transform ('æ', "&aelig;");
-				transform ('Æ', "&AElig;");
-			default:
-				out[outpos++] = in[inpos++];
-				out[outpos] = 0;
-				break;
-		}
-	}
-	return (out);
-}
+/* *INDENT-ON* */
 
 
-static int export_html (char *params, void *data)
+static int export_html (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	Node *tnode;
 	int level, flags, startlevel, lastlevel, cnt;
 	char *cdata;
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -104,7 +86,7 @@ static int export_html (char *params, void *data)
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
-		cdata = fixnullstring(node_get (tnode, TEXT));
+		cdata = fixnullstring (node_get (tnode, TEXT));
 
 		if (level > lastlevel) {
 			indent (level - 1, "\t");
@@ -123,9 +105,9 @@ static int export_html (char *params, void *data)
 		indent (level, "\t");
 
 		if (cdata[0] != 0) {
-			fprintf (file, "<LI>%s%s</LI>\n",
-					 (flags & F_todo ? (flags & F_done ? "[X] " : "[&nbsp] ")
-					  : ""), html_quote (cdata));
+			char *quoted=string_replace(cdata,htmlquote);
+			fprintf (file, "<LI>%s</LI>\n", quoted);
+			free(quoted);
 		} else {
 			fprintf (file, "<!-- empty line in input -->\n");
 		}
@@ -156,12 +138,17 @@ static int export_html (char *params, void *data)
 static void htmlcss_export_nodes (FILE * file, Node *node, int level)
 {
 	while (node) {
-		char *data = fixnullstring(node_get (node, TEXT));
+		char *data = fixnullstring (node_get (node, TEXT));
+		char *quoted=string_replace(data,htmlquote);
+
 
 		fprintf (file, "\n");
 		indent (level, "\t");
-		fprintf (file, "<div>");	
-		fprintf (file, "%s", html_quote (data));
+		fprintf (file, "<div class=\"level%i\">",level+1);
+		fprintf (file, "%s", quoted);
+		
+		free(quoted);
+
 
 		if (node_right (node)) {
 			htmlcss_export_nodes (file, node_right (node), level + 1);
@@ -177,13 +164,14 @@ static void htmlcss_export_nodes (FILE * file, Node *node, int level)
 }
 
 
-static int export_htmlcss (char *params, void *data)
+static int export_htmlcss (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -193,13 +181,17 @@ static int export_htmlcss (char *params, void *data)
 		return (int) node;
 	}
 
-	fprintf (file,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+	fprintf (file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \
 \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n\
 <html><head>\n\
-<meta http-equiv=\"Content-type\" content=\"text/html; charset=UTF-8\" />\n\
+<meta http-equiv=\"Content-type\" content=\"text/html; charset=ISO8859-1\" />\n\
 <title>tree exported from hnb</title>\n\
 <style type=\"text/css\" id=\"internalStyle\">\n\
+body {\n\
+	padding-right: 3em;\n\
+	padding-left: 3em;\n\
+}\n\
 div {\n\
 	padding-top: 0.5em;\n\
 	font-family: verdana, arial, helvetica, sans-serif; position:relative;\n\
@@ -207,13 +199,31 @@ div {\n\
 	left:        2em;\n\
 	padding-right: 2em;\n\
 }\n\
+div.level1 {\n\
+	padding-top: 2.5em;\n\
+	font-family: verdana, arial, helvetica, sans-serif; position:relative;\n\
+	font-size:   18pt;\n\
+	text-decoration: underline;\n\
+	font-weight: bold;\n\
+	left:        0em;\n\
+	padding-right: 0em;\n\
+}\n\
+div.level2 {\n\
+	padding-top: 0.5em;\n\
+	font-family: verdana, arial, helvetica, sans-serif; position:relative;\n\
+	font-size:   12pt;\n\
+	text-decoration: none;\n\
+	font-weight: bold;\n\
+	left:        0em;\n\
+	padding-right: 0em;\n\
+}\n\
 </style>\n\
 </head>\n\
 <body xmlns=\"http://www.w3.org/1999/xhtml\">\n");
 
-htmlcss_export_nodes(file,node,0);
+	htmlcss_export_nodes (file, node, 0);
 
-fprintf (file, "\n</body></html>\n");
+	fprintf (file, "\n</body></html>\n");
 	if (file != stdout)
 		fclose (file);
 
@@ -224,7 +234,8 @@ fprintf (file, "\n</body></html>\n");
 /*
 !init_file_html();
 */
-void init_file_html(){
+void init_file_html ()
+{
 	cli_add_command ("export_html", export_html, "<filename>");
 	cli_add_command ("export_htmlcss", export_htmlcss, "<filename>");
 }

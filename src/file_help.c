@@ -23,55 +23,36 @@
 #include <config.h>
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "cli.h"
 #include "tree.h"
 #include "file.h"
 #include "query.h"
+#include "util_string.h"
 
-#define transform(a,b) case a:\
-						{int j=0;char * msg=b;\
-							while(msg[j])\
-								out[outpos++]=msg[j++];\
-							out[outpos]=0;\
-							inpos++;\
-							break;\
-						}\
+/* *INDENT-OFF* */
 
-static char *help_quote (char *in)
-{
-	static char out[bufsize + 10];
-	int inpos = 0;
-	int outpos = 0;
+static char *helpquote[]={
+	"\"", "\\\\",
+	"\"", "\\\"",NULL
+};
 
-	out[0] = 0;
+/* *INDENT-ON* */
 
-	while (in[inpos]) {
-		switch (in[inpos]) {
-				transform ('\\', "\\\\");
-				transform ('"', "\\\"");
-			default:
-				out[outpos++] = in[inpos++];
-				out[outpos] = 0;
-				break;
-		}
-	}
-
-
-	return (out);
-}
-
-static int export_help (char *params, void *data)
+static int export_help (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	Node *tnode;
 	int level, flags, startlevel, lastlevel, cnt;
 	char *cdata;
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	file = fopen (filename, "w");
 	if (!file) {
 		cli_outfunf ("help export, unable to open \"%s\"", filename);
@@ -82,30 +63,35 @@ static int export_help (char *params, void *data)
 
 	tnode = node;
 	lastlevel = 0;
-	fprintf (file, "#define i(a,b,c) do{Node *tnode=node_new();node_set(tnode,TEXT,b);node_setflags(tnode,c);import_node(&ist,a,tnode);}while(0)\n\n");
+	fprintf (file,
+			 "#define i(a,b,c) do{Node *tnode=node_new();node_set(tnode,TEXT,b);node_setflags(tnode,c);import_node(&ist,a,tnode);}while(0)\n\n");
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
+		char *quoted;
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
-		cdata = fixnullstring(node_get (tnode, TEXT));
+		cdata = fixnullstring (node_get (tnode, TEXT));
+
+		quoted=string_replace(cdata,helpquote);
 
 		for (cnt = 0; cnt < level; cnt++)
 			fprintf (file, "\t");
 
-		fprintf (file, "i(%i,\"%s\",%i);\n", level, help_quote (cdata),
+		fprintf (file, "i(%i,\"%s\",%i);\n", level, quoted,
 				 flags);
 
+		free(quoted);
 		lastlevel = level;
 		tnode = node_recurse (tnode);
 	}
 	level = 0;
-	
+
 	fclose (file);
 
 	cli_outfunf ("help export, wrote data to \"%s\"", filename);
 	return (int) node;
 }
 
-static int import_help (char *params, void *data)
+static int import_help (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
 	import_state_t ist;
@@ -122,7 +108,8 @@ static int import_help (char *params, void *data)
 /*
 !init_file_help();
 */
-void init_file_help(){
+void init_file_help ()
+{
 	cli_add_command ("export_help", export_help, "<filename>");
 	cli_add_command ("import_help", import_help, "<filename>");
 }

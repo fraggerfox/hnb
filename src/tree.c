@@ -30,7 +30,7 @@ user) */
 #include <stdlib.h>
 #include "tree.h"
 
-char TEXT[5]="text";
+char TEXT[5] = "text";
 
 Node *node_recurse (Node *node)
 {
@@ -237,7 +237,9 @@ Node *node_match (char *match, Node *where)
 		return 0;
 
 	do {
-		if (strncmp (fixnullstring(node_get(node,TEXT)), match, strlen (match)) == 0)
+		if (strncmp
+			(fixnullstring (node_get (node, TEXT)), match,
+			 strlen (match)) == 0)
 			return node;
 	} while ((node = node_down (node)));
 
@@ -253,7 +255,7 @@ Node *node_exact_match (char *match, Node *where)
 		return 0;
 
 	do {
-		if (strcmp (fixnullstring(node_get(node,TEXT)), match) == 0)
+		if (strcmp (fixnullstring (node_get (node, TEXT)), match) == 0)
 			return node;
 	} while ((node = node_down (node)));
 
@@ -319,7 +321,7 @@ Node *node_recursive_match (char *match, Node *where)
 
 	where = node_recurse (where);	/* skip forward */
 	while (where) {
-		if (stristr (fixnullstring(node_get(where,TEXT)), match) != NULL)	/* case insensitive */
+		if (stristr (fixnullstring (node_get (where, TEXT)), match) != NULL)	/* case insensitive */
 			return where;
 		where = node_recurse (where);
 	}
@@ -334,7 +336,7 @@ Node *node_backrecursive_match (char *match, Node *where)
 
 	where = node_backrecurse (where);	/* skip forward */
 	while (where) {
-		if (stristr (fixnullstring(node_get(where,TEXT)), match) != NULL)	/* case insensitive */
+		if (stristr (fixnullstring (node_get (where, TEXT)), match) != NULL)	/* case insensitive */
 			return where;
 		where = node_backrecurse (where);
 	}
@@ -379,102 +381,105 @@ void tree_free (Node *node)
 */
 void node_swap (Node *nodeA, Node *nodeB)
 {
-	Node *Aup,*Aleft,*Aright,*Adown;
-	Node *Bup,*Bleft,*Bright,*Bdown;
+	Node *Aup, *Aleft, *Aright, *Adown;
+	Node *Bup, *Bleft, *Bright, *Bdown;
 
-	if((!nodeB) || (!nodeA))
+	if ((!nodeB) || (!nodeA))
 		return;
 
-	if(nodeB==nodeA)
+	if (nodeB == nodeA)
 		return;
 
-	if(nodeB->right==nodeA || nodeA->right==nodeB){
-		return;				/* can't swap parent and child,.. (nor deeper levels actually) */
-	}
-	
-	if( (nodeB->down==nodeA) && (nodeA->up==nodeB )){ /* special case neighbours,.. normalize first */
-		Node *tnode=nodeA;
-		nodeA=nodeB;
-		nodeB=tnode;
+	if (nodeB->right == nodeA || nodeA->right == nodeB) {
+		return;					/* can't swap parent and child,.. (nor deeper levels actually) */
 	}
 
-	Aup=node_up(nodeA);
-	Adown=node_down(nodeA);
-	Aleft=node_left(nodeA);
-	Aright=node_right(nodeA);
-	Bup=node_up(nodeB);
-	Bdown=node_down(nodeB);
-	Bleft=node_left(nodeB);
-	Bright=node_right(nodeB);	
-	
-	if( (nodeA->down==nodeB) && (nodeB->up==nodeA) ){ /* special case, neighbours */
-		if(Aup)
-			Aup->down=nodeB;
-		nodeB->up=Aup;
-		if(Bdown)
-			Bdown->up=nodeA;
-		nodeA->down=Bdown;
-		nodeA->up=nodeB;
-		nodeB->down=nodeA;
-		if(Aleft)
-			if(Aleft->right==nodeA)
-				Aleft->right=nodeB;
-		return;	
-	} 
-	
-	if(Aup)
-		Aup->down=nodeB;
-	nodeB->up=Aup;
-	if(Adown)
-		Adown->up=nodeB;
-	nodeB->down=Adown;
-	if(Aleft){
-		if(Aleft->right==nodeA)
-			Aleft->right=nodeB;
+	if ((nodeB->down == nodeA) && (nodeA->up == nodeB)) {	/* special case neighbours,.. normalize first */
+		Node *tnode = nodeA;
+
+		nodeA = nodeB;
+		nodeB = tnode;
+	}
+
+	Aup = node_up (nodeA);
+	Adown = node_down (nodeA);
+	Aleft = node_left (nodeA);
+	Aright = node_right (nodeA);
+	Bup = node_up (nodeB);
+	Bdown = node_down (nodeB);
+	Bleft = node_left (nodeB);
+	Bright = node_right (nodeB);
+
+	if ((nodeA->down == nodeB) && (nodeB->up == nodeA)) {	/* special case, neighbours */
+		if (Aup)
+			Aup->down = nodeB;
+		nodeB->up = Aup;
+		if (Bdown)
+			Bdown->up = nodeA;
+		nodeA->down = Bdown;
+		nodeA->up = nodeB;
+		nodeB->down = nodeA;
+		if (Aleft)
+			if (Aleft->right == nodeA)
+				Aleft->right = nodeB;
+		return;
+	}
+
+	if (Aup)
+		Aup->down = nodeB;
+	nodeB->up = Aup;
+	if (Adown)
+		Adown->up = nodeB;
+	nodeB->down = Adown;
+	if (Aleft) {
+		if (Aleft->right == nodeA)
+			Aleft->right = nodeB;
 
 	}
-	nodeB->left=Aleft;
+	nodeB->left = Aleft;
 
-	if(Bup)
-		Bup->down=nodeA;
-	nodeA->up=Bup;
-	if(Bdown)
-		Bdown->up=nodeA;
-	nodeA->down=Bdown;
+	if (Bup)
+		Bup->down = nodeA;
+	nodeA->up = Bup;
+	if (Bdown)
+		Bdown->up = nodeA;
+	nodeA->down = Bdown;
 
-	if(Bleft){
-		if(Bleft->right==nodeB)
-			Bleft->right=nodeA;
+	if (Bleft) {
+		if (Bleft->right == nodeB)
+			Bleft->right = nodeA;
 	}
-	nodeA->left=Bleft;
+	nodeA->left = Bleft;
 }
 
 
 #include "file.h"
 
-Node *tree_duplicate(Node *source, Node *target){
+Node *tree_duplicate (Node *source, Node *target)
+{
 	int level, startlevel;
-	import_state_t ist;	
+	import_state_t ist;
 	Node *tnode;
 
-	tnode=node_duplicate(source);
-	tnode->up=tnode->down=tnode->left=tnode->right=NULL;
-	node_swap(tnode,target);
-	node_free(target);
-	target=tnode;
+	tnode = node_duplicate (source);
+	tnode->up = tnode->down = tnode->left = tnode->right = NULL;
+	node_swap (tnode, target);
+	node_free (target);
+	target = tnode;
 
 	init_import (&ist, target);
 
 	if (node_right (source)) {
 		source = node_right (source);
 		startlevel = nodes_left (source);
-		while ((source ) && (nodes_left (source) >= startlevel)) {
+		while ((source) && (nodes_left (source) >= startlevel)) {
 			Node *tnode;
-			level = nodes_left (source) - startlevel + 1 ;
-			tnode=node_duplicate(source);
-			
+
+			level = nodes_left (source) - startlevel + 1;
+			tnode = node_duplicate (source);
+
 			/* clear out all references to other nodes */
-			tnode->up=tnode->down=tnode->left=tnode->right=NULL;
+			tnode->up = tnode->down = tnode->left = tnode->right = NULL;
 			import_node (&ist, level, tnode);
 			source = node_recurse (source);
 		}

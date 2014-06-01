@@ -27,19 +27,26 @@
 
 char query[100];
 
-static int getquery_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
-	strcpy(query,"");
-	ui_getstr(params,&query[0]);
-	return (int)pos;
+static int getquery_cmd (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+
+	strcpy (query, "");
+	if(argc==2)
+		ui_getstr (argv[1], &query[0]);
+	else
+		ui_getstr ("enter string", &query[0]);
+	return (int) pos;
 }
 
 /*
 !init_query();
 */
-void init_query(){
+void init_query ()
+{
 	cli_add_command ("getquery", getquery_cmd, "<prompt>");
-	cli_add_help("getquery","Input a string from the user (put into the variable query, used by amongst other function the search function, and at least some of the export/import functions");
-	cli_add_string("query",query,"last query (also settable as a variable)");
+	cli_add_help ("getquery",
+				  "Input a string from the user (put into the variable query, used by amongst other function the search function, and at least some of the export/import functions");
+	cli_add_string ("query", query,
+					"last query (also settable as a variable)");
 }
-

@@ -20,4 +20,3 @@
  */
 
 extern char query[100];
-

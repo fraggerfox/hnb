@@ -151,7 +151,7 @@ Node *path2node_make (char *path, Node *root)
 				tnode = node_exact_match (token, node);
 				if (tnode == 0) {
 					tnode = node_insert_down (node);
-					node_set(tnode, TEXT, token);
+					node_set (tnode, TEXT, token);
 				}
 				node = tnode;
 			}
@@ -194,7 +194,7 @@ char *node2path (Node *node)
 		for (cnt2 = 0; cnt2 < cnt; cnt2++)
 			tnode = node_left (tnode);
 
-		strcpy (&path[pos], fixnullstring(node_get(tnode,TEXT)));
+		strcpy (&path[pos], fixnullstring (node_get (tnode, TEXT)));
 		pos = strlen (path);
 		path[pos] = '/';
 		path[++pos] = 0;
@@ -292,4 +292,3 @@ typedef struct Path {
 	struct Path *parent;
 	struct Node *node;
 } Path;
-

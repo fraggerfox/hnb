@@ -15,7 +15,7 @@ int node_calc_complete (Node *node);
 /**
 	@returns the accumulated size of the nodes children
 */
-int node_calc_size(Node *node);
+int node_calc_size (Node *node);
 
 /*returns the completion status a node should have*/
 
@@ -23,4 +23,4 @@ int done_status (Node *a);
 
 #endif /* TREE_TODO_H */
 
-int calc_percentage_size(Node *node, int *resize);
+int calc_percentage_size (Node *node, int *resize);

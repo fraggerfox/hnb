@@ -76,7 +76,7 @@ Options:\n\
 \n\n");
 }
 
-void init_subsystems();
+void init_subsystems ();
 
 
 int main (int argc, char **argv)
@@ -122,7 +122,7 @@ int main (int argc, char **argv)
 					   || !strcmp (argv[argno], "--hnb")) {
 				cmdline.format = format_hnb;
 			} else if (!strcmp (argv[argno], "-o")
-			 		   ||	!strcmp (argv[argno], "-opml")
+					   || !strcmp (argv[argno], "-opml")
 					   || !strcmp (argv[argno], "--opml")) {
 				cmdline.format = format_opml;
 			} else if (!strcmp (argv[argno], "-x")
@@ -174,7 +174,7 @@ int main (int argc, char **argv)
 		}
 	}
 
-	init_subsystems();
+	init_subsystems ();
 
 	if (cmdline.usage) {
 		usage (argv[0]);
@@ -193,14 +193,15 @@ int main (int argc, char **argv)
 
 	if (!file_check (prefs.rc_file)) {
 		write_default_prefs ();
-		fprintf (stderr, "created %s for hnb preferences file\n", prefs.rc_file);
+		fprintf (stderr, "created %s for hnb preferences file\n",
+				 prefs.rc_file);
 		sleep (1);
 	}
 
-	if(cmdline.ui==1)
+	if (cmdline.ui == 1)
 		ui_init ();
 
-	load_prefs();
+	load_prefs ();
 
 
 	/* ovveride the prefs with commandline specified options */
@@ -208,8 +209,8 @@ int main (int argc, char **argv)
 		prefs.tutorial = 1;
 	if (cmdline.format != -1) {	/* format specified */
 		prefs.format = cmdline.format;
-	} 
-	
+	}
+
 	if (cmdline.def_db) {
 		strcpy (prefs.db_file, prefs.default_db_file);
 		if (!file_check (prefs.db_file))
@@ -223,12 +224,15 @@ int main (int argc, char **argv)
 	if (!prefs.tutorial) {
 		int oldpos = -1;
 
-		if (prefs.format == format_hnb || prefs.format == format_xml || prefs.format==format_opml) {
+		if (prefs.format == format_hnb || prefs.format == format_xml
+			|| prefs.format == format_opml) {
 
 			if (!xml_check (prefs.db_file)) {
-				fprintf (stderr, "%s does not seem to be a xml file, aborting.\n",prefs.db_file);
-				if(ui_inited)
-					ui_end();
+				fprintf (stderr,
+						 "%s does not seem to be a xml file, aborting.\n",
+						 prefs.db_file);
+				if (ui_inited)
+					ui_end ();
 				exit (1);
 			}
 			if (prefs.savepos)
@@ -252,6 +256,8 @@ int main (int argc, char **argv)
 		if (prefs.tutorial != 2)
 			prefs.db_file[0] = (char) 255;	/* disable saving */
 		pos = docmd (pos, "import_help");
+		pos = docmd (pos, "status ''");
+		pos = docmd (pos, "status 'navigate the documentation with your cursor keys'");
 	}
 
 	switch (cmdline.ui) {
@@ -273,18 +279,21 @@ int main (int argc, char **argv)
 			break;
 		case 4:
 			ui_init ();
-			{int c=0;
-			while(c!='q'){
-				char buf[100];
-				c=getch();
-				sprintf(buf,"[%i] [%c]\n",c,c);
-				addstr(buf);
+			{
+				int c = 0;
+
+				while (c != 'q') {
+					char buf[100];
+
+					c = getch ();
+					sprintf (buf, "[%i] [%c]\n", c, c);
+					addstr (buf);
 			}}
 			ui_end ();
 			break;
 	}
 
-	cli_cleanup();
+	cli_cleanup ();
 	tree_free (pos);
 
 	return 0;

@@ -20,7 +20,7 @@ typedef struct Node_AttItem {
 } Node_AttItem;
 
 
-/** 
+/* 
   Datastructure for the nodes in the tree is defined in this file.
 
  Structure of a node,.. don't acces them directly use the other functions
@@ -29,19 +29,14 @@ typedef struct Node_AttItem {
 
 typedef struct Node {
 	struct Node *up, *down, *left, *right;
-	unsigned int flags;		/* FIXME: todo/done should be todo attrib,.. checked="true" checked="false" implied:cheched="void"*/
+	unsigned int flags;
 	Node_AttItem *attrib;
-
-	int expanded;
-						
- 	int percent_done;	/* FIXME: due to be made attribute */
-	int size;           /* FIXME: due to be made attribute */
 } Node;
 
 
-char *node_get(Node *node, char *name);
-void node_set(Node *node, char *name, char *data);
-void node_unset(Node *node, char *name);
+char *node_get (Node *node, char *name);
+void node_set (Node *node, char *name, char *data);
+void node_unset (Node *node, char *name);
 
 /* convenience macro for the rest of this header*/
 #define if_node(a,b)		((a)?(b):0)
@@ -113,7 +108,7 @@ void node_unset(Node *node, char *name);
 */
 Node *node_new ();
 
-Node *node_duplicate(Node *node);
+Node *node_duplicate (Node *node);
 
 /* frees a node an it's related variables
 */

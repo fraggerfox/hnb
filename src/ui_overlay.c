@@ -17,7 +17,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
- 
+
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -42,159 +42,177 @@
 */
 
 
-static char* ui_helptext[MAX_SCOPES]={0};
+static char *ui_helptext[MAX_SCOPES] = { 0 };
 
-static int ui_helptext_cmd(char *params,void *data){
-	ui_helptext[ui_current_scope]=strdup(params);
-	return (int)data;
+static int ui_helptext_cmd (int argc, char **argv, void *data)
+{
+	if(argc>1)
+		ui_helptext[ui_current_scope] = strdup (argv[1]);
+	return (int) data;
 }
 
 #define MAX_STATUS_LINES 100
 
-static char status_line[MAX_STATUS_LINES][128]={""};
+static char status_line[MAX_STATUS_LINES][128] = { "" };
 
-static int status_ttl=0;
+static int status_ttl = 0;
 
-static void status(char *message, int ttl){
+static void status (char *message, int ttl)
+{
 	int i;
-	for(i=0;i<MAX_STATUS_LINES-1;i++)
-		strncpy(status_line[i],status_line[i+1],128);
-	strncpy(&status_line[MAX_STATUS_LINES-1][0],message, 128);
-	status_ttl+=ttl;
-	if(status_ttl>=MAX_STATUS_LINES)
-		status_ttl=MAX_STATUS_LINES-1;
-	if(status_ttl>=LINES-2)
-		status_ttl=LINES-3;
+
+	for (i = 0; i < MAX_STATUS_LINES - 1; i++)
+		strncpy (status_line[i], status_line[i + 1], 128);
+	strncpy (&status_line[MAX_STATUS_LINES - 1][0], message, 128);
+	status_ttl += ttl;
+	if (status_ttl >= MAX_STATUS_LINES)
+		status_ttl = MAX_STATUS_LINES - 1;
+	if (status_ttl >= LINES - 2)
+		status_ttl = LINES - 3;
 
 
 }
 
-void set_status(char *message){
+void set_status (char *message)
+{
 	char *tbuf, *word, *bp, *dp, *wp;
 	int width;
-	if(!COLS)width=60;
-	else width=COLS+1-2;
 
-	 bp=tbuf=malloc( width );
-	 wp=word=malloc( width );
-     dp=message;
-	
-	*bp=*wp='\0';
-	
-	while(1+1==2){
-		if(isspace(*dp) || *dp=='\0'){
-			if( (bp-tbuf) + (wp-word) +1 < width ){
-				strcpy(bp,word);
-				bp+=(wp-word);
-				*(bp++)=' ';
-				*bp='\0';
-				wp=word;
-				*wp='\0';
+	if (!COLS)
+		width = 60;
+	else
+		width = COLS + 1 - 2;
+
+	bp = tbuf = malloc (width);
+	wp = word = malloc (width);
+	dp = message;
+
+	*bp = *wp = '\0';
+
+	while (1 + 1 == 2) {
+		if (isspace ((unsigned char)*dp) || *dp == '\0') {
+			if ((bp - tbuf) + (wp - word) + 1 < width) {
+				strcpy (bp, word);
+				bp += (wp - word);
+				*(bp++) = ' ';
+				*bp = '\0';
+				wp = word;
+				*wp = '\0';
 			} else {
-				status(tbuf,1);
-				bp=tbuf;
-				*bp='\0';
-				strcpy(bp,word);
-				bp+=(wp-word);
-				*(bp++)=' ';
-				*bp='\0';
-				wp=word;
-				*wp='\0';
+				status (tbuf, 1);
+				bp = tbuf;
+				*bp = '\0';
+				strcpy (bp, word);
+				bp += (wp - word);
+				*(bp++) = ' ';
+				*bp = '\0';
+				wp = word;
+				*wp = '\0';
 			}
-			if(!*dp)break;
+			if (!*dp)
+				break;
 		} else {
-			if(wp-word>= width-1){
-				status(tbuf,1);
-				status(word,1);
-				wp=word;
+			if (wp - word >= width - 1) {
+				status (tbuf, 1);
+				status (word, 1);
+				wp = word;
 			}
-			*(wp++)=*dp;
-			*wp='\0';
+			*(wp++) = *dp;
+			*wp = '\0';
 		}
 		dp++;
 	}
-	status(tbuf,1);
-	
-	free(word);
-	free(tbuf);
+	status (tbuf, 1);
+
+	free (word);
+	free (tbuf);
 }
 
 
-static int ui_status_cmd(char *params,void *data){
-	set_status(params);
-	return (int)data;
+static int ui_status_cmd (int argc, char **argv, void *data)
+{
+	if(argc>1)set_status (argv[1]);
+	return (int) data;
 }
 
 
-static int ui_status_clear_cmd(char *params,void *data){
-	status_ttl=0;
-	return (int)data;
+static int ui_status_clear_cmd (int argc, char **argv, void *data)
+{
+	status_ttl = 0;
+	return (int) data;
 }
 
-void status_draw(void)
+void status_draw (void)
 {
 	int j;
-	for(j=0;j<status_ttl;j++){
-		move(status_ttl-j-1,0);
-		ui_style(ui_style_menuitem);
-		addstr(" ");
-		ui_style(ui_style_background);
-		addstr(" ");
-		ui_style(ui_style_menutext);
-		addstr(status_line[MAX_STATUS_LINES-j-1]);
-		move(status_ttl-j-1,strlen(status_line[MAX_STATUS_LINES-j-1])+2);
-		clrtoeol();
+
+	for (j = 0; j < status_ttl; j++) {
+		move (status_ttl - j - 1, 0);
+		ui_style (ui_style_menuitem);
+		addstr (" ");
+		ui_style (ui_style_background);
+		addstr (" ");
+		ui_style (ui_style_menutext);
+		addstr (status_line[MAX_STATUS_LINES - j - 1]);
+		move (status_ttl - j - 1,
+			  strlen (status_line[MAX_STATUS_LINES - j - 1]) + 2);
+		clrtoeol ();
 	}
-	if(status_ttl>0)
+	if (status_ttl > 0)
 		status_ttl--;
 }
 
 void help_draw (int scope)
 {
-	if(!ui_inited)return;
-	status_draw();
+	if (!ui_inited)
+		return;
+	status_draw ();
 
-	move(LINES-1,0);
-	ui_style(ui_style_menuitem);
-	{unsigned char *p=(unsigned char*)ui_helptext[scope];
-	 int style_is_menuitem=1;
-	 while(*p){
-		switch(*p){
-			case '|':
-				if(*(p+1)=='|'){
-					addch('|');
-					p++;
-				} else {					
-					if(style_is_menuitem){
-						ui_style(ui_style_menutext);
+	move (LINES - 1, 0);
+	ui_style (ui_style_menuitem);
+	{
+		unsigned char *p = (unsigned char *) ui_helptext[scope];
+		int style_is_menuitem = 1;
+
+		while (*p) {
+			switch (*p) {
+				case '|':
+					if (*(p + 1) == '|') {
+						addch ('|');
+						p++;
 					} else {
-						ui_style(ui_style_menuitem);
+						if (style_is_menuitem) {
+							ui_style (ui_style_menutext);
+						} else {
+							ui_style (ui_style_menuitem);
+						}
+						style_is_menuitem = !style_is_menuitem;
 					}
-					style_is_menuitem=!style_is_menuitem;					
-				}
-				break;
-			default:
-				addch(*p);
-				break;
+					break;
+				default:
+					addch (*p);
+					break;
+			}
+			p++;
 		}
-		p++;
-	 }
-	}	
+	}
 
 
-	clrtoeol();
-	ui_style(ui_style_background);
-	
+	clrtoeol ();
+	ui_style (ui_style_background);
+
 }
 
 /*
 !init_ui_overlay();
 */
-void init_ui_overlay(){
+void init_ui_overlay ()
+{
 	cli_add_command ("helptext", ui_helptext_cmd, "<help for context>");
-	cli_add_help("helptext","Defines the helptext for the current context, the character | alternates between the menuitem and the menutext styles, || is the escape sequence for a single pipe.");
+	cli_add_help ("helptext",
+				  "Defines the helptext for the current context, the character | alternates between the menuitem and the menutext styles, || is the escape sequence for a single pipe.");
 	cli_add_command ("status", ui_status_cmd, "<message>");
-	cli_add_help("status","Adds 'message' as the newest status line.");
+	cli_add_help ("status", "Adds 'message' as the newest status line.");
 	cli_add_command ("status_clear", ui_status_clear_cmd, "");
-	cli_add_help("status","Clears all status messages off screen.");
+	cli_add_help ("status", "Clears all status messages off screen.");
 }

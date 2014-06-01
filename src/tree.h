@@ -8,9 +8,7 @@ enum {
 	F_hidden = 1 << 0,
 	F_readonly = 1 << 1,
 	F_temp = 1 << 2,
-	F_todo = 1 << 3,
-	F_done = 1 << 4,
-
+	F_expanded = 1 << 3,
 	F_visible = 1 << 12
 };
 
@@ -186,7 +184,7 @@ char *node_setdata(Node *node,char *data);
 char *node_getdata(Node *node);
 */
 
-Node *tree_duplicate(Node *source, Node *target);
+Node *tree_duplicate (Node *source, Node *target);
 
 extern char TEXT[5];
 

@@ -27,79 +27,91 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-static char web_command[255]="galeon -n *";
-static char mail_command[255]="rxvt -rv +sb -e mutt *";
+static char web_command[255] = "galeon -n *";
+static char mail_command[255] = "rxvt -rv +sb -e mutt *";
 
-static int action_node(Node *node){
-	char cmdline[512]="";
-	char *start=NULL;
-	int ui_was_inited=ui_inited;
+static int action_node (Node *node)
+{
+	char cmdline[512] = "";
+	char *start = NULL;
+	int ui_was_inited = ui_inited;
 
-	if(!strncmp("exec ",fixnullstring( node_get( node ,TEXT)) ,5)){
-		sprintf(cmdline,"%s > /dev/null 2>&1 &", fixnullstring( node_get( node, TEXT )) +5 );
-	} else if( (start=strstr( fixnullstring( node_get( node , TEXT) ),"http://") ) ){
+	if (!strncmp ("exec ", fixnullstring (node_get (node, TEXT)), 5)) {
+		sprintf (cmdline, "%s > /dev/null 2>&1 &",
+				 fixnullstring (node_get (node, TEXT)) + 5);
+	} else
+		if ((start =
+			 strstr (fixnullstring (node_get (node, TEXT)), "http://"))) {
 		char url[200];
 		char *dest;
-		dest=url;
-		while(*start && !isspace(*start)){
-			*dest=*start;
+
+		dest = url;
+		while (*start && !isspace ((unsigned char)*start)) {
+			*dest = *start;
 			dest++;
 			start++;
 		}
-		*dest=0;
-		{char *cs=web_command;
-		 char *cd=cmdline;
+		*dest = 0;
+		{
+			char *cs = web_command;
+			char *cd = cmdline;
 
-		 while(*cs){
-		 	if(*cs=='*'){
-				strcat(cd,url);
-				strcat(cd,cs+1);
-				cli_outfunf("shelling out: %s",cmdline);
-				//strcat(cd,"> /dev/null 2>&1 &");
-				break;
-			} else {
-				*cd=*cs;
-				*(++cd)='\0';
+			while (*cs) {
+				if (*cs == '*') {
+					strcat (cd, url);
+					strcat (cd, cs + 1);
+					cli_outfunf ("shelling out: %s", cmdline);
+					//strcat(cd,"> /dev/null 2>&1 &");
+					break;
+				} else {
+					*cd = *cs;
+					*(++cd) = '\0';
+				}
+				cs++;
 			}
-			cs++;
-		 }
 		}
-	} else if( (start=strchr( fixnullstring( node_get(node, TEXT) ), '@'))){
+	} else if ((start = strchr (fixnullstring (node_get (node, TEXT)), '@'))) {
 		char mail_address[200];
 		char *dest;
-		dest=mail_address;
 
-		while(start>fixnullstring( node_get(node, TEXT)) && !isspace(*start))
+		dest = mail_address;
+
+		while (start > fixnullstring (node_get (node, TEXT))
+			   && !isspace ((unsigned char)*start))
 			start--;
-		while(*start && !isspace(*start)){
-			*dest=*start;
+		while (*start && !isspace (*start)) {
+			*dest = *start;
 			dest++;
 			start++;
 		}
-		*dest=0;
-		{char *cs=mail_command;
-		 char *cd=cmdline;
+		*dest = 0;
+		{
+			char *cs = mail_command;
+			char *cd = cmdline;
 
-		 while(*cs){
-		 	if(*cs=='*'){
-				strcat(cd,mail_address);
-				strcat(cd,cs+1);
-				cli_outfunf("shelling out: %s",cmdline);
-				//strcat(cd,"> /dev/null 2>&1 &");
-				break;
-			} else {
-				*cd=*cs;
-				*(++cd)='\0';
+			while (*cs) {
+				if (*cs == '*') {
+					strcat (cd, mail_address);
+					strcat (cd, cs + 1);
+					cli_outfunf ("shelling out: %s", cmdline);
+					//strcat(cd,"> /dev/null 2>&1 &");
+					break;
+				} else {
+					*cd = *cs;
+					*(++cd) = '\0';
+				}
+				cs++;
 			}
-			cs++;
-		 }
-		}	}
-	
-	if(cmdline[0]){
-		if(ui_was_inited)ui_end();
-		system(cmdline);
-		if(ui_was_inited)ui_init();
-		return 0; 
+		}
+	}
+
+	if (cmdline[0]) {
+		if (ui_was_inited)
+			ui_end ();
+		system (cmdline);
+		if (ui_was_inited)
+			ui_init ();
+		return 0;
 	}
 	return -1;
 }
@@ -109,35 +121,41 @@ static int action_node(Node *node){
  * url/email address substring,.. and launches an app based on that?
  *
  */
-static int action_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
-	Node *node=node_right(pos);
+static int action_cmd (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+	Node *node = node_right (pos);
 
-	while(node){
-		if(!action_node(node))
-			return (int)pos;
-		node=node_down(node);
+	while (node) {
+		if (!action_node (node))
+			return (int) pos;
+		node = node_down (node);
 	}
-	if(!action_node(pos)){
-		return (int)pos;
+	if (!action_node (pos)) {
+		return (int) pos;
 	} else {
-		cli_outfunf("nothing to do");
-		return (int)pos;
+		cli_outfunf ("nothing to do");
+		return (int) pos;
 	}
-	
+
 	/***
 	***/
 }
+
 /*
 !init_exec_cmd();
 */
-void init_exec_cmd(){
+void init_exec_cmd ()
+{
 	cli_add_command ("action", action_cmd, "");
-	cli_add_help("action","executes an external shell according to node content, it first checks the direct children \
+	cli_add_help ("action",
+				  "executes an external shell according to node content, it first checks the direct children \
 then the current node. If it contains an http:// url, the command described in browser_command is executed, if it \
 contains a '@' the characters surrounding it is interpreted as an mail address and the mail_command is executed \
 and if the data starts with 'exec' the rest of the data is executed verbatim.");
 
-	cli_add_string("web_command",web_command,"Command executed when opening url's * is subsituted with the url");
-	cli_add_string("mail_command",mail_command,"Command executed when sending mail to a mailaddress * is substituted with the address");
+	cli_add_string ("web_command", web_command,
+					"Command executed when opening url's * is subsituted with the url");
+	cli_add_string ("mail_command", mail_command,
+					"Command executed when sending mail to a mailaddress * is substituted with the address");
 }

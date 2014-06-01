@@ -34,73 +34,60 @@
 #include "file.h"
 #include "prefs.h"
 #include "query.h"
+#include "util_string.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
-#define transform(a,b) case a:\
-						{int j=0;const char * msg=b;\
-							while(msg[j])\
-								out[outpos++]=msg[j++];\
-							out[outpos]=0;\
-							inpos++;\
-							break;\
-						}\
+/* *INDENT-OFF* */
 
-/* converts special chars into entities */
-static char *xml_quote (const char *in)
-{
-	static char out[bufsize + 30];	/* for added tags'n'tabs */
-	int inpos = 0;
-	int outpos = 0;
 
-	out[0] = 0;
+static char *xmlquote[]={
+	"<" , "&lt;",
+	">" , "&gt;",
+	"&" , "&amp;",
+	"\"", "&quot;",
+	"'" , "&apos;",
+	NULL
+};
 
-	while (in[inpos]) {
-		switch (in[inpos]) {
-				transform ('&', "&amp;");
-				transform ('<', "&lt;");
-				transform ('>', "&gt;");
-				transform ('\'', "&apos;");
-				transform ('"', "&quot;");
-			default:
-				out[outpos++] = in[inpos++];
-				out[outpos] = 0;
-				break;
-		}
-	}
-	return (out);
-}
+static char *xmlunquote[]={
+	"&lt;"   , "<",
+	"&gt;"   , ">",
+	"&amp;"  , "&",
+	"&quot;" , "\"",
+	"&apos;" , "'",
+	NULL
+};
 
+/* *INDENT-ON* */
 
 
 static void hnb_export_nodes (FILE * file, Node *node, int level)
 {
 	while (node) {
-		int flags = node_getflags (node);
-		char *data = fixnullstring(node_get (node, TEXT));
-		int percent_done = node_getpercent_done(node);
-		int size=node_getsize(node);
+		char *data = fixnullstring (node_get (node, TEXT));
 
 		fprintf (file, "\n");
 		indent (level, "\t");
 		fprintf (file, "<node");	/* the start tag with attributes if any */
-		if (flags & F_todo) {
-			fprintf (file, " done=");
-			if (flags & F_done) {
-				fprintf (file, "\"yes\"");
-			} else {
-				fprintf (file, "\"no\"");
-			}
+
+		{Node_AttItem *att=node->attrib;
+		 while(att){
+		 	char *quoted=string_replace(att->data,xmlquote);
+			fprintf (file, " %s=\"%s\"", att->name, quoted);
+			free(quoted);
+			att=att->next;
+		 }		 
 		}
-		if (percent_done != -1)
-			fprintf (file, " percent_done=\"%i\"", percent_done);
-		if (size != -1)
-			fprintf (file, " size=\"%i\"", size);
 
 
 		fprintf (file, ">");
 
-		fprintf (file, "<data>%s</data>", xml_quote (data));
+		{
+			char *quoted=string_replace(data,xmlquote);
+			fprintf (file, "<data>%s</data>", quoted);
+			free(quoted);
+		}
 
 		if (node_right (node)) {
 			hnb_export_nodes (file, node_right (node), level + 1);
@@ -115,21 +102,14 @@ static void hnb_export_nodes (FILE * file, Node *node, int level)
 	}
 }
 
-static int export_hnb (char *params, void *data)
+static int export_hnb (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc>=2?argv[1]:"";
 	FILE *file;
 
-	
-	while (*params && (*params != ' '))
-		params++;
-	if (*params == ' ') {
-		*params = 0;
-		params++;
-	}
-
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 
 	if (!strcmp (filename, "-"))
 		file = stdout;
@@ -150,7 +130,7 @@ static int export_hnb (char *params, void *data)
 	<!ELEMENT node (data?,node*)>\n\
 	<!ATTLIST node done (yes|no) #IMPLIED> ]>\n\
 \n\
-<tree>", params,
+<tree>", (argc==3)?argv[2]:"",
 			 VERSION);
 
 	hnb_export_nodes (file, node, 0);
@@ -165,26 +145,28 @@ static int export_hnb (char *params, void *data)
 }
 
 
-static int import_hnb (char *params, void *data)
+static int import_hnb (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	char *rdata;
 	int type;
 	int in_tree = 0;
 	int level = -1;
 	char nodedata[4096];
 	int nodedatapos = 0;
-	int percent_done = -1;
-	int size = -1;
-	int flags = 0;
 	int in_data = 0;
+	int in_nodetag = 0;
 	xml_tok_state *s;
 	import_state_t ist;
 
+	Node *tempnode=NULL;
+
+
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	file = fopen (filename, "r");
 	if (!file) {
 		cli_outfunf ("hnb import, unable to open \"%s\"", filename);
@@ -195,35 +177,40 @@ static int import_hnb (char *params, void *data)
 
 	while (((type = xml_tok_get (s, &rdata)) != t_eof) && (type != t_error)) {
 		if (type == t_error) {
-			cli_outfunf ("hnb import error, parsing og '%s', %s",filename, rdata);
+			cli_outfunf ("hnb import error, parsing og '%s' line:%i, %s", filename,
+						 s->line_no, rdata);
 			fclose (file);
 			return (int) node;
 		}
 		if (in_tree) {
 			if (type == t_tag && !strcmp (rdata, "node")) {
-				flags = 0;
 				level++;
+				tempnode=node_new();
+				in_nodetag=1;
 				continue;
 			}
-			if (type == t_att && !strcmp (rdata, "done")) {
-				xml_tok_get (s, &rdata);
-				if (!strcmp ("no", rdata)) {
-					flags = F_todo;
-				} else if (!strcmp ("yes", rdata)) {
-					flags = F_todo + F_done;
+			if(in_nodetag && type == t_att){
+				char *att_name=strdup(rdata);
+				if(xml_tok_get(s,&rdata)!=t_val){
+					cli_outfun("import_hnb,.. hmpf....");
+				};
+				{char *unquoted=string_replace(rdata,xmlunquote);
+				node_set(tempnode,att_name,unquoted);
+				free(unquoted);
 				}
+
+				if(!strcmp(att_name,"done")){ /* to make older files conform */
+					node_set(tempnode,"type","todo");
+				}
+
+				free(att_name);
+				continue;
+			}				
+			if ( (type == t_endtag || type == t_closeemptytag) && !strcmp(rdata,"node")){
+				in_nodetag=0;
 				continue;
 			}
-			if (type == t_att && !strcmp (rdata, "percent_done")) {
-				xml_tok_get (s, &rdata);
-				percent_done = atoi (rdata);
-				continue;
-			}
-			if (type == t_att && !strcmp (rdata, "size")) {
-				xml_tok_get (s, &rdata);
-				size = atoi (rdata);
-				continue;
-			}
+
 			if (type == t_tag && !strcmp (rdata, "data")) {
 				nodedatapos = 0;
 				nodedata[nodedatapos] = 0;
@@ -237,24 +224,8 @@ static int import_hnb (char *params, void *data)
 						nodedata[nodedatapos] = 0;
 						break;
 					case t_entity:
-						if (!strcmp (rdata, "amp")) {
-							nodedata[nodedatapos++] = '&';
-							nodedata[nodedatapos] = 0;
-						} else if (!strcmp (rdata, "gt")) {
-							nodedata[nodedatapos++] = '>';
-							nodedata[nodedatapos] = 0;
-						} else if (!strcmp (rdata, "lt")) {
-							nodedata[nodedatapos++] = '<';
-							nodedata[nodedatapos] = 0;
-						} else if (!strcmp (rdata, "quot")) {
-							nodedata[nodedatapos++] = '"';
-							nodedata[nodedatapos] = 0;
-						} else if (!strcmp (rdata, "apos")) {
-							nodedata[nodedatapos++] = '\'';
-							nodedata[nodedatapos] = 0;
-						} else {
-							/* unhandled entity,.. might as well do a standard html and xml transform?,.. or ? */
-						}
+						sprintf (&nodedata[strlen (nodedata)], "&%s;", rdata);
+						nodedatapos+=strlen(rdata)+2;
 						break;
 					case t_word:
 						strcpy (&nodedata[nodedatapos], rdata);
@@ -265,14 +236,11 @@ static int import_hnb (char *params, void *data)
 				}
 			}
 			if (type == t_closetag && !strcmp (rdata, "data")) {
-				Node *tnode=node_new();
-				node_set(tnode,TEXT,nodedata);
-				node_setflags(tnode,flags);
-				node_setpercent_done(tnode,percent_done);
-				node_setsize(tnode,size);
-				import_node (&ist, level, tnode);
-				percent_done=-1;	
-				size=-1;
+				char *unquoted=string_replace(nodedata,xmlunquote);
+				node_set(tempnode,TEXT,unquoted);
+				free(unquoted);
+				import_node (&ist, level, tempnode);
+				tempnode=NULL;
 				in_data = 0;
 			}
 			if (type == t_closetag && !strcmp (rdata, "node")) {
@@ -289,15 +257,16 @@ static int import_hnb (char *params, void *data)
 	if (node_getflag (node, F_temp))
 		node = node_remove (node);	/* remove temporary node, if tree was empty */
 
-	cli_outfunf ("hnb import - imported \"%s\"", filename);
-	xml_tok_cleanup(s);
+	cli_outfunf ("hnb import - imported \"%s\" %i lines", filename, s->line_no);
+	xml_tok_cleanup (s);
 	return (int) node;
 }
 
 /*
 !init_file_hnb();
 */
-void init_file_hnb(){
+void init_file_hnb ()
+{
 	cli_add_command ("export_hnb", export_hnb, "<filename>");
 	cli_add_command ("import_hnb", import_hnb, "<filename>");
 }

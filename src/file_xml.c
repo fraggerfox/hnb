@@ -33,44 +33,29 @@
 #include "file.h"
 #include "prefs.h"
 #include "query.h"
+#include "util_string.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
-#define transform(a,b) case a:\
-						{int j=0;const char * msg=b;\
-							while(msg[j])\
-								out[outpos++]=msg[j++];\
-							out[outpos]=0;\
-							inpos++;\
-							break;\
-						}\
+static int xml_cuddle = 0;
 
-static int xml_cuddle=0;
+static char *xmlquote[]={
+	"<","&lt;",
+	">","&gt;",
+	"&","&amp;",
+	"\"","&quot;",
+	"'","&apos;",
+	NULL
+};
 
-/* converts special chars into entities */
-static char *xml_quote (const char *in)
-{
-	static char out[bufsize + 30];	/* for added tags'n'tabs */
-	int inpos = 0;
-	int outpos = 0;
-
-	out[0] = 0;
-
-	while (in[inpos]) {
-		switch (in[inpos]) {
-				transform ('&', "&amp;");
-				transform ('<', "&lt;");
-				transform ('>', "&gt;");
-				transform ('\'', "&apos;");
-				transform ('"', "&quot;");
-			default:
-				out[outpos++] = in[inpos++];
-				out[outpos] = 0;
-				break;
-		}
-	}
-	return (out);
-}
+static char *xmlunquote[]={
+	"&lt;","<",
+	"&gt;",">",
+	"&amp;","&",
+	"&quot;","\"",
+	"&apos;","'",
+	NULL
+};
 
 /* returns the first occurence of one of the needles, or 0 (termination)
    if not found, return 0*/
@@ -101,7 +86,7 @@ static void xml_export_nodes (FILE * file, Node *node, int level)
 
 		tag[0] = 0;
 		flags = node_getflags (node);
-		data = fixnullstring( node_get (node, TEXT) );
+		data = fixnullstring (node_get (node, TEXT));
 
 		indent (level, "  ");
 
@@ -116,8 +101,11 @@ static void xml_export_nodes (FILE * file, Node *node, int level)
 
 		if (no_quote)
 			fprintf (file, "%s%s", tag, &data[data_start]);
-		else
-			fprintf (file, "%s%s", tag, xml_quote (&data[data_start]));
+		else{
+			char *quoted=string_replace(&data[data_start],xmlquote);
+			fprintf (file, "%s%s", tag, quoted);
+			free(quoted);
+		}
 
 		if (data[0] == '<') {	/* calculate end tag */
 			strcpy (tag, data);
@@ -159,13 +147,14 @@ static void xml_export_nodes (FILE * file, Node *node, int level)
 	}
 }
 
-static int export_xml (char *params, void *data)
+static int export_xml (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -195,13 +184,13 @@ static Node *xml_cuddle_nodes (Node *node)
 	char *tdata;
 	char data[bufsize];
 
-	tnode = node_root(node);
+	tnode = node_root (node);
 
 	while (tnode) {
 		if (node_right (tnode)) {
-			tdata = fixnullstring( node_get (node_right (tnode), TEXT));
+			tdata = fixnullstring (node_get (node_right (tnode), TEXT));
 			if (tdata[0] != '<') {	/* not a child tag */
-				strcpy (data, fixnullstring( node_get (tnode,TEXT)));
+				strcpy (data, fixnullstring (node_get (tnode, TEXT)));
 				strcat (data, " ");
 				strcat (data, tdata);
 				node_set (tnode, TEXT, data);
@@ -215,11 +204,10 @@ static Node *xml_cuddle_nodes (Node *node)
 }
 
 
-
-static int import_xml (char *params, void *data)
+static int import_xml (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	char *rdata;
 	int type;
 	int level = 0;
@@ -232,7 +220,8 @@ static int import_xml (char *params, void *data)
 
 	nodedata[0] = 0;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	file = fopen (filename, "r");
 	if (!file) {
 		cli_outfunf ("xml import, unable to open \"%s\"", filename);
@@ -243,7 +232,8 @@ static int import_xml (char *params, void *data)
 
 	while (((type = xml_tok_get (s, &rdata)) != t_eof)) {
 		if (type == t_error) {
-			cli_outfunf ("xml import error, parsing og '%s', %s",filename, rdata);
+			cli_outfunf ("xml import error, parsing og '%s', line:%i %s", filename,
+						 s->line_no,rdata);
 			fclose (file);
 			return (int) node;
 		}
@@ -267,7 +257,9 @@ static int import_xml (char *params, void *data)
 				break;
 			case t_tag:
 				if (got_data) {
-					import_node_text (&ist, level, nodedata);
+					char *unquoted=string_replace(nodedata,xmlunquote);
+					import_node_text (&ist, level, unquoted);
+					free(unquoted);
 					got_data = 0;
 					nodedata[0] = 0;
 				}
@@ -304,7 +296,9 @@ static int import_xml (char *params, void *data)
 				break;
 			case t_closetag:
 				if (got_data) {
-					import_node_text (&ist, level, nodedata);
+					char *unquoted=string_replace(nodedata,xmlunquote);
+					import_node_text (&ist, level, unquoted);
+					free(unquoted);
 					got_data = 0;
 					nodedata[0] = 0;
 				}
@@ -323,42 +317,7 @@ static int import_xml (char *params, void *data)
 				break;
 			case t_entity:
 				got_data = 1;
-				if (!strcmp (rdata, "amp")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = '&';
-				} else if (!strcmp (rdata, "gt")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = '>';
-				} else if (!strcmp (rdata, "lt")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = '<';
-				} else if (!strcmp (rdata, "quot")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = '"';
-				} else if (!strcmp (rdata, "apos")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = '\'';
-				} else if (!strcmp (rdata, "aring")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = 'å';
-				} else if (!strcmp (rdata, "Aring")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = 'Å';
-				} else if (!strcmp (rdata, "oslash")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = 'ø';
-				} else if (!strcmp (rdata, "Oslash")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = 'Ø';
-				} else if (!strcmp (rdata, "aelig")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = 'æ';
-				} else if (!strcmp (rdata, "AElig")) {
-					nodedata[strlen (nodedata) + 1] = 0;
-					nodedata[strlen (nodedata)] = 'Æ';
-				} else {
-					sprintf (&nodedata[strlen (nodedata)], "&%s;", rdata);
-				}
+				sprintf (&nodedata[strlen (nodedata)], "&%s;", rdata);
 				break;
 			default:
 				break;
@@ -371,21 +330,23 @@ static int import_xml (char *params, void *data)
 	if (xml_cuddle)
 		node = xml_cuddle_nodes (node);
 
-	cli_outfunf ("xml import - imported \"%s\"", filename);
-	xml_tok_cleanup(s);
+	cli_outfunf ("xml import - imported \"%s\" %i lines", filename, s->line_no);
+	xml_tok_cleanup (s);
 	return (int) node;
 }
 
 /*
 !init_file_xml();
 */
-void init_file_xml(){
+void init_file_xml ()
+{
 	cli_add_command ("export_xml", export_xml, "<filename>");
 	cli_add_command ("import_xml", import_xml, "<filename>");
-	cli_add_help("export_xml","Exports the current node, it's siblings and all sublevels to 'filename' as if it was xml markup.\
-(load an xml file with import_xml or hnb -x file.xml to see how it should be inside hnb.");	
-	cli_add_help("import_xml","Imports 'filename' and inserts it's contents at the current level.");
-	cli_add_int("xml_cuddle",&xml_cuddle,"join the data with nodes if no tags within tag");
-
-
+	cli_add_help ("export_xml",
+				  "Exports the current node, it's siblings and all sublevels to 'filename' as if it was xml markup.\
+(load an xml file with import_xml or hnb -x file.xml to see how it should be inside hnb.");
+	cli_add_help ("import_xml",
+				  "Imports 'filename' and inserts it's contents at the current level.");
+	cli_add_int ("xml_cuddle", &xml_cuddle,
+				 "join the data with nodes if no tags within tag");
 }

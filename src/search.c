@@ -28,35 +28,42 @@
 
 /************** search ************************/
 
-static int next_match_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
+static int next_match_cmd (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+
 	pos = node_recursive_match ((char *) query, pos);
 
-	if(pos==NULL){
-		docmdf(pos,"status reached bottom of tree and '%s' not found", query);
-		return (int)data;
+	if (pos == NULL) {
+		docmdf (pos, "status 'reached bottom of tree and \\'%s\\' not found'",
+				query);
+		return (int) data;
 	}
-	return (int)pos;
+	return (int) pos;
 }
 
-static int prev_match_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
+static int prev_match_cmd (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+
 	pos = node_backrecursive_match ((char *) query, pos);
 
-	if(pos==NULL){
-		docmdf(pos,"status reached top of tree and '%s' not found", query);
-		return (int)data;
+	if (pos == NULL) {
+		docmdf (pos, "status 'reached top of tree and \\'%s\\' not found'", query);
+		return (int) data;
 	}
-	return (int)pos;
+	return (int) pos;
 }
 
 /*
 !init_search();
 */
-void init_search(){
+void init_search ()
+{
 	cli_add_command ("prev_match", prev_match_cmd, "");
-	cli_add_help("prev_match","Moves backwards in the tree to the prior match");
+	cli_add_help ("prev_match",
+				  "Moves backwards in the tree to the prior match");
 	cli_add_command ("next_match", next_match_cmd, "");
-	cli_add_help("next_match","Moves forward in the tree to the next match");
+	cli_add_help ("next_match",
+				  "Moves forward in the tree to the next match");
 }
-

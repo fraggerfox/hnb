@@ -8,5 +8,5 @@
 
 void ui_draw (Node *node, char *input, int edit_mode);
 
-void set_status(char *message);
+void set_status (char *message);
 #endif

@@ -23,8 +23,10 @@
 int integer=0;
 char string[40]="not set";
 
-int echo(char *params, void *data){
-	printf("%s\n",params);
+int echo(int argc,char **argv, void *data){
+	printf("tokens:%i\n",argc);
+	while(*argv)
+		printf("[%s]\n",*(argv++));
 	return 0;
 }
 

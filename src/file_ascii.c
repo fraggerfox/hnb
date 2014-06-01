@@ -32,19 +32,20 @@
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
-static int ascii_margin=-1;
+static int ascii_margin = -1;
 
-static int import_ascii (char *params, void *data)
+static int import_ascii (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	int level;
 	import_state_t ist;
 	char cdata[bufsize];
 	FILE *file;
 
-	
-	if(!strcmp(filename,"*"))filename=query;
+
+	if (!strcmp (filename, "*"))
+		filename = query;
 
 	file = fopen (filename, "r");
 	if (file == NULL) {
@@ -91,23 +92,24 @@ static void ascii_export_node (FILE * file, int level, int flags, char *data)
 			fprintf (file, "[ ]");
 	}
 #endif
-	if(ascii_margin<0){ /* no wrap */
+	if (ascii_margin < 0) {		/* no wrap */
 		fprintf (file, "%s\n", data);
 	} else {
 		fprintf (file, "%s\n", data);
 	}
 }
 
-static int export_ascii (char *params, void *data)
+static int export_ascii (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	Node *tnode;
 	int level, flags, startlevel;
 	char *cdata;
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 
 	if (!strcmp (filename, "-"))
 		file = stdout;
@@ -124,7 +126,7 @@ static int export_ascii (char *params, void *data)
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
-		cdata = fixnullstring(node_get (tnode, TEXT));
+		cdata = fixnullstring (node_get (tnode, TEXT));
 		ascii_export_node (file, level, flags, cdata);
 
 		tnode = node_recurse (tnode);
@@ -142,9 +144,10 @@ static int export_ascii (char *params, void *data)
 /*
 !init_file_ascii();
 */
-void init_file_ascii(){
+void init_file_ascii ()
+{
 	cli_add_command ("export_ascii", export_ascii, "<filename>");
 	cli_add_command ("import_ascii", import_ascii, "<filename>");
-	cli_add_int("ascii_margin", &ascii_margin, "the margin that ascii export wraps at (-1=no wrap)");
+	cli_add_int ("ascii_margin", &ascii_margin,
+				 "the margin that ascii export wraps at (-1=no wrap)");
 }
-

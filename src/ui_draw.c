@@ -17,7 +17,7 @@
  * this program; if not, write to the Free Software Foundation, Inc., 59
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
- 
+
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -37,15 +37,17 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#define KEEPLINES 5
+
 int nodes_above;
 int active_line;
 int nodes_below;
 
 static Node *up (Node *sel, Node *node)
 {
-	if (node_up (node) && node_up(node)->expanded){
+	if (node_up (node) && node_getflag( node_up (node), F_expanded)) {
 		node = node_up (node);
-		while (node_right (node) && node->expanded ) {
+		while (node_right (node) && node_getflag(node,F_expanded)) {
 			node = node_right (node);
 			node = node_bottom (node);
 		}
@@ -56,13 +58,13 @@ static Node *up (Node *sel, Node *node)
 		else
 			return (node_left (node));
 	}
-	return node_left(node);
+	return node_left (node);
 }
 
 static Node *down (Node *sel, Node *node)
 {
-	if(node->expanded){
-		return node_recurse(node);
+	if (node_getflag(node,F_expanded)) {
+		return node_recurse (node);
 	} else {
 		if (node_down (node)) {
 			return (node_down (node));
@@ -72,7 +74,7 @@ static Node *down (Node *sel, Node *node)
 				if (node_down (node))
 					return (node_down (node));
 			}
-		}			
+		}
 	}
 	return NULL;
 }
@@ -83,7 +85,7 @@ int hnb_edit_posup = 0;			/*contains the cursor pos for up/down */
 int hnb_edit_posdown = 0;		/*from here when in editing mode */
 
 enum {
-	drawmode_test=0,
+	drawmode_test = 0,
 	drawmode_normal,
 	drawmode_selected,
 	drawmode_edit,
@@ -95,150 +97,156 @@ enum {
  *
  *
  */
-static int draw_textblock(int line_start, int col_start, int width, int cursor_pos, Node *node, int drawmode){
-	int col_end=col_start+width;
-	unsigned char word[200];    /* current word being rendered */
-	int wpos=0;        /* position in current word */
-	int dpos=0;        /* position in data*/
-	int col; 		   /* current column */
+static int draw_textblock (int line_start, int col_start, int width,
+						   int cursor_pos, Node *node, int drawmode)
+{
+	int col_end = col_start + width;
+	unsigned char word[200];	/* current word being rendered */
+	int wpos = 0;				/* position in current word */
+	int dpos = 0;				/* position in data */
+	int col;					/* current column */
 
-	int lines_used=1;
+	int lines_used = 1;
 
-	int cursor_state=0;
-	int cx=0,cy=0; /* coordinates to draw cursor at */
+	int cursor_state = 0;
+	int cx = 0, cy = 0;			/* coordinates to draw cursor at */
 
-	unsigned char *data=(unsigned char*) fixnullstring( node_get(node, TEXT) );
+	unsigned char *data =
+		(unsigned char *) fixnullstring (node_get (node, TEXT));
 
-	col=col_start;
+	col = col_start;
 
-	word[0]=0;
-	if(drawmode==drawmode_edit){
-		hnb_edit_posup =0;
-		hnb_edit_posdown=strlen((char *)data);
+	word[0] = 0;
+	if (drawmode == drawmode_edit) {
+		hnb_edit_posup = 0;
+		hnb_edit_posdown = strlen ((char *) data);
 	}
 
-	switch(drawmode){
+	switch (drawmode) {
 		case drawmode_test:
 			break;
 		case drawmode_completion:
-			if(node_right(node)){
-				ui_style(ui_style_parentnode);
+			if (node_right (node)) {
+				ui_style (ui_style_parentnode);
 			} else {
-				ui_style(ui_style_node);
+				ui_style (ui_style_node);
 			}
 			break;
 		case drawmode_selected:
-			if(node_right(node)){
-				ui_style(ui_style_parentselected);
+			if (node_right (node)) {
+				ui_style (ui_style_parentselected);
 			} else {
-				ui_style(ui_style_selected);
+				ui_style (ui_style_selected);
 			}
 			break;
 		case drawmode_normal:
 		case drawmode_edit:
 		default:
-			if(node_right(node)){
-				ui_style(ui_style_parentnode);
+			if (node_right (node)) {
+				ui_style (ui_style_parentnode);
 			} else {
-				ui_style(ui_style_node);
+				ui_style (ui_style_node);
 			}
 			break;
 	}
 
-	while((dpos==0)||data[dpos-1]){ /* loop through data + \0 */
-		switch(data[dpos]){
-			case '\0':  /* \0 as well,.. to print last word */
+	while ((dpos == 0) || data[dpos - 1]) {	/* loop through data + \0 */
+		switch (data[dpos]) {
+			case '\0':			/* \0 as well,.. to print last word */
 			case ' ':
 			case '\t':
 			case '\n':
-			case '\r': /* all whitespace is treated as spaces */
-				if(col + wpos + 1 >= col_end){ /* reached margin */
-					if(drawmode==drawmode_edit){
-						if(cursor_state==0)
-							hnb_edit_posup= cursor_pos-(col-col_start);
-						if(cursor_state==1){
-							hnb_edit_posdown= cursor_pos+(col-col_start);
-							cursor_state=2;
+			case '\r':			/* all whitespace is treated as spaces */
+				if (col + wpos + 1 >= col_end) {	/* reached margin */
+					if (drawmode == drawmode_edit) {
+						if (cursor_state == 0)
+							hnb_edit_posup = cursor_pos - (col - col_start);
+						if (cursor_state == 1) {
+							hnb_edit_posdown = cursor_pos + (col - col_start);
+							cursor_state = 2;
 						}
 					}
-				
+
 					col = col_start;
 					lines_used++;
-					if(lines_used+line_start>=LINES)
+					if (lines_used + line_start >= LINES)
 						return lines_used;
 				}
-				if(drawmode!=drawmode_test){
-					if(line_start+lines_used -1>=0){
-						move(line_start+lines_used-1,col);
-						
+				if (drawmode != drawmode_test) {
+					if (line_start + lines_used - 1 >= 0) {
+						move (line_start + lines_used - 1, col);
+
 						/* must break the word in two due to differnt text formatting */
-						if(drawmode==drawmode_completion && cursor_state==0 && dpos>=cursor_pos){ 
+						if (drawmode == drawmode_completion
+							&& cursor_state == 0 && dpos >= cursor_pos) {
 							int i;
-							for(i=0;i< wpos-(dpos-cursor_pos)  ;i++)
-								addch(word[i]);
-								if(node_right(node)){
-									ui_style(ui_style_parentselected);
-								} else {
-									ui_style(ui_style_selected);
-								}
-							for(i=wpos-(dpos-cursor_pos);i<wpos  ;i++)
-								addch(word[i]);	
+
+							for (i = 0; i < wpos - (dpos - cursor_pos); i++)
+								addch (word[i]);
+							if (node_right (node)) {
+								ui_style (ui_style_parentselected);
+							} else {
+								ui_style (ui_style_selected);
+							}
+							for (i = wpos - (dpos - cursor_pos); i < wpos;
+								 i++)
+								addch (word[i]);
 						} else {
-						
-							addstr((char *)word);
-							
+
+							addstr ((char *) word);
+
 						}
-						if(data[dpos])
-							addch(' ');
+						if (data[dpos])
+							addch (' ');
 					}
 				}
 
-				switch(drawmode){
+				switch (drawmode) {
 					case drawmode_edit:
-						if(cursor_state==0 && dpos>=cursor_pos) {
+						if (cursor_state == 0 && dpos >= cursor_pos) {
 							cy = line_start + lines_used - 1;
 							cx = col - (dpos - cursor_pos) + wpos;
-							cursor_state=1;
+							cursor_state = 1;
 						}
 						break;
 					case drawmode_completion:
-						if(cursor_state==0 && dpos>=cursor_pos) {
-							if(node_right(node)){
-								ui_style(ui_style_parentselected);
+						if (cursor_state == 0 && dpos >= cursor_pos) {
+							if (node_right (node)) {
+								ui_style (ui_style_parentselected);
 							} else {
-								ui_style(ui_style_selected);
+								ui_style (ui_style_selected);
 							}
-							cursor_state=1;
+							cursor_state = 1;
 						}
 					default:
 						break;
 				}
 
-				col+=wpos+1;
-				word[wpos=0]=0;
+				col += wpos + 1;
+				word[wpos = 0] = 0;
 				break;
 			default:
-				if(wpos<198){
-							word[wpos++]=data[dpos];
-							word[wpos]=0;
+				if (wpos < 198) {
+					word[wpos++] = data[dpos];
+					word[wpos] = 0;
 				}
 				break;
 		}
 		dpos++;
 	}
 	/* draw the cursor */
-	if (drawmode==drawmode_edit) {
+	if (drawmode == drawmode_edit) {
 		move (cy, cx);
-		if(node_right(node)){
-			ui_style(ui_style_parentselected);
+		if (node_right (node)) {
+			ui_style (ui_style_parentselected);
 		} else {
-			ui_style(ui_style_selected);
+			ui_style (ui_style_selected);
 		}
 		addch (data[cursor_pos]);
-		if(node_right(node)){
-			ui_style(ui_style_parentnode);
+		if (node_right (node)) {
+			ui_style (ui_style_parentnode);
 		} else {
-			ui_style(ui_style_node);
+			ui_style (ui_style_node);
 		}
 	}
 	return lines_used;
@@ -246,85 +254,96 @@ static int draw_textblock(int line_start, int col_start, int width, int cursor_p
 
 
 
-static int draw_dummy(int line, int col, int width, Node *node, int drawmode){
-	if(width==0)
-		width=1;
-	if(drawmode!=drawmode_test){
+static int draw_dummy (int line, int col, int width, Node *node, int drawmode)
+{
+	if (width == 0)
+		width = 1;
+	if (drawmode != drawmode_test) {
 		int j;
-		move(line,col);
-		ui_style(ui_style_bullet);
-		for(j=0;j<width;j++){
-			addch('X');
+
+		move (line, col);
+		ui_style (ui_style_bullet);
+		for (j = 0; j < width; j++) {
+			addch ('X');
 		}
 	}
 	return width;
 }
 
-static int draw_spacing(int line, int col, int width, Node *node, int drawmode){
-	if(width==0)
-		width=1;
-		if(drawmode!=drawmode_test){
+static int draw_spacing (int line, int col, int width, Node *node,
+						 int drawmode)
+{
+	if (width == 0)
+		width = 1;
+	if (drawmode != drawmode_test) {
 		int j;
-		move(line,col);
-		ui_style(ui_style_background);
-		for(j=0;j<width;j++){
-			addch(' ');
+
+		move (line, col);
+		ui_style (ui_style_background);
+		for (j = 0; j < width; j++) {
+			addch (' ');
 		}
 	}
 	return width;
 }
 
-static char bullet_leaf[4]="  ·";
-static char bullet_parent[4]="  +";
-static char bullet_parent_expanded[4]="  -";
+static char bullet_leaf[4] = "  ·";
+static char bullet_parent[4] = "  +";
+static char bullet_parent_expanded[4] = "  -";
 
 
 
-static int draw_bullet(int line, int col, int width, Node *node,int drawmode){
+static int draw_bullet (int line, int col, int width, Node *node,
+						int drawmode)
+{
 	int asize;
 	int perc;
 
 /*	if(width==0)*/
-	width=3;
+	width = 3;
 
-	perc=calc_percentage_size(node, &asize);
+	perc = calc_percentage_size (node, &asize);
 	{
-		ui_style(ui_style_bullet);
+		ui_style (ui_style_bullet);
 
-		move(line,col);
-			switch(perc){
-				case -1:
-					if(drawmode!=drawmode_test)
-						addstr( (node_right(node)) ? node->expanded?bullet_parent_expanded:bullet_parent
-						                           : bullet_leaf);
-					break;
-				case 0:
-					if(drawmode!=drawmode_test)
-						addstr ("[ ]");
-					break;
-				case 2000:
-					if(drawmode!=drawmode_test)
-						addstr ("[X]");
-					break;
-				default:{
-					char str[100];
-					snprintf (str, 4, "%2i%%", perc);
-					if(drawmode!=drawmode_test)
-						addstr(str);
-					}
+		move (line, col);
+		switch (perc) {
+			case -1:
+				if (drawmode != drawmode_test)
+					addstr ((node_right (node)) ? node_getflag(node,F_expanded)
+							? bullet_parent_expanded : bullet_parent
+							: bullet_leaf);
+				break;
+			case 0:
+				if (drawmode != drawmode_test)
+					addstr ("[ ]");
+				break;
+			case 2000:
+				if (drawmode != drawmode_test)
+					addstr ("[X]");
+				break;
+			default:{
+				char str[100];
+
+				snprintf (str, 4, "%2i%%", perc);
+				if (drawmode != drawmode_test)
+					addstr (str);
 			}
+		}
 	}
 
 	return width;
 }
 
 
-static char *node2no_path (Node *node){
+static char *node2no_path (Node *node)
+{
 	static char path[512];
 	int pos = 0;
 	int levels = nodes_left (node);
 	int cnt;
-	path[0]=0;
+
+	path[0] = 0;
 
 	for (cnt = levels; cnt >= 0; cnt--) {
 		int cnt2;
@@ -333,7 +352,7 @@ static char *node2no_path (Node *node){
 		for (cnt2 = 0; cnt2 < cnt; cnt2++)
 			tnode = node_left (tnode);
 
-		sprintf (&path[pos], "%i", nodes_up (tnode)+1);
+		sprintf (&path[pos], "%i", nodes_up (tnode) + 1);
 		pos = strlen (path);
 		path[pos] = '.';
 		path[++pos] = 0;
@@ -344,92 +363,109 @@ static char *node2no_path (Node *node){
 	return (path);
 }
 
-static int draw_node_no(int line, int col, int width, Node *node,int drawmode){
-	char str[100]="";
+static int draw_node_no (int line, int col, int width, Node *node,
+						 int drawmode)
+{
+	char str[100] = "";
 
-	if(width==0)
-		width=4;
+	if (width == 0)
+		width = 4;
 
-	ui_style(ui_style_bullet);
-	move(line,col);
-	snprintf (str, 5, "%4i", node_no(node) );
-	if(drawmode!=drawmode_test){
-		addstr(str);
+	ui_style (ui_style_bullet);
+	move (line, col);
+	snprintf (str, 5, "%4i", node_no (node));
+	if (drawmode != drawmode_test) {
+		addstr (str);
 	}
-	
+
 	return width;
 }
 
 
-static int draw_nr(int line, int col, int width, Node *node,int drawmode){
-	char str[100]="";
+static int draw_nr (int line, int col, int width, Node *node, int drawmode)
+{
+	char str[100] = "";
 
-	if(width==0)
-		width=3;
+	if (width == 0)
+		width = 3;
 
-	ui_style(ui_style_bullet);
-	move(line,col);
-	snprintf (str, 5, "%3i", nodes_up(node)+ 1);
-	if(drawmode!=drawmode_test){
-		addstr(str);
+	ui_style (ui_style_bullet);
+	move (line, col);
+	snprintf (str, 5, "%3i", nodes_up (node) + 1);
+	if (drawmode != drawmode_test) {
+		addstr (str);
 	}
-	
+
 	return width;
 }
 
 
 
-static int draw_anr(int line, int col, int width, Node *node,int drawmode){
-	char str[100]="";
+static int draw_anr (int line, int col, int width, Node *node, int drawmode)
+{
+	char str[100] = "";
 	char fstr[20];
 
-	if(width==0)
-		width=8;
+	if (width == 0)
+		width = 8;
 
-	ui_style(ui_style_bullet);
-	move(line,col);
-	snprintf(fstr,8,"%%%is",width);
-	snprintf (str, width+2, fstr, node2no_path(node));
-	if(drawmode!=drawmode_test){
-		addstr(str);
+	ui_style (ui_style_bullet);
+	move (line, col);
+	snprintf (fstr, 8, "%%%is", width);
+	snprintf (str, width + 2, fstr, node2no_path (node));
+	if (drawmode != drawmode_test) {
+		addstr (str);
 	}
-	
+
 	return width;
 }
 
-static int draw_debug(int line,int col,int width,Node *node,int drawmode){
+static int node_getval(Node *node, char *name){
+	char *got=node_get(node,name);
+	if(!got)return -1;
+	return(atoi(got));
+}
+
+
+static int draw_debug (int line, int col, int width, Node *node, int drawmode)
+{
 	int asize;
-	int size=node_getsize(node);
+	int size = node_getval (node,"size");
 	int perc;
-	
-	width=40;
 
-	if(drawmode!=drawmode_test){
-	ui_style(ui_style_background);
-	move(line,col);
-	perc=calc_percentage_size(node, &asize);
-	
-	{
-		char str[64];
-		sprintf(str,"(%i/%i) ",(perc==2000?100:perc*asize)/100 ,asize);
-		if(drawmode!=drawmode_test)
-			addstr(str);
-	}
-	
-	{
-		perc=calc_percentage_size(node, &asize);
-		attrset(A_NORMAL);
+	width = 40;
+
+	if (drawmode != drawmode_test) {
+		ui_style (ui_style_background);
+		move (line, col);
+		perc = calc_percentage_size (node, &asize);
+
 		{
-			char str[256];
-			sprintf (str, "size:%i a_size:%i %i%% ", node_getsize(node),size,perc);
-			addstr(str);
-		}
-	}
+			char str[64];
 
-		if(node_calc_size(node)!=-1){
+			sprintf (str, "(%i/%i) ",
+					 (perc == 2000 ? 100 : perc * asize) / 100, asize);
+			if (drawmode != drawmode_test)
+				addstr (str);
+		}
+
+		{
+			perc = calc_percentage_size (node, &asize);
+			attrset (A_NORMAL);
+			{
+				char str[256];
+
+				sprintf (str, "size:%i a_size:%i %i%% ", node_getval (node,"size"),
+						 size, perc);
+				addstr (str);
+			}
+		}
+
+		if (node_calc_size (node) != -1) {
 			char str[10];
-			sprintf (str, "%4.1f ", (float)node_calc_size(node)/10.0  );
-			addstr(str);			
+
+			sprintf (str, "%4.1f ", (float) node_calc_size (node) / 10.0);
+			addstr (str);
 		}
 	}
 
@@ -438,16 +474,18 @@ static int draw_debug(int line,int col,int width,Node *node,int drawmode){
 
 #define MAX_COLUMNS 20
 
-static int draw_indent(int line, int col, int width, Node *node, int drawmode){
-	if(width==0)
-		width=4;
+static int draw_indent (int line, int col, int width, Node *node,
+						int drawmode)
+{
+	if (width == 0)
+		width = 4;
 
-	return width*nodes_left(node);
+	return width * nodes_left (node);
 }
 
 
-enum{
-	col_spacing=0,
+enum {
+	col_spacing = 0,
 	col_indent,
 	col_nr,
 	col_anr,
@@ -461,114 +499,126 @@ enum{
 };
 
 
-static int (*col_fun[col_terminate+1])  (int line, int col, int width, Node *node, int drawmode)={
-draw_spacing,
-draw_indent,
-draw_nr,
-draw_anr,
-draw_bullet,
-draw_spacing,
-draw_debug,
-draw_spacing,
-draw_node_no,
-draw_dummy,
-draw_dummy};
+static int (*col_fun[col_terminate + 1]) (int line, int col, int width,
+										  Node *node, int drawmode) = {
+draw_spacing, draw_indent, draw_nr, draw_anr, draw_bullet, draw_spacing,
+		draw_debug, draw_spacing, draw_node_no, draw_dummy, draw_dummy};
 
 static struct {
 	int type;
 	int width;
-}col_def[MAX_COLUMNS]={
-	{col_indent, 4},
-	{col_spacing, 1},
-	{col_bullet, 3},
-	{col_spacing, 1},
-	{col_data, 0},
-	{col_spacing, 1},
-	{col_dummy, 10},
-	{col_spacing, 2},
-	{col_dummy, 10},
-	{col_spacing, 1},
-
-	{col_terminate, 0}
+} col_def[MAX_COLUMNS] = {
+	{
+	col_indent, 4}, {
+	col_spacing, 1}, {
+	col_bullet, 3}, {
+	col_spacing, 1}, {
+	col_data, 0}, {
+	col_spacing, 1}, {
+	col_dummy, 10}, {
+	col_spacing, 2}, {
+	col_dummy, 10}, {
+	col_spacing, 1}, {
+	col_terminate, 0}
 };
 
 
 /* FIXME: make backup?,.. and make sure data is present,.., make possiblity to write back? */
 
-int display_format_cmd(char *params, void *data){
-	char *p=params;
+int display_format_cmd (int argc, char **argv, void *data)
+{
+	char *p = argv[1];
 	int width;
 	int type;
-	int col_no=0;
+	int col_no = 0;
 
-	do{
-		width=0;
-		type=col_spacing;
-		switch(*p){
-			case 'i':type=col_indent;
-					if(isdigit(*(p+1))){
-						width=atoi(p+1);
-						while(isdigit(*(p+1)))p++;
-					}
-					break;
-			case 'd':type=col_data;
-					if(isdigit(*(p+1))){
-						width=atoi(p+1);
-						while(isdigit(*(p+1)))p++;	
-					}
-					break;
-			case 'D':type=col_debug;
-					if(isdigit(*(p+1))){
-						width=atoi(p+1);
-						while(isdigit(*(p+1)))p++;	
-					}
-					break;
-			case 'x':type=col_dummy;
-					if(isdigit(*(p+1))){
-						width=atoi(p+1);
-						while(isdigit(*(p+1)))p++;	
-					}
-					break;
-			case '1':type=col_nr;
-					if(*(p+1)=='.'){
-						type=col_anr;
+	if(argc<2){
+		return (int)data;
+	}
+
+	do {
+		width = 0;
+		type = col_spacing;
+		switch (*p) {
+			case 'i':
+				type = col_indent;
+				if (isdigit (*(p + 1))) {
+					width = atoi (p + 1);
+					while (isdigit ((unsigned char)*(p + 1)))
 						p++;
-					}
-					if(isdigit(*(p+1))){
-						width=atoi(p+1);
-						while(isdigit(*(p+1)))p++;	
-					}
-					break;
-			case '-':type=col_bullet;
-					if(isdigit(*(p+1))){
-						width=atoi(p+1);
-						while(isdigit(*(p+1)))p++;	
-					}
-					break;
-			case '#':type=col_node_no;
-					if(isdigit(*(p+1))){
-						width=atoi(p+1);
-						while(isdigit(*(p+1)))p++;	
-					}
-					break;
-			case ' ':type=col_spacing;
-					while(' '==(*(p+1))){
+				}
+				break;
+			case 'd':
+				type = col_data;
+				if (isdigit (*(p + 1))) {
+					width = atoi (p + 1);
+					while (isdigit ((unsigned char)*(p + 1)))
 						p++;
-						width++;
-					}
-					break;
+				}
+				break;
+			case 'D':
+				type = col_debug;
+				if (isdigit (*(p + 1))) {
+					width = atoi (p + 1);
+					while (isdigit ((unsigned char)*(p + 1)))
+						p++;
+				}
+				break;
+			case 'x':
+				type = col_dummy;
+				if (isdigit (*(p + 1))) {
+					width = atoi (p + 1);
+					while (isdigit ((unsigned char)*(p + 1)))
+						p++;
+				}
+				break;
+			case '1':
+				type = col_nr;
+				if (*(p + 1) == '.') {
+					type = col_anr;
+					p++;
+				}
+				if (isdigit (*(p + 1))) {
+					width = atoi (p + 1);
+					while (isdigit ((unsigned char)*(p + 1)))
+						p++;
+				}
+				break;
+			case '-':
+				type = col_bullet;
+				if (isdigit (*(p + 1))) {
+					width = atoi (p + 1);
+					while (isdigit ((unsigned char)*(p + 1)))
+						p++;
+				}
+				break;
+			case '#':
+				type = col_node_no;
+				if (isdigit (*(p + 1))) {
+					width = atoi (p + 1);
+					while (isdigit ((unsigned char)*(p + 1)))
+						p++;
+				}
+				break;
+			case ' ':
+				type = col_spacing;
+				while (' ' == ((unsigned char)*(p + 1))) {
+					p++;
+					width++;
+				}
+				break;
 			default:
-					cli_outfunf("td not_parsed(%c)",*p);
-					break;
+				cli_outfunf ("td not_parsed(%c)", *p);
+				break;
 		}
-		col_def[col_no].type=type;
-		col_def[col_no].width=width;
+		col_def[col_no].type = type;
+		col_def[col_no].width = width;
 		col_no++;
-	}while(*(++p));
+	} while (*(++p));
 
-	col_def[col_no].type=col_terminate;
+	col_def[col_no].type = col_terminate;
 
-	return (int)data;
+	return (int) data;
 }
 
 
@@ -588,36 +638,50 @@ int display_format_cmd(char *params, void *data){
  *
  * @return number of lines needed to draw item
  **/
-static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
-	int col_no=0;
-	int lines_used=1;
+static int draw_item (int line_start, int cursor_pos, Node *node,
+					  int drawmode)
+{
+	int col_no = 0;
+	int lines_used = 1;
 
-	int col_start =0;
-	int col_end   = COLS;
-	
-	col_start=0;
+	int col_start = 0;
+	int col_end = COLS;
+
+	col_start = 0;
 	/* draw columns before col_data */
 
-	while(col_def[col_no].type != col_data && col_def[col_no].type != col_terminate){
-		col_start += col_fun[ col_def[ col_no ].type ]( line_start,col_start,col_def[col_no].width,node,drawmode);
+	while (col_def[col_no].type != col_data
+		   && col_def[col_no].type != col_terminate) {
+		col_start +=
+			col_fun[col_def[col_no].type] (line_start, col_start,
+										   col_def[col_no].width, node,
+										   drawmode);
 		col_no++;
 	}
-	
+
 	/* fastforward to end of col_def */
-	while(col_def[col_no].type != col_terminate)
+	while (col_def[col_no].type != col_terminate)
 		col_no++;
 
 	col_no--;
 
 	/* draw columns after col_data */
-	while(col_no && col_def[col_no].type != col_data){
-			int width=col_fun[ col_def[ col_no].type ](line_start,col_end-col_def[col_no].width,col_def[col_no].width,node,drawmode_test);
-			col_end-=col_fun[ col_def[ col_no].type ](line_start,col_end-width,width,node,drawmode);
-			col_no--;
+	while (col_no && col_def[col_no].type != col_data) {
+		int width =
+			col_fun[col_def[col_no].type] (line_start,
+										   col_end - col_def[col_no].width,
+										   col_def[col_no].width, node,
+										   drawmode_test);
+		col_end -=
+			col_fun[col_def[col_no].type] (line_start, col_end - width, width,
+										   node, drawmode);
+		col_no--;
 	}
 
-	lines_used=draw_textblock(line_start, col_start, (col_end-col_start), cursor_pos, node, drawmode);
-		
+	lines_used =
+		draw_textblock (line_start, col_start, (col_end - col_start),
+						cursor_pos, node, drawmode);
+
 	return lines_used;
 }
 
@@ -625,123 +689,134 @@ extern int hnb_nodes_up;
 extern int hnb_nodes_down;
 
 #define MAXLINES 512
-static int line_nodeno[MAXLINES]={0};
+static int line_nodeno[MAXLINES] = { 0 };
 
 void ui_draw (Node *node, char *input, int edit_mode)
 {
 	int lines;
-	
+
 	static struct {
 		int self;
 		int prev;
-	} node_numb={1,1};
-	
+	} node_numb = {
+	1, 1};
+
 	if (!prefs.fixedfocus) {
 
-		node_numb.prev=node_numb.self;
-		node_numb.self=node_no(node);
+		node_numb.prev = node_numb.self;
+		node_numb.self = node_no (node);
 
-		if(node_numb.self>node_numb.prev){
+		if (node_numb.self > node_numb.prev) {
 			active_line++;
-		} else if(node_numb.self<node_numb.prev){
+		} else if (node_numb.self < node_numb.prev) {
 			active_line--;
 		}
 
-		{int i;
-		for(i=0;i<((LINES<MAXLINES)?LINES:MAXLINES);i++)
-			if(line_nodeno[i]==node_numb.self){
-				active_line=i;
-				break;
-			}
+		{
+			int i;
+
+			for (i = 0; i < ((LINES < MAXLINES) ? LINES : MAXLINES); i++)
+				if (line_nodeno[i] == node_numb.self) {
+					active_line = i;
+					break;
+				}
 		}
 
-		if(node_numb.self==1){	/* jumped to root, always bring nodes to top of screen*/
-			active_line=1;
+		if (node_numb.self == 1) {	/* jumped to root, always bring nodes to top of screen */
+			active_line = 1;
 		}
 
-		{int i;
-		for(i=0;i<((LINES<MAXLINES)?LINES:MAXLINES);i++)
-			line_nodeno[i]=0;
+		{
+			int i;
+
+			for (i = 0; i < ((LINES < MAXLINES) ? LINES : MAXLINES); i++)
+				line_nodeno[i] = 0;
 		}
-		
-		#define KEEPLINES 3
-		{int maxline=LINES-KEEPLINES;		
-		if (active_line > maxline)	/*if we overlap with help,.. move up */
-			active_line = maxline;
-		if (active_line < KEEPLINES)
-			active_line = KEEPLINES;
+
+
+		{
+			int maxline = LINES - KEEPLINES;
+
+			if (active_line > maxline)	/*if we overlap with help,.. move up */
+				active_line = maxline;
+			if (active_line < KEEPLINES)
+				active_line = KEEPLINES;
 		}
 	};
 
 	nodes_above = active_line;
 	nodes_below = LINES - active_line;
 
-		{
-			hnb_nodes_up = 0;
-			hnb_nodes_down = 0;
+	{
+		hnb_nodes_up = 0;
+		hnb_nodes_down = 0;
 
-			erase ();
+		erase ();
 /* draw nodes above selected node */
-			{
-				Node *prev_down = node;	/* to aid pgup/pgdn */
-				int line = active_line;
-				Node *tnode = up (node, node);
+		{
+			Node *prev_down = node;	/* to aid pgup/pgdn */
+			int line = active_line;
+			Node *tnode = up (node, node);
 
-				while (tnode) {
-					draw_item (line -= draw_item (0, 0, tnode, drawmode_test), 0, tnode, drawmode_normal);
-					
-					line_nodeno[line]=node_no(tnode);
-					
-					if (node_down (tnode) == prev_down) {
-						hnb_nodes_up++;
-						prev_down = tnode;
-					}
+			while (tnode) {
+				draw_item (line -=
+						   draw_item (0, 0, tnode, drawmode_test), 0, tnode,
+						   drawmode_normal);
 
-					tnode = up (node, tnode);
-					if (active_line - nodes_above >= line)
-						tnode = 0;
+				line_nodeno[line] = node_no (tnode);
+
+				if (node_down (tnode) == prev_down) {
+					hnb_nodes_up++;
+					prev_down = tnode;
 				}
-			}
-/* draw the currently selected item */
 
-			line_nodeno[active_line]=node_no(node);
-
-			if (edit_mode) {
-				lines =	draw_item (active_line, (int) input, node, drawmode_edit);
-			} else {
-				lines =	draw_item (active_line, strlen(input), node, drawmode_completion);
-			}
-
-/* draw items below current item */
-			{
-				Node *prev_up = node;	/* to aid pgup/pgdn */
-				Node *tnode = down (node, node);
-
-				lines += active_line;
-				if (lines >= LINES)
+				tnode = up (node, tnode);
+				if (active_line - nodes_above >= line)
 					tnode = 0;
-				while (tnode) {
-					line_nodeno[lines]=node_no(tnode);
-					lines += draw_item (lines, 0, tnode, drawmode_normal);
-
-					if (node_up (tnode) == prev_up) {
-						hnb_nodes_down++;
-						prev_up = tnode;
-					}
-
-					tnode = down (node, tnode);
-					if (lines >= LINES)
-						tnode = 0;
-
-				}
 			}
 		}
+/* draw the currently selected item */
+
+		line_nodeno[active_line] = node_no (node);
+
+		if (edit_mode) {
+			lines = draw_item (active_line, (int) input, node, drawmode_edit);
+		} else {
+			lines =
+				draw_item (active_line, strlen (input), node,
+						   drawmode_completion);
+		}
+
+/* draw items below current item */
+		{
+			Node *prev_up = node;	/* to aid pgup/pgdn */
+			Node *tnode = down (node, node);
+
+			lines += active_line;
+			if (lines >= LINES)
+				tnode = 0;
+			while (tnode) {
+				line_nodeno[lines] = node_no (tnode);
+				lines += draw_item (lines, 0, tnode, drawmode_normal);
+
+				if (node_up (tnode) == prev_up) {
+					hnb_nodes_down++;
+					prev_up = tnode;
+				}
+
+				tnode = down (node, tnode);
+				if (lines >= LINES)
+					tnode = 0;
+
+			}
+		}
+	}
 
 	help_draw (ui_current_scope);
 
 	move (LINES - 1, COLS - 1);
 
-	refresh ();
+/*	refresh ();*/
 
 	hnb_nodes_up++;
 	hnb_nodes_down++;
@@ -750,9 +825,10 @@ void ui_draw (Node *node, char *input, int edit_mode)
 /*
 !init_ui_draw();
 */
-void init_ui_draw(){
+void init_ui_draw ()
+{
 	cli_add_command ("display_format", display_format_cmd, "<format string>");
-	cli_add_help("display_format","\
+	cli_add_help ("display_format", "\
 defines how each node is displayed, the display string syntax is \
 interpreted as follows: \
 spaces turn into real spaces, i means indentation, - means bullet, \
@@ -760,8 +836,8 @@ d means the real data of the node, x is a temporary placeholder for \
 upcoming columntypes,. (for debugging only) \
 i and x can take an argument specifying how many characters wide \
 the field should be");
-	cli_add_string("bullet_leaf",  	bullet_leaf,"");
-	cli_add_string("bullet_parent",	bullet_parent,"");
-	cli_add_string("bullet_parent_expanded",	bullet_parent_expanded,"");
+	cli_add_string ("bullet_leaf", bullet_leaf, "");
+	cli_add_string ("bullet_parent", bullet_parent, "");
+	cli_add_string ("bullet_parent_expanded", bullet_parent_expanded, "");
 
 }

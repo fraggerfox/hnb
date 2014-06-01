@@ -57,46 +57,11 @@ void node_update_parents_todo (Node *pos)
 #endif
 }
 
-/* a traversal calculation of completion level
-*/
-int old_node_calc_complete (Node *node)
-{
-	int percent_sum = 0;
-	int nodes = 0;
-
-	if (!(node_getflag (node, F_todo)))
-		return -1;				/* node has no completion status */
-
-	if (node_getflag (node, F_done))
-		return 2000;			/* this node is done */
-
-	if (node_getpercent_done (node) != -1)
-		return node_getpercent_done (node) * 10;
-
-	if (!node_right (node))
-		return 0;				/* no undone children,.. completly undone */
-
-	node = node_right (node);
-
-	while (node) {
-		switch (old_node_calc_complete (node)) {
-			case -1:
-				break;
-			case 2000:
-				percent_sum += 1000;
-				nodes++;
-				break;
-			default:
-				percent_sum += old_node_calc_complete (node);
-				nodes++;
-				break;
-		}
-		node = node_down (node);
-	}
-
-	if (nodes)
-		return (percent_sum) / (nodes);
-	return 0;
+static int node_getval(Node *node, char *name){
+	char *got;
+	got=node_get(node,name);
+	if(!got)return -1;
+	return(atoi(got));
 }
 
 /* a traversal calculation of completion level
@@ -106,14 +71,14 @@ int node_calc_complete (Node *node)
 	int percent_sum = 0;
 	int nodes = 0;
 
-	if (!(node_getflag (node, F_todo)))
+	if (strcmp(fixnullstring(node_get(node,"type")),"todo"))
 		return -1;				/* node has no completion status */
 
-	if (node_getflag (node, F_done))
+	if (node_get(node,"done") && !strcmp(node_get(node,"done"),"yes"))
 		return 2000;			/* this node is done */
 
-	if (node_getpercent_done (node) != -1)
-		return node_getpercent_done (node) * 10;
+	if (node_getval (node,"percent_done") != -1)
+		return node_getval (node,"percent_done") * 10;
 
 	if (!node_right (node))
 		return 0;				/* no undone children,.. completly undone */
@@ -152,8 +117,8 @@ int done_status (Node *a)
 	if (prefs.showpercent) {
 		completion = node_calc_complete (a);
 	} else {
-		if (node_getflag (a, F_todo)) {
-			if (node_getflag (a, F_done)) {
+		if (!strcmp(fixnullstring(node_get(a,"type")),"todo")){
+			if (node_get(a,"done") && !strcmp(node_get(a,"done"),"yes")) {
 				completion = 2000;
 			} else {
 				completion = 0;
@@ -165,7 +130,7 @@ int done_status (Node *a)
 
 	/* FIXME this is the wrong location for this code,.. must fixup the drawing code */
 	if (!prefs_bullet_empty && completion == -1) {
-		char *data = fixnullstring( node_get (a, TEXT) ); 
+		char *data = fixnullstring (node_get (a, TEXT));
 		int j = 0;
 
 		completion = -2;
@@ -179,21 +144,22 @@ int done_status (Node *a)
 	return completion;
 }
 
-int node_calc_size(Node *node){
+int node_calc_size (Node *node)
+{
 	int size_sum = 0;
 	int nodes = 0;
 
-	if (!(node_getflag (node, F_todo)))
-		return -1;
+	if (strcmp(fixnullstring(node_get(node,"type")),"todo"))
+		return -1;				/* node has no completion status */
 
-	if(node_getsize(node)!=-1)
-		return node_getsize(node);
+	if (node_getval (node,"size") != -1)
+		return node_getval (node,"size");
 
-	if (!node_right (node)){ /* leaf node */
-		if(node_getsize(node)!=-1)
-			return node_getsize(node);
+	if (!node_right (node)) {	/* leaf node */
+		if (node_getval (node,"size") != -1)
+			return node_getval (node,"size");
 		else
-			return 10; /* default size value */
+			return 10;			/* default size value */
 	}
 
 	node = node_right (node);
@@ -204,7 +170,7 @@ int node_calc_size(Node *node){
 				break;
 			default:
 				size_sum += node_calc_size (node);
-				nodes ++;
+				nodes++;
 				break;
 		}
 		node = node_down (node);
@@ -212,7 +178,7 @@ int node_calc_size(Node *node){
 
 	if (nodes)
 		return (size_sum);
-	return 10; /* no of the children had any time,.. so we default to 1 */
+	return 10;					/* no of the children had any time,.. so we default to 1 */
 
 }
 
@@ -228,84 +194,112 @@ int node_calc_size(Node *node){
 			 2000    done            percentage
 */
 
-int calc_percentage_size(Node *node, int *retsize){
-	int percentage=node_getpercent_done(node);
-	int size=node_getsize(node);
-	int size_todo=0;
-	int size_done=0;
-	int childnodes=0;
+int calc_percentage_size (Node *node, int *retsize)
+{
+	int percentage = node_getval (node,"percent_done");
+	int size = node_getval (node,"size");
+	int size_todo = 0;
+	int size_done = 0;
+	int childnodes = 0;
 	Node *tnode;
-	
-	if (!(node_getflag (node, F_todo))){ /* bail out if not todo info set */
-		*retsize=-1;
+
+	if (strcmp(fixnullstring(node_get(node,"type")),"todo")) {	/* bail out if not todo info set */
+		*retsize = -1;
 		return -1;
 	}
 
-	tnode=node_right(node);
+	tnode = node_right (node);
 
-	while(tnode){
+	while (tnode) {
 		int rsize, rperc;
-			
-		rperc=calc_percentage_size(tnode,&rsize);
-		switch(rperc){
-			case -1:break;
+
+		rperc = calc_percentage_size (tnode, &rsize);
+		switch (rperc) {
+			case -1:
+				break;
 			case 2000:
-				if(rsize!=-1)size_todo+=rsize;
-				size_done+=rsize*100;
+				if (rsize != -1)
+					size_todo += rsize;
+				size_done += rsize * 100;
 				childnodes++;
 				break;
 			default:
-				if(rsize!=-1)size_todo+=rsize;
-				size_done+=rsize*rperc;
+				if (rsize != -1)
+					size_todo += rsize;
+				size_done += rsize * rperc;
 				childnodes++;
 				break;
 		}
-		tnode=node_down(tnode);
+		tnode = node_down (tnode);
 	}
 
-	if(!childnodes){
-		size_todo=def_size;
-		size_done=0;
+	if (!childnodes) {
+		size_todo = def_size;
+		size_done = 0;
 	}
 
-	if(size!=-1){
-		if(childnodes)size+=size_todo;
+	if (size != -1) {
+		if (childnodes)
+			size += size_todo;
 	} else {
-		size=size_todo;
+		size = size_todo;
 	}
-	*retsize=size;
+	*retsize = size;
 
-	if(node_getflag(node,F_done))
+	if (node_get(node,"done") && !strcmp(node_get(node,"done"),"yes"))
 		return 2000;
-	
-	if(percentage!=-1){
+
+	if (percentage != -1) {
 		return percentage;
 	} else {
-		percentage=size_done/size_todo;
+		percentage = size_done / size_todo;
 	}
-	
+
 	return percentage;
 }
 
 #include "cli.h"
 
-static int toggle_todo_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
-	node_toggleflag (pos, F_todo);
-	return (int)pos;
+static int toggle_todo_cmd (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+
+	if (strcmp(fixnullstring(node_get(pos,"type")),"todo")) {	/* bail out if not todo info set */
+		node_set(pos,"type","todo");
+		node_set(pos,"done","no");
+	} else {
+		node_unset(pos,"type");
+	}
+
+	return (int) pos;
 }
 
-static int toggle_done_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
-	node_toggleflag (pos, F_done);
-	return (int)pos;
+static int toggle_done_cmd (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
+
+	if (strcmp(fixnullstring(node_get(pos,"type")),"todo")) {	/* bail out if not todo info set */
+		return (int) pos;
+	}
+
+	if (!strcmp(fixnullstring(node_get(pos,"done")),"yes")) {	/* bail out if not todo info set */
+		node_set(pos,"done","no");
+	} else {
+		node_set(pos,"done","yes");
+	}
+
+	return (int) pos;
 }
+
 /*
 !init_tree_todo();
 */
-void init_tree_todo(){
+void init_tree_todo ()
+{
 	cli_add_command ("toggle_todo", toggle_todo_cmd, "");
-	cli_add_help("toggle_todo","Toggles visiblity and usage of the checkbox for the currently active item.");
+	cli_add_help ("toggle_todo",
+				  "Toggles visiblity and usage of the checkbox for the currently active item.");
 	cli_add_command ("toggle_done", toggle_done_cmd, "");
-	cli_add_help("toggle_done","Toggles visiblity and usage of the checkbox for the currently active item.");
+	cli_add_help ("toggle_done",
+				  "Toggles visiblity and usage of the checkbox for the currently active item.");
 }

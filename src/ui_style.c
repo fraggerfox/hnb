@@ -27,7 +27,7 @@
 #include "prefs.h"
 #include "ui.h"
 
-#include "cli.h"  
+#include "cli.h"
 
 typedef struct {
 	char name[16];
@@ -36,20 +36,21 @@ typedef struct {
 	int att;
 } styleitm;
 
-static styleitm styledb[]={
-	{"reserved", 		 0, 0,0},
-	{"menuitem",   		-1,-1,A_REVERSE},
-	{"menutext",   		-1,-1,A_NORMAL},
-	{"node",       		-1,-1,A_NORMAL},
-	{"parentnode", 		-1,-1,A_BOLD},
-	{"bullet",     		-1,-1,A_NORMAL},
-	{"selected",   		-1,-1,A_REVERSE},
-	{"parentselected", 	-1,-1,A_REVERSE|A_BOLD},
-	{"background", 		-1,-1,A_NORMAL},
+static styleitm styledb[] = {
+	{"reserved", 0, 0, 0},
+	{"menuitem", -1, -1, A_REVERSE},
+	{"menutext", -1, -1, A_NORMAL},
+	{"node", -1, -1, A_NORMAL},
+	{"parentnode", -1, -1, A_BOLD},
+	{"bullet", -1, -1, A_NORMAL},
+	{"selected", -1, -1, A_REVERSE},
+	{"parentselected", -1, -1, A_REVERSE | A_BOLD},
+	{"background", -1, -1, A_NORMAL},
 };
 
-void ui_style(int style_no){
-	attrset(styledb[style_no].att);
+void ui_style (int style_no)
+{
+	attrset (styledb[style_no].att);
 }
 
 typedef struct {
@@ -68,7 +69,7 @@ static ColornameT colorname[] = {
 	{"whi", COLOR_WHITE},
 	/* 20021129 RVE - default terminal colors */
 #ifdef NCURSES_VERSION
-    {"def", -1},
+	{"def", -1},
 #endif
 	{"", 0}
 };
@@ -94,77 +95,91 @@ static int name2color (const char *name_in)
 	return (COLOR_WHITE);
 }
 
-static int string2style(char *str){
-	int j=0;
-	while(j<ui_style_terminator){
-		if(!strcmp(styledb[j].name,str))
+static int string2style (char *str)
+{
+	int j = 0;
+
+	while (j < ui_style_terminator) {
+		if (!strcmp (styledb[j].name, str))
 			return j;
 		j++;
 	}
 	return -1;
 }
 
-void ui_style_restore_color(){
+void ui_style_restore_color ()
+{
 	int no;
-	for(no=1;no<=8;no++){
-		init_pair(no, styledb[no].fg , styledb[no].bg);
+
+	for (no = 1; no <= 8; no++) {
+		init_pair (no, styledb[no].fg, styledb[no].bg);
 	}
 }
 
-static int ui_style_cmd(char *params, void *data){
-	char item[40];
-	char colors[40];
-	char atts[40];
-	char *tail;
+static int ui_style_cmd (int argc, char **argv, void *data)
+{
+	char *item;
+	char *colors;
+	char *atts;
 
-	tail=params;
-	while(*tail==' ' || *tail=='\t')tail++;
-	cli_split(tail,item,&tail);
-	while(*tail==' ' || *tail=='\t')tail++;
-	cli_split(tail,colors,&tail);
-		while(*tail==' ' || *tail=='\t')tail++;
-	cli_split(tail,atts,&tail);
+	if(argc!=4){
+		cli_outfunf("usage: %i <item> <fg/bg> <atts>");
+		return (int)data;
+	}
+
+	item=argv[1];
+	colors=argv[2];
+	atts=argv[3];
 
 	{
-		int style_no=string2style(item);
+		int style_no = string2style (item);
 		char *color2;
-		if(style_no==-1){
-			printf("unknown style 'style [%s] %s %s'\n",item,colors,atts);
-			return (int)data;
+
+		if (style_no == -1) {
+			printf ("unknown style 'style [%s] %s %s'\n", item, colors, atts);
+			return (int) data;
 		}
-		color2=strchr(colors,'/');
-		color2[0]='\0';
+		color2 = strchr (colors, '/');
+		color2[0] = '\0';
 		color2++;
 
-		init_pair(style_no, name2color(colors),name2color(color2));
-		styledb[style_no].fg=name2color(colors);
-		styledb[style_no].bg=name2color(color2);
-		styledb[style_no].att=A_NORMAL | COLOR_PAIR(style_no);
+		init_pair (style_no, name2color (colors), name2color (color2));
+		styledb[style_no].fg = name2color (colors);
+		styledb[style_no].bg = name2color (color2);
+		styledb[style_no].att = A_NORMAL | COLOR_PAIR (style_no);
 
-		if(strstr(atts,"standout"))styledb[style_no].att |=  A_STANDOUT;
-		if(strstr(atts,"underline"))styledb[style_no].att |= A_UNDERLINE;
-		if(strstr(atts,"reverse"))styledb[style_no].att |=   A_REVERSE;
-		if(strstr(atts,"blink"))styledb[style_no].att |=     A_BLINK;
-		if(strstr(atts,"dim"))styledb[style_no].att |=       A_DIM;
-		if(strstr(atts,"bold"))styledb[style_no].att |=      A_BOLD;
+		if (strstr (atts, "standout"))
+			styledb[style_no].att |= A_STANDOUT;
+		if (strstr (atts, "underline"))
+			styledb[style_no].att |= A_UNDERLINE;
+		if (strstr (atts, "reverse"))
+			styledb[style_no].att |= A_REVERSE;
+		if (strstr (atts, "blink"))
+			styledb[style_no].att |= A_BLINK;
+		if (strstr (atts, "dim"))
+			styledb[style_no].att |= A_DIM;
+		if (strstr (atts, "bold"))
+			styledb[style_no].att |= A_BOLD;
 
-		if(style_no==ui_style_background){
+		if (style_no == ui_style_background) {
 
 			bkgdset (' ' + COLOR_PAIR (ui_style_background));
 		}
 	}
-	return (int)data;
+	return (int) data;
 }
 
 /*
 !init_ui_style();
 */
 
-void init_ui_style(){
-	cli_add_command ("style", ui_style_cmd, "<element> <foreground/background> <attributes>");
-	cli_add_help("style","Changes the drawing style of 'element' available colors: \
+void init_ui_style ()
+{
+	cli_add_command ("style", ui_style_cmd,
+					 "<element> <foreground/background> <attributes>");
+	cli_add_help ("style",
+				  "Changes the drawing style of 'element' available colors: \
 black, blue, cyan, red, green, magenta, yellow, white and default which uses the standard colors \
 of the terminal. Attrbutes are one or more of: standout, underline, reverse, blink, dim and bold. \
 Available elements are: menuitem, menutext, parentnode, node, bullet, selected, parentselected and background.");
 }
-

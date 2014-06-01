@@ -14,7 +14,7 @@ enum {
 	t_word,
 	t_tag,
 	t_closetag,
-	t_closeemptytag,	
+	t_closeemptytag,
 	t_endtag,
 	t_att,
 	t_val,
@@ -31,24 +31,31 @@ typedef struct {
 	char curtag[outbufsize];
 	int c;
 	int c_held;
+
+
+	unsigned char inbuf[inbufsize];
+	int inbuflen;
+	int inbufpos;
+
+	int line_no;
 } xml_tok_state;
 
-xml_tok_state* xml_tok_init(FILE *file_in);
-void xml_tok_cleanup(xml_tok_state*t);
+xml_tok_state *xml_tok_init (FILE * file_in);
+void xml_tok_cleanup (xml_tok_state * t);
 
 /*	get an xml token
  *	@param data pointer to pointer to string where the result *             ing data should be put
  * @return token type
  *
  */
-int xml_tok_get(xml_tok_state *t, char **data);
+int xml_tok_get (xml_tok_state * t, char **data);
 
 /** get a html token
  * same as above, but tries to balance bad html parse
  * trees, tries to do an automatic transformation from
  * html to xhtml
  */
-int html_tok_get(xml_tok_state *t,char **data);
+int html_tok_get (xml_tok_state * t, char **data);
 
 #define XML_TOK_H
-#endif /*XML_TOK_H*/
+#endif /*XML_TOK_H */

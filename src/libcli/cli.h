@@ -25,17 +25,21 @@
 
 	cli_split(commandline, char head[40], &tailstring);
 */
+#ifndef LIBCLI_H
+#define LIBCLI_H
+
+#include <stdarg.h>
+
 void cli_split(char *orig, char *head, char **tail);	
 
 void cli_add_help(char *name,char *helptext);
-
 
 void cli_cleanup(void);
 
 void
 cli_add_item (char *name,
 		  int *integer, char *string,
-		  int (*func) (char *params, void *data), char *usage);
+		  int (*func) (int argc,char **argv, void *data), char *usage);
 
 #define cli_add_int(name,integer,usage)\
 	cli_add_item (name, integer, NULL, NULL, usage)
@@ -56,25 +60,19 @@ extern void (*cli_outfun) (char *);	/* the outputting function
 									   assign cli_outfun a void function that takes a string
 									   to use something other than printf
 									 */
-
+void cli_outfunf( char *format, ... );
 
 #ifdef WIN32
 	#define snprintf(a,b,args...) sprintf(a,args)
 #endif
 
 
-#define cli_outfunf(args...)  \
-     do{        char cli_outfun_buf[128];\
-                snprintf (cli_outfun_buf, 127, args);\
-                cli_outfun(cli_outfun_buf);\
-       }while(0)
-
-
 extern void (*cli_precmd) (char *);	/* cstuff to run before executing commands */
 extern void (*cli_postcmd) (char *);	/* stuff to run after executing commands */
 
-extern void(*cli_unknown) (char *,void *); /* handler for unmatched commands */
+extern void(*cli_unknown) (int,char **,void *); /* handler for unmatched commands */
 
 extern int cli_width;				/* wrap width of output window */
 
 #include "cli_history.h"
+#endif /* LIBCLI_H */

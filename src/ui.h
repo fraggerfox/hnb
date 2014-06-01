@@ -39,11 +39,11 @@ extern int hnb_edit_posdown;
 
 extern int ui_inited;
 
-void ui_getstr(char *prompt, char *datastorage);
+void ui_getstr (char *prompt, char *datastorage);
 
 #define undefined_key(a,c)\
 	{if(c!=ui_action_ignore){\
-	docmdf(pos,"status No action assigned to '%s'(%id) in %s-mode",tidy_keyname(keyname(c)),c,a);\
+	docmdf(pos,"status \"No action assigned to '%s'(%id) in %s-mode\"",tidy_keyname(keyname(c)),c,a);\
 	}}\
 
 #define info(a)\

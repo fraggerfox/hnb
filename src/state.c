@@ -18,7 +18,7 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h> 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -27,56 +27,65 @@
 #include "prefs.h"
 #include "ui_cli.h"
 
-static Node *savedtree=NULL;
+static Node *savedtree = NULL;
 
-static int save_state_cmd (char *params, void *data)
+static int save_state_cmd (int argc, char **argv, void *data)
 {
-	Node *pos=(Node *)data;
+	Node *pos = (Node *) data;
 	Node *i;
 	Node *j;
-	
-	if(savedtree!=NULL){
-		tree_free(savedtree);
+
+	if (savedtree != NULL) {
+		tree_free (savedtree);
 	}
-	savedtree=node_new();
+	savedtree = node_new ();
 
-	i=node_root(pos);
-	j=savedtree;
-	do{
-		j=savedtree=tree_duplicate( i, j);
-		i=node_down(i);
-		j=node_insert_down(j);
-	}while(i!=NULL);
-	j=node_remove(j);
+	i = node_root (pos);
+	j = savedtree;
+	do {
+		j = savedtree = tree_duplicate (i, j);
+		i = node_down (i);
+		j = node_insert_down (j);
+	} while (i != NULL);
+	j = node_remove (j);
 
-	{int no;
-	 no=node_no(pos);
-	 savedtree=node_root(savedtree);
-	 while(--no)savedtree=node_recurse(savedtree);
+	{
+		int no;
+
+		no = node_no (pos);
+		savedtree = node_root (savedtree);
+		while (--no)
+			savedtree = node_recurse (savedtree);
 	}
 
-	return (int)pos;
+	return (int) pos;
 }
 
-static int restore_state_cmd (char *params, void *data)
+static int restore_state_cmd (int argc, char **argv, void *data)
 {
-	Node *pos=(Node *)data;
-	if(savedtree!=NULL){
+	Node *pos = (Node *) data;
+
+	if (savedtree != NULL) {
 		Node *temp;
-		temp=pos;
-		pos=savedtree;
-		savedtree=temp;
-		tree_free(savedtree);
-		savedtree=NULL;		
+
+		temp = pos;
+		pos = savedtree;
+		savedtree = temp;
+		tree_free (savedtree);
+		savedtree = NULL;
 	}
-	return (int)pos;
+	return (int) pos;
 }
+
 /*
 !init_keepstate();
 */
-void init_keepstate(){
+void init_keepstate ()
+{
 	cli_add_command ("save_state", save_state_cmd, "");
-	cli_add_help("save_state","Saves a copy of the current tree and selected node in memory");
+	cli_add_help ("save_state",
+				  "Saves a copy of the current tree and selected node in memory");
 	cli_add_command ("restore_state", restore_state_cmd, "");
-	cli_add_help("restore_state","Restores the copy of the tree saved with save_state");
+	cli_add_help ("restore_state",
+				  "Restores the copy of the tree saved with save_state");
 }

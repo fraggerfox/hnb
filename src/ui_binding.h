@@ -19,8 +19,8 @@ enum {
 };
 
 enum {
-	ui_action_backspace=512,
-	ui_action_bkill_word,	
+	ui_action_backspace = 512,
+	ui_action_bkill_word,
 	ui_action_bol,
 	ui_action_bottom,
 	ui_action_bskipword,
@@ -61,6 +61,6 @@ extern int ui_current_scope;
 
 Tbinding *parsekey (int key, int scope);
 char *tidy_keyname (const char *keyname);
-char *resolve_binding(int scope, int action);
+char *resolve_binding (int scope, int action);
 
 #endif /* UI_BINDING_H */

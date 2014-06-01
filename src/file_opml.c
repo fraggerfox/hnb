@@ -1,5 +1,5 @@
 /*
- * file_ascii.c -- generic xml import/export filters for hnb
+ * file_opml.c -- generic xml import/export filters for hnb
  *
  * Copyright (C) 2001-2003 Øyvind Kolås <pippin@users.sourceforge.net>
  *
@@ -33,56 +33,47 @@
 #include "file.h"
 #include "prefs.h"
 #include "query.h"
+#include "util_string.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
-#define transform(a,b) case a:\
-						{int j=0;const char * msg=b;\
-							while(msg[j])\
-								out[outpos++]=msg[j++];\
-							out[outpos]=0;\
-							inpos++;\
-							break;\
-						}\
+/* *INDENT-OFF* */
 
-/* converts special chars into entities */
-static char *xml_quote (const char *in)
-{
-	static char out[bufsize + 30];	/* for added tags'n'tabs */
-	int inpos = 0;
-	int outpos = 0;
+static char *xmlquote[]={
+	"<","&lt;",
+	">","&gt;",
+	"&","&amp;",
+	"\"","&quot;",
+	"'","&apos;",
+	NULL
+};
 
-	out[0] = 0;
+static char *xmlunquote[]={
+	"&lt;","<",
+	"&gt;",">",
+	"&amp;","&",
+	"&quot;","\"",
+	"&apos;","'",
+	NULL
+};
 
-	while (in[inpos]) {
-		switch (in[inpos]) {
-				transform ('&', "&amp;");
-				transform ('<', "&lt;");
-				transform ('>', "&gt;");
-				transform ('\'', "&apos;");
-				transform ('"', "&quot;");
-			default:
-				out[outpos++] = in[inpos++];
-				out[outpos] = 0;
-				break;
-		}
-	}
-	return (out);
-}
-
-
+/* *INDENT-ON* */
 
 static void opml_export_nodes (FILE * file, Node *node, int level)
 {
 	while (node) {
-		char *data = fixnullstring(node_get (node, TEXT));
-
 		fprintf (file, "\n");
 		indent (level, "\t");
 		fprintf (file, "<outline");
 
-		fprintf (file, " text=\"%s\" ", xml_quote (data));
-
+		{Node_AttItem *att=node->attrib;
+		 while(att){
+		 	char *quoted=string_replace(att->data,xmlquote);
+			fprintf (file, " %s=\"%s\"", att->name, quoted);
+			free(quoted);
+			att=att->next;
+		 }		 
+		}
 
 		if (node_right (node)) {
 			fprintf (file, ">");
@@ -92,27 +83,21 @@ static void opml_export_nodes (FILE * file, Node *node, int level)
 			indent (level, "\t");
 			fprintf (file, "</outline>");
 		} else {
-			fprintf (file, "/>");
+			fprintf (file, " />");
 		}
 
 		node = node_down (node);
 	}
 }
 
-static int export_opml (char *params, void *data)
+static int export_opml (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc>=2?argv[1]:"";
 	FILE *file;
 
-	while (*params && (*params != ' '))
-		params++;
-	if (*params == ' ') {
-		*params = 0;
-		params++;
-	}
-
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -139,7 +124,7 @@ static int export_opml (char *params, void *data)
 		<windowBottom>200</windowBottom>\n\
 		<windowRight>200</windowRight>\n\
 		</head>\n\
-	<body>\n", params,
+	<body>\n", argc==3?argv[2]:"1",
 			 VERSION);
 
 	opml_export_nodes (file, node, 0);
@@ -153,47 +138,23 @@ static int export_opml (char *params, void *data)
 	return (int) node;
 }
 
-static void xml_unquote(char *str){
-	while(*str){
-		if(*str=='&' && *(str+1)){
-			if (!strncmp ((str+1), "amp",3)) {
-				*str='&';
-				memmove(str+1,str+5,strlen(str+5)+1);
-			} else if (!strncmp ((str+1), "gt",2)) {
-				*str='>';
-				memmove(str+1,str+4,strlen(str+4)+1);
-			} else if (!strncmp ((str+1), "lt",2)) {
-				*str='<';
-				memmove(str+1,str+4,strlen(str+4)+1);
-			} else if (!strncmp ((str+1), "quot",4)) {
-				*str='"';
-				memmove(str+1,str+6,strlen(str+6)+1);
-			} else if (!strncmp ((str+1), "apos",4)) {
-				*str='\'';
-				memmove(str+1,str+6,strlen(str+6)+1);
-			} else {
-				/* unhandled entity,.. might as well do a standard html and xml transform?,.. or ? */
-			}
-		}
-		str++;
-	}
-}
-
-static int import_opml (char *params, void *data)
+static int import_opml (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	char *rdata;
 	int type;
 	int in_body = 0;
-	int in_outlineelement =0;
+	int in_outlineelement = 0;
 	int level = -1;
 	xml_tok_state *s;
 	import_state_t ist;
 
+	Node *tempnode=NULL;
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	file = fopen (filename, "r");
 	if (!file) {
 		cli_outfunf ("opml import, unable to open \"%s\"", filename);
@@ -204,26 +165,39 @@ static int import_opml (char *params, void *data)
 
 	while (((type = xml_tok_get (s, &rdata)) != t_eof) && (type != t_error)) {
 		if (type == t_error) {
-			cli_outfunf ("opml import error, parsing og '%s', %s",filename, rdata);
+			cli_outfunf ("opml import error, parsing og '%s', line:%i %s", filename,
+						 s->line_no, rdata);
 			fclose (file);
 			return (int) node;
 		}
 		if (in_body) {
 			if (type == t_tag && !strcmp (rdata, "outline")) {
 				level++;
-				in_outlineelement=1;
+				in_outlineelement = 1;
+				tempnode=node_new();
 				continue;
 			}
-			if(in_outlineelement && type == t_att && !strcmp(rdata,"text")){
-				xml_tok_get(s,&rdata);
-				xml_unquote(rdata);
-				import_node_text(&ist,level,rdata);
+			if (in_outlineelement && type == t_att){
+				char *att_name=strdup(rdata);
+				char *unquoted;
+				if(xml_tok_get(s,&rdata)!=t_val){
+					cli_outfun("import_opml: hmm I don't think this is according to OPML,..");
+				};
+				unquoted=string_replace(rdata,xmlunquote);
+
+				node_set(tempnode,att_name,unquoted);
+				free(unquoted);
+				free(att_name);
 				continue;
 			}
-			if ((type == t_endtag || type == t_closeemptytag) && !strcmp(rdata,"outline") ) {
-				in_outlineelement=0;
+			if ((type == t_endtag || type == t_closeemptytag)
+				&& !strcmp (rdata, "outline")) {
+				in_outlineelement = 0;
+				import_node(&ist, level, tempnode);	/* will free tempnode */
+				tempnode=NULL;
 			}
-			if ((type == t_closetag || type== t_closeemptytag) && !strcmp (rdata, "outline")) {
+			if ((type == t_closetag || type == t_closeemptytag)
+				&& !strcmp (rdata, "outline")) {
 				level--;
 				continue;
 			}
@@ -236,8 +210,8 @@ static int import_opml (char *params, void *data)
 	if (node_getflag (node, F_temp))
 		node = node_remove (node);	/* remove temporary node, if tree was empty */
 
-	cli_outfunf ("opml import - imported \"%s\"", filename);
-	xml_tok_cleanup(s);
+	cli_outfunf ("opml import - imported \"%s\" %i lines", filename, s->line_no);
+	xml_tok_cleanup (s);
 	return (int) node;
 }
 
@@ -245,7 +219,8 @@ static int import_opml (char *params, void *data)
 /*
 !init_file_opml();
 */
-void init_file_opml(){
+void init_file_opml ()
+{
 	cli_add_command ("export_opml", export_opml, "<filename>");
 	cli_add_command ("import_opml", import_opml, "<filename>");
 }

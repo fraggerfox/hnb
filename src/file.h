@@ -20,10 +20,11 @@ extern void init_import (import_state_t * is, Node *node);
 
 /** import node into tree
 */
-extern Node* import_node_text (import_state_t * is, int level, char *data);
+extern Node *import_node_text (import_state_t * is, int level, char *data);
+
 /** import node into tree
 */
-extern Node* import_node (import_state_t * is, int level, Node *node);
+extern Node *import_node (import_state_t * is, int level, Node *node);
 
 
 

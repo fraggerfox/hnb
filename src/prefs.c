@@ -65,18 +65,20 @@ void init_prefs ()
 	sprintf (prefs.default_db_file, "C:\\hnb_data");
 #endif
 
-/*str*/cli_add_int ("format", &prefs.format, "the format of the current file");
+/*str*/ cli_add_int ("format", &prefs.format,
+						 "the format of the current file");
 
-cli_add_string("rc_file",prefs.rc_file,"");
-cli_add_string("db_file",prefs.db_file,"");
-cli_add_string("default_db_file",prefs.default_db_file,"");
+	cli_add_string ("rc_file", prefs.rc_file, "");
+	cli_add_string ("db_file", prefs.db_file, "");
+	cli_add_string ("default_db_file", prefs.default_db_file, "");
 
-cli_add_int("showpercent",&prefs.showpercent,"");
-cli_add_int("fixedfocus",&prefs.fixedfocus,"");
-cli_add_int("savepos",&prefs.savepos,"");
+	cli_add_int ("showpercent", &prefs.showpercent, "");
+	cli_add_int ("fixedfocus", &prefs.fixedfocus, "");
+	cli_add_int ("savepos", &prefs.savepos, "");
 
-#ifdef NCURSES_VERSION
-	cli_add_int("escdelay",&ESCDELAY,"how long does curses wait before it decides ESC is ESC and not a coded key sequence");
+#ifdef NCURSES_VERSION 
+	cli_add_int ("escdelay", &ESCDELAY,
+				 "how long does curses wait before it decides ESC is ESC and not a coded key sequence");
 #endif
 }
 
@@ -86,18 +88,18 @@ void write_default_prefs ()
 
 	file = fopen (prefs.rc_file, "w");
 	fprintf (file,
-		#include "hnbrc.inc"
+#include "hnbrc.inc"
 		);
 	fclose (file);
 }
 
 void load_prefs (void)
 {
-	if(xml_check(prefs.rc_file)){
-	printf("seems like your current ~/.hnbrc is outdated (it's xml the new format\n\
+	if (xml_check (prefs.rc_file)) {
+		printf
+			("seems like your current ~/.hnbrc is outdated (it's xml the new format\n\
 is plain text,.. remove it and let hnb make a new default\n");
-	exit(0);
+		exit (0);
 	}
-	cli_load_file(prefs.rc_file);
+	cli_load_file (prefs.rc_file);
 }
-

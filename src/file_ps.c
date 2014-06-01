@@ -26,69 +26,51 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "cli.h"
 #include "tree.h"
 #include "file.h"
 #include "query.h"
+#include "util_string.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
-#define transform(a,b) case a:\
-						{int j=0;const char * msg=b;\
-							while(msg[j])\
-								out[outpos++]=msg[j++];\
-							out[outpos]=0;\
-							inpos++;\
-							break;\
-						}\
+/* *INDENT-OFF* */
 
+static char *psquote[]={
+	"(", "\\(",
+	")", "\\)",
+	"æ", "\\346",
+	"ø", "\\370",
+	"å", "\\345",
+	"Æ", "\\306",
+	"Ø", "\\330",
+	"Å", "\\305",NULL
+};
 
-static char *ps_quote (const char *in)
-{
-	static char out[bufsize];
-	int inpos = 0;
-	int outpos = 0;
-
-	out[0] = 0;
-	while (in[inpos]) {
-		switch (in[inpos]) {
-				transform ('(', "\\(");
-				transform (')', "\\)");
-				transform ('æ', "\\346");
-				transform ('ø', "\\370");
-				transform ('å', "\\345");
-				transform ('Æ', "\\306");
-				transform ('Ø', "\\330");
-				transform ('Å', "\\305");
-				
-
-			default:
-				out[outpos++] = in[inpos++];
-				out[outpos] = 0;
-				break;
-		}
-	}
-	return (out);
-}
+/* *INDENT-ON* */
 
 static void ps_export_node (FILE * file, int level, int flags, char *data)
 {
-
+	char *quoted=string_replace(data,psquote);
 	indent (level, "\t");
-	fprintf (file, "( ) S 10 ss %i LM 0 a (%s ) P\n", level*22,ps_quote(data));
+	fprintf (file, "( ) S 10 ss %i LM 0 a (%s ) P\n", level * 22,
+			 quoted);
+	free(quoted);
 }
 
-static int export_ps (char *params, void *data)
+static int export_ps (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
-	char *filename = params;
+	char *filename = argc==2?argv[1]:"";
 	Node *tnode;
 	int level, flags, startlevel;
 	char *cdata;
 	FILE *file;
 
-	if(!strcmp(filename,"*"))filename=query;
+	if (!strcmp (filename, "*"))
+		filename = query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -101,8 +83,7 @@ static int export_ps (char *params, void *data)
 
 	tnode = node;
 
-	fprintf(file,
-"%%!PS %% all files must open with this header\n\
+	fprintf (file, "%%!PS %% all files must open with this header\n\
 %%%%BeginResource minidict.ps\n\
 %%%%Creator: byram@cappella-archive.com\n\
 %%%%For: Direct PostScript Mark-up\n\
@@ -230,15 +211,15 @@ end %% close minidict: *this is important*\n\
 	while ((tnode != 0) & (nodes_left (tnode) >= startlevel)) {
 		level = nodes_left (tnode) - startlevel;
 		flags = node_getflags (tnode);
-		cdata = fixnullstring(node_get (tnode, TEXT));
+		cdata = fixnullstring (node_get (tnode, TEXT));
 		ps_export_node (file, level, flags, cdata);
-		if(node_up(tnode) && node_up(tnode)==node_backrecurse(tnode))
-			fprintf(file," H\n");
+		if (node_up (tnode) && node_up (tnode) == node_backrecurse (tnode))
+			fprintf (file, " H\n");
 
 		tnode = node_recurse (tnode);
 	}
 
-fprintf(file,"\
+	fprintf (file, "\
 %%%%Trailer \n\
 close\n\
 %%%%EOF\n");
@@ -252,7 +233,9 @@ close\n\
 /*
 !init_file_ps();
 */
-void init_file_ps(){
+void init_file_ps ()
+{
 	cli_add_command ("export_ps", export_ps, "<filename>");
-	cli_add_help("export_ps","Exports the current node, it's siblings and all sublevels to a postscript file suitable for printing");	
+	cli_add_help ("export_ps",
+				  "Exports the current node, it's siblings and all sublevels to a postscript file suitable for printing");
 }

@@ -49,244 +49,113 @@ static char *path_strip (char *path)
 	return path;
 }
 
-static int add (char *params, void *data)
+static int add (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 	Node *tnode;
 
-	if (!params[0]) {
-		cli_outfun("empty node added\n");
+	if(argc==1){
+		cli_outfunf("usage: %s <new entry>",argv[0]);
+		return 0;
+	}
+
+	if (argc==2) {
+		cli_outfun ("empty node added\n");
 	}
 
 	tnode = node_insert_down (node_bottom (pos));
-	node_set (tnode, TEXT, params);
+	node_set (tnode, TEXT, argv[1]);
 	return (int) pos;
 }
 
-static int addc (char *params, void *data)
+static int addc (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 	Node *tnode;
 
-	int j = 0;
-	char par[100];
-	char *child;
+	if(argc==1){
+		cli_outfunf("usage: %s <entry> [new subentry]",argv[0]);
+		return 0;
+	}
 
-	strncpy (par, params, 100);
-	par[99] = ' ';
-	while (par[j] != ' ' && par[j] != 0)
-		j++;
-	par[j] = 0;
-
-	child = &params[j + 1];
-	if (strlen (par) == strlen (params))
-		child = strdup ("");
-
-	tnode = node_exact_match (par, pos);
+	tnode = node_exact_match (argv[1], pos);
 	if (!tnode) {
-		cli_outfun("specified parent not found");
+		cli_outfun ("specified parent not found");
 		return (int) pos;
 	}
+
 	if (node_right (tnode)) {
-		cli_outfun("failed, node already had a child");
-		return (int) pos;
+		tnode=node_bottom(tnode);
+	} else {
+		tnode=node_insert_right(tnode);
 	}
 
-	if (!child[0]) {
-		cli_outfun("empty node added\n");
-	}
-
-	tnode = node_insert_right (tnode);
-	node_set (tnode, TEXT, child);
+	if(argc==2)
+		node_set (tnode, TEXT, "");
+	else
+		node_set (tnode, TEXT, argv[2]);
 
 	return (int) pos;
 }
 
-static int pwd (char *params, void *data)
+static int pwd (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
-	cli_outfun(path_strip (node2path (pos)));
-	cli_outfun("\n");
+	cli_outfun (path_strip (node2path (pos)));
+	cli_outfun ("\n");
 	return (int) pos;
 }
 
-static int cd (char *params, void *data)
+static int cd (int argc, char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 	Node *tnode = pos;
 
-	if (!strcmp (params, ".."))
-		params[0] = 0;
+	if(argc==1){
+		return (int)node_root(pos);
+	}
 
-	if (params[0]) {
-		tnode = path2node (params, pos);
-		if (tnode) {
-			tnode = node_right (tnode);
-		}
-		if (!tnode) {
-			cli_outfun("no such node\n");
-			return (int) pos;
-		}
-		return (int) tnode;
-	} else {					/* go to parent */
+	if (!strcmp (argv[1], "..")){
 		if (node_left (tnode) != 0)
 			return (int) (node_left (tnode));
 	}
+		
 
-	return (int) pos;
-}
-
-
-static int rm (char *params, void *data)
-{
-	Node *pos = (Node *) data;
-	Node *tnode;
-	int force = 0;
-
-	if (params[0] == '-') {		/* parse options */
-		int j = 0;
-
-		while (params[j] != 0 && params[j] != ' ') {
-			j++;
-			if (params[j] == 'H' || params[j] == 'h') {
-				cli_outfun("type '? rm' for help on rm");
-				return (int) pos;
-			}
-			if (params[j] == 'F' || params[j] == 'f' || params[j] == 'r')
-				force = 1;
-		}
-		params = &params[j];
-		if (params[0] == ' ')
-			params++;
+	tnode = path2node (argv[1], pos);
+	if (tnode) {
+		tnode = node_right (tnode);
 	}
-
-	if (!params[0]) {
-		cli_outfun("no node specified for removal");
-		return (int) pos;
-	}
-
-	tnode = path2node (params, pos);
 	if (!tnode) {
-		cli_outfun("no such node");
+		cli_outfun ("no such node\n");
 		return (int) pos;
 	}
+	return (int) tnode;
 
-	if (node_right (tnode)) {
-		if (force) {
-			return (int) node_remove (tnode);
-		} else {
-			cli_outfun("node has children force removal with 'rm -f'");
-		}
-	} else {
-		return (int) node_remove (tnode);
-	}
-
-	return (int) pos;
-}
-
-static int ls (char *params, void *data)
-{
-	Node *pos = (Node *) data;
-
-	Node *tnode;
-	int recurse = 0;
-	int indicate_sub = 0;
-	int indicate_todo = 0;
-	int startlevel;
-
-	if (params[0] == '-') {		/* parse options */
-		int j = 0;
-
-		while (params[j] != 0 && params[j] != ' ') {
-			j++;
-			if (params[j] == 'H' || params[j] == 'h') {
-				cli_outfun("type '? ls' for help on ls");
-				return (int) pos;
-			}
-			if (params[j] == 'R' || params[j] == 'r')
-				recurse = 1;
-			if (params[j] == 'T' || params[j] == 't')
-				indicate_todo = 1;
-			if (params[j] == 's' || params[j] == 'S')
-				indicate_sub = 1;
-		}
-		params = &params[j];
-		if (params[0] == ' ')
-			params++;
-	}
-
-	tnode = node_top (pos);
-	if (params[0]) {
-		tnode = path2node (params, pos);
-		if (tnode) {
-			tnode = node_right (tnode);
-		} else {
-			cli_outfun( "no such node");
-			return (int) pos;
-		}
-	}
-
-	startlevel = nodes_left (tnode);
-	while (tnode) {
-		int paren = 0;
-
-		if (recurse) {
-			int j;
-
-			for (j = nodes_left (tnode); j > startlevel; j--) {
-				printf ("\t");
-			}
-		}
-
-		cli_outfun( fixnullstring(node_get (tnode, TEXT)));
-
-		if (indicate_sub)
-			if (node_right (tnode)) {
-				cli_outfun( "\t(.. ");
-				paren = 1;
-			}
-
-		if (indicate_todo)
-			if (node_getflag (tnode, F_todo)) {
-				if (!paren)
-					cli_outfun( "\t(");
-				if (node_getflag (tnode, F_done)) {
-					cli_outfun( "done");
-				} else {
-					cli_outfun( "not done");
-				}
-				paren = 1;
-			}
-
-		if (paren)
-			cli_outfun( ")");
-
-		if (recurse) {
-			tnode = node_recurse (tnode);
-			if (nodes_left (tnode) < startlevel)
-				tnode = 0;
-		} else {
-			tnode = node_down (tnode);
-		}
-	}
 	return (int) pos;
 }
 
 #include <ctype.h>
 
-void pre_command(char *commandline){
-	char *c=commandline;
-	if(commandline){ 
-		while(isspace(*c))c++;
-		if(*c=='#')commandline[0]='\0';
-		if(*c=='\0')commandline[0]='\0';
+static void pre_command (char *commandline)
+{
+	char *c = commandline;
+
+	if (commandline) {
+		while (isspace ((unsigned char)*c))
+			c++;
+		if (*c == '#')
+			commandline[0] = '\0';
+		if (*c == '\0')
+			commandline[0] = '\0';
 	}
 }
 
-static int eCho(char *commandline, void *data){
-	cli_outfun(commandline);
-	return (int)data;
+static int eCho (int argc, char **argv, void *data)
+{
+	if(argc>1)
+		cli_outfun (argv[1]);
+	return (int) data;
 }
 
 /*
@@ -295,19 +164,19 @@ static int eCho(char *commandline, void *data){
 void init_ui_cli (void)
 {
 	static int inited = 0;
+
 	if (!inited) {
 		inited = 1;
-		cli_precmd=pre_command;
+		cli_precmd = pre_command;
 		cli_add_command ("add", add, "<string>");
 		cli_add_command ("addc", addc, "<parent> <string>");
 		cli_add_command ("cd", cd, "<path>");
-		cli_add_command ("ls", ls, "[-Rst] [path]");
-		cli_add_command ("rm", rm, "[-f] path");
-		cli_add_command ("pwd", pwd,"");
-		cli_add_help("pwd", "echoes the current path");
+		cli_add_command ("pwd", pwd, "");
+		cli_add_help ("pwd", "echoes the current path");
 		cli_add_command ("q", eCho, "see the entry for 'quit'");
 	}
 }
+
 
 Node *docmd (Node *pos, const char *commandline)
 {
@@ -318,6 +187,19 @@ Node *docmd (Node *pos, const char *commandline)
 	free (cmdline);
 	return (Node *) ret;
 }
+
+Node *docmdf (Node *pos,char *format, ...){
+	va_list arglist;
+	char buf[128];
+	
+	va_start( arglist, format );
+	vsnprintf(buf,127,format,arglist);
+	va_end(arglist);
+
+	buf[127]=0;
+	return docmd(pos,buf);
+}
+
 
 Node *cli (Node *pos)
 {

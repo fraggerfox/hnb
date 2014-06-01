@@ -25,90 +25,104 @@
 
 #ifndef WIN32
 
-static int mem_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
+static int mem_cmd (int argc, char **argv, void *data)
+{
+	Node *pos = (Node *) data;
 
 	{
 		int VmSize;
 		FILE *file;
-		file=fopen("/proc/self/stat","r");
-		if(!file)return (int)pos;
-	
-		fscanf(file,"%*i %*s %*s %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %i",
-			&VmSize);
-		fclose(file);
 
-		cli_outfunf("Memory used: %2.2fmb (%ib)",(float)(VmSize/1024.0/1024.0),VmSize );
+		file = fopen ("/proc/self/stat", "r");
+		if (!file)
+			return (int) pos;
+
+		fscanf (file,
+				"%*i %*s %*s %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %*i %i",
+				&VmSize);
+		fclose (file);
+
+		cli_outfunf ("Memory used: %2.2fmb (%ib)",
+					 (float) (VmSize / 1024.0 / 1024.0), VmSize);
 	}
 
 
 	{
-		int free,buffers,cached;
+		int free, buffers, cached;
 		FILE *file;
-		file=fopen("/proc/meminfo","r");
-		if(!file)return (int)pos;
-	
-		fscanf(file,"%*s %*s %*s %*s %*s %*s %*s %*i %*i %i %i %i",
-			&free,&buffers,&cached);
-		fclose(file);
 
-		cli_outfunf("Memory free: %2.2fmb (+buffers/cache: %2.2fmb)",(float)(free/1024.0/1024.0),
-		(float)((free+buffers+cached)/1024.0/1024.0));
+		file = fopen ("/proc/meminfo", "r");
+		if (!file)
+			return (int) pos;
+
+		fscanf (file, "%*s %*s %*s %*s %*s %*s %*s %*i %*i %i %i %i",
+				&free, &buffers, &cached);
+		fclose (file);
+
+		cli_outfunf ("Memory free: %2.2fmb (+buffers/cache: %2.2fmb)",
+					 (float) (free / 1024.0 / 1024.0),
+					 (float) ((free + buffers + cached) / 1024.0 / 1024.0));
 	}
 
-	return (int)pos;
+	return (int) pos;
 }
 #endif
 /*
 !init_mem();
 */
-void init_mem(){
-	#ifndef WIN32
+void init_mem ()
+{
+#ifndef WIN32
 	cli_add_command ("mem", mem_cmd, "");
-	cli_add_help("mem","Reports memory usage of application");
-	#endif
+	cli_add_help ("mem", "Reports memory usage of application");
+#endif
 }
 
 #include <ctype.h>
 
-static int count_words(char *str){
-	int words=0;
-	char *p=str;
-	do{
-		if(! isspace(*p) ){
+static int count_words (unsigned char *str)
+{
+	int words = 0;
+	unsigned char *p = str;
+
+	do {
+		if (!isspace (*p)) {
 			words++;
-			while(*p && (!isspace(*p))) p++;
+			while (*p && (!isspace (*p)))
+				p++;
 		} else {
-		   p++;
+			p++;
 		}
-	}while(*p);
+	} while (*p);
 	return words;
 }
 
-static int stats_cmd(char *params, void *data){
-	int words=0, 
-		leaves=0, 
-	    nodes=0;
-	Node *pos=(Node *)data;
-	Node *node=node_root(pos);
-	
-	while(node){
+static int stats_cmd (int argc, char **argv, void *data)
+{
+	int words = 0, leaves = 0, nodes = 0;
+	Node *pos = (Node *) data;
+	Node *node = node_root (pos);
+
+	while (node) {
 		nodes++;
-		words+=count_words(fixnullstring(node_get(node,TEXT)));
-		if(!node_right(node))
+		words += count_words ((unsigned char *)fixnullstring (node_get (node, TEXT)));
+		if (!node_right (node))
 			leaves++;
 
-		node=node_recurse(node);
+		node = node_recurse (node);
 	}
 
-	cli_outfunf("nodes:%i, leaves:%i words:%i",nodes,leaves,words);
-	
-	return (int)pos;
+	cli_outfunf ("nodes:%i, leaves:%i words:%i", nodes, leaves, words);
+
+	return (int) pos;
 }
+
 /*
 !init_stats();
 */
-void init_stats(){
-	cli_add_command ("stats", stats_cmd,"");
-	cli_add_help("stats","Reoprts number of items, leaf items and total number of words in tree");
+void init_stats ()
+{
+	cli_add_command ("stats", stats_cmd, "");
+	cli_add_help ("stats",
+				  "Reoprts number of items, leaf items and total number of words in tree");
 }

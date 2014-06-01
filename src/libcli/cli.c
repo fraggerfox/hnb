@@ -21,7 +21,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "cli.h"
-
+#include "cli_tokenize.h"
 
 #define HIDE_NULL_HELP
 
@@ -34,15 +34,6 @@
 #ifdef WIN32
 #define snprintf(a,b,args...) sprintf(a,args)
 #endif
-
-#define outf(args...)  \
-     do{	\
-        char outbuf[512];\
-	 	snprintf (outbuf, 512, args);\
-		outbuf[511]=0;\
-		cli_outfun(outbuf);\
-	 }while(0)
-
 /*
 	wordwrapping outputting function
 */
@@ -57,7 +48,7 @@ static void default_output(char *data){
 	*bp=*wp='\0';
 	
 	while(1+1==2){
-		if(isspace(*dp) || *dp=='\0'){
+		if(isspace((unsigned char)*dp) || *dp=='\0'){
 			if( (bp-tbuf) + (wp-word) +1 < COLS){
 				strcpy(bp,word);
 				bp+=(wp-word);
@@ -94,25 +85,35 @@ static void default_output(char *data){
 	free(tbuf);
 }
 
-static void default_unknown_command (char *commandline, void *data){
-	char command[100];
-	char *params;	
-	cli_split(commandline, command, &params);
-	outf ("unknown command '%s' type '?' to see allowed commands.\n",
-		  command);
+static void default_unknown_command (int argc,char **argv, void *data){
+	cli_outfunf ("unknown command '%s' type '?' to see allowed commands.\n",argv[0]);
 }
 
 void (*cli_outfun) (char *) = default_output;
 void (*cli_precmd) (char *) = NULL;
 void (*cli_postcmd) (char *) = NULL;
-void (*cli_unknown) (char *,void *) = default_unknown_command;
+void (*cli_unknown) (int,char **,void *) = default_unknown_command;
 int cli_width = 40;
 
-static inline int item_matches (const char *itemname);
+
+void cli_outfunf(char *format, ...){
+	va_list arglist;
+	char buf[128];
+	
+	va_start( arglist, format );
+	vsnprintf(buf,127,format,arglist);
+	va_end(arglist);
+
+	buf[127]=0;
+	cli_outfun(buf);
+}
+
+
+static  int item_matches (const char *itemname);
 
 typedef struct ItemT {
 	char *name;					/* what the user types */
-	int (*func) (char *params, void *data);	/* function that is the command */
+	int (*func) (int argc,char **argv, void *data);	/* function that is the command */
 	int *integer;				/* pointer to integer (set to NULL if string) */
 	char *string;				/* pointer to string (set to NULL if integer) */
 	char *usage;					/* helptext for this command */
@@ -129,13 +130,13 @@ static ItemT *items = NULL;
 void
 cli_add_item (char *name,
 		  int *integer, char *string,
-		  int (*func) (char *params, void *data), char *usage)
+		  int (*func) (int argc,char **argv, void *data), char *usage)
 {
 	ItemT *titem = items;
 
 	while(titem){
 		if(!strcmp(titem->name,name)){
-			outf ("libcli: attempted to add item '%s' more than once\n", name);
+			cli_outfunf ("libcli: attempted to add item '%s' more than once\n", name);
 			return;
 		}
 		titem=titem->next;
@@ -186,13 +187,13 @@ void cli_add_help(char *name, char *helptext){
 		}
 		titem=titem->next;
 	}
-	outf("libcli: attempted to add help for '%s' which is not registered",name);
+	cli_outfunf("libcli: attempted to add help for '%s' which is not registered",name);
 }
 
 
-static int help (char *params, void *data);
-static int vars (char *params, void *data);
-static int nop (char *params, void *data)
+static int help (int argc,char **argv, void *data);
+static int vars (int argc,char **argv, void *data);
+static int nop (int argc,char **argv, void *data)
 {
 	return (int)data;
 }
@@ -220,7 +221,7 @@ void cli_cleanup(void){
 
 static void init_cli (void)
 {
-	cli_add_command ("quit", nop, "quits the application");
+/*	cli_add_command ("quit", nop, "quits the application");*/
 	cli_add_command ("?", help, "? - this listing");
 	cli_add_command ("show_vars", vars, "show all variables");
 	inited = 1;
@@ -230,8 +231,9 @@ int cli_calllevel=0;
 
 int cli_docmd (char *commandline, void *data)
 {
-	char command[40];
-	char *params;
+	int largc;
+	char **largv;
+	
 	ItemT *titem = items;
 	int ret=(int)data;
 	cli_calllevel++;
@@ -245,61 +247,67 @@ int cli_docmd (char *commandline, void *data)
 		inited = 1;
 	}
 
-	if(commandline[0]=='\0')
+	largv=cli_tokenize(commandline,&largc);
+
+	if(!largc){
+		cli_free_tokenlist(largv);
 		return ret;
-
-	while(*commandline==' ' || *commandline=='\t')commandline++;
+	}
 	
-	cli_split(commandline, command, &params);
-
 	while (titem) {
-		if (!strcmp (command, titem->name)) {
+		if (!strcmp (largv[0], titem->name)) {
 			if (is_command (titem)) {
 
-				ret=titem->func (params, data);
-
+				ret=titem->func (largc,largv, data);
+				
 				if (cli_postcmd)
 					cli_postcmd (commandline);
 				cli_calllevel--;
+				
+				cli_free_tokenlist(largv);
 				return ret;
 			} else if (is_variable (titem)) {
-				if (!params[0]) {
+				if (largc==1) {
 					if (titem->string) {
-						outf ("%s\t[%s]\t- %s\n", titem->name,
+						cli_outfunf ("%s\t[%s]\t- %s\n", titem->name,
 							  titem->string, titem->usage);
 					} else if (titem->integer) {
-						outf ("%s\t[%i]\t- %s\n", titem->name,
+						cli_outfunf ("%s\t[%i]\t- %s\n", titem->name,
 							  *titem->integer, titem->usage);
 					} else {
-						outf ("%s\tis a broken variable\n", titem->name);
+						cli_outfunf ("%s\tis a broken variable\n", titem->name);
 					}
 				} else {
 					if (titem->integer)
-						*titem->integer = atoi (params);
+						*titem->integer = atoi (largv[1]);
 					if (titem->string)
-						strcpy (titem->string, params);
+						strcpy (titem->string, largv[1]);
 					if (titem->func)
-						ret=titem->func (params, data);
+						ret=titem->func (largc,largv, data);
 				}
 				if (cli_postcmd)
 					cli_postcmd (commandline);
 				cli_calllevel--;
+				
+				cli_free_tokenlist(largv);
 				return ret;
 			}
 		}
 		titem = titem->next;
 	}
 	if(cli_unknown)
-		cli_unknown(commandline,data);	
+		cli_unknown(1,&commandline,data);
 	if (cli_postcmd)
 		cli_postcmd (commandline);
 	cli_calllevel--;
+	
+	cli_free_tokenlist(largv);
 	return ret;
 }
 
 static char newcommand[100];
 
-static inline int item_matches (const char *itemname)
+static int item_matches (const char *itemname)
 {
 	int matches = 0;
 	ItemT *titem = items;
@@ -369,94 +377,39 @@ char *cli_complete (const char *commandline)
 			}
 			newcommand[strlen (newcommand) - 1] = '\0';
 		} else {
-			outf ("no match");
+			cli_outfunf ("no match");
 		}
 	}
 
 	return newcommand;
 }
 
-#define transform(a,b) case a:\
-						{int j=0;const char * msg=b;\
-							while(msg[j])\
-								out[outpos++]=msg[j++];\
-							out[outpos]=0;\
-							inpos++;\
-							break;\
-						}\
+/* internal commands */
 
-
-/** internal commands */
-
-static char *html_quote (const char *in)
+static int help (int argc,char **argv, void *data)
 {
-	static char out[4096];
-	int inpos = 0;
-	int outpos = 0;
-
-	out[0] = 0;
-	while (in[inpos]) {
-		switch (in[inpos]) {
-				transform ('&', "&amp;");
-				transform ('\'', "&#39;");
-				transform ('<', "&lt;");
-				transform ('>', "&gt;");
-				transform ('ø', "&oslash;");
-				transform ('Ø', "&Oslash;");
-				transform ('å', "&aring;");
-				transform ('Å', "&Aring;");
-				transform ('æ', "&aelig;");
-				transform ('Æ', "&AElig;");
-			default:
-				out[outpos++] = in[inpos++];
-				out[outpos] = 0;
-				break;
-		}
-	}
-	return (out);
-}
-
-
-static int help (char *params, void *data)
-{
-	if (params[0] == 0) {		/* show all help */
+	if (argc == 1) {		/* show all help */
 		ItemT *titem = items;
 
-		outf ("available commands:");
+		cli_outfunf ("available commands:");
 
 		while (titem) {
 		#ifdef HIDE_NULL_HELP
 			if(titem->usage)
 		#endif
 			if (is_command (titem))
-				outf ("%14s %s", titem->name, titem->usage);
+				cli_outfunf ("%14s %s", titem->name, titem->usage);
 			titem = titem->next;
 		};
-	} else if(!strcmp(params,"--html")){
-		ItemT *titem = items->next;
-		while (titem) {
-			if (is_command (titem)) {
-				outf ("<p><tt>%s ", html_quote(titem->name));
-				outf ("%s</tt></p>", html_quote(titem->usage));
-				if(titem->help[0]){
-					cli_outfun ("<blockquote>");
-					cli_outfun(html_quote(titem->help));
-					cli_outfun ("</blockquote>");
-				}
-				cli_outfun ("<hr />");
-				cli_outfun ("");
-			}
-			titem = titem->next;
-		}
 	} else {					/* show help for specified command */
 		ItemT *titem = items;
 
-		outf ("HELP for '%s'", params);
+		cli_outfunf ("HELP for '%s'", argv[1] );
 
 		while (titem) {
 			if (is_command (titem)) {
-				if (!strcmp (params, titem->name)) {
-					outf ("usage: %s %s", titem->name, titem->usage);
+				if (!strcmp (argv[1], titem->name)) {
+					cli_outfunf ("usage: %s %s", titem->name, titem->usage);
 					if(titem->help[0]){
 						cli_outfun ("");
 						cli_outfun(titem->help);
@@ -466,16 +419,16 @@ static int help (char *params, void *data)
 			}
 			titem = titem->next;
 		}
-		outf ("unknown command '%s'", params);
+		cli_outfunf ("unknown command '%s'", argv[1]);
 	}
 	return(int)data;	
 }
 
-static int vars (char *params, void *data)
+static int vars (int argc, char **argv, void *data)
 {
 	ItemT *titem = items;
 
-	outf ("all variables:");
+	cli_outfunf ("all variables:");
 
 	while (titem) {
 		#ifdef HIDE_NULL_HELP
@@ -483,20 +436,20 @@ static int vars (char *params, void *data)
 		#endif
 		if (is_variable (titem)) {
 			if (titem->string) {
-				outf ("%15s [%s]\t- %s", titem->name,
+				cli_outfunf ("%15s [%s]\t- %s", titem->name,
 					  titem->string, titem->usage);
 			} else if (titem->integer) {
-				outf ("%15s [%i]\t- %s", titem->name,
+				cli_outfunf ("%15s [%i]\t- %s", titem->name,
 					  *titem->integer, titem->usage);
 			} else {
-				outf ("%s\tis a broken variable", titem->name);
+				cli_outfunf ("%s\tis a broken variable", titem->name);
 			}
 		}
 		titem = titem->next;
 	}
 
-	outf ("----------------");
-	outf ("to change a variable: \"variablename newvalue\"");
+	cli_outfunf ("----------------");
+	cli_outfunf ("to change a variable: \"variablename newvalue\"");
 	return(int)data;
 }
 
@@ -537,9 +490,6 @@ int cli_load_file(char *filename){
 		if(c)*c='\0';
 		if(*buf){
 			while(*t==' ' || *t=='\t')t++;
-/*			if(!strncmp(t,"macro_add ",10)){
-				char *macro_name
-			} else*/
 			cli_docmd(buf,NULL);
 		}
 	}
