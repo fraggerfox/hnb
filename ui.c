@@ -18,7 +18,8 @@ ui_init ()
   intrflush(stdscr,TRUE);
   keypad (stdscr, TRUE);
   nonl ();
-  cbreak ();
+/*  cbreak ();*/
+  raw();     /* enable the usage of ctl+c,ctrl+q,ctrl+z..*/
   noecho ();
   middle_line = LINES / 3;
   /* COLS ? */
@@ -124,7 +125,7 @@ int line;
 		line=LINES-1;pos=0;clr;
 
 		i("return"," edit");
-		i(" ^X S "," save");		
+		i(" ^S "," save");		
 		i("del"," remove");
 
 		i("^space"," move");
@@ -198,6 +199,10 @@ int line;
 	    line=LINES-1;pos=0;clr;
 		i("Error:",message);
 	    break;
+	case UI_MODE_INFO:
+	    line=LINES-1;pos=0;clr;
+		i("Info:",message);
+	    break;
 	case UI_MODE_GETSTR:
 	    line=LINES-1;pos=0;clr;
 		i(message," ");		
@@ -211,7 +216,9 @@ int line;
 	    break;		
 	case UI_MODE_SEARCH:
 		line=LINES-2;pos=0;clr;
-		i("Searching for:",message);i("","");i("","");
+		i("Searching for:","");
+		addch(' ');addstr(message);
+		i("","");i("","");
 		i("Enter,S"," stop");
 		i("N,space"," next");
 		i("Esc,C"," cancel");
@@ -254,24 +261,35 @@ int draw_node(int line_start, int col_start, char *data, int draw_mode, int comp
 
 	move(line_start,col);
 
-  if(completion!=-1){
+  if(completion!=-1){						/* todo bullets */
 	    switch(completion){
 			case 0:
 		     if( ! (draw_mode & D_M_TEST))	  addstr("[ ] ");
-		  	  col=col_start=col_start+4;			 
+		  	  col=col_start+=4;			 
 			 break;
 			case 1000:
  		     if( ! (draw_mode & D_M_TEST))	  addstr("[X] ");
-		  	  col=col_start=col_start+4;
+		  	  col=col_start+=4;
 			 break;
 			default:{char str[10];
-		  	  col=col_start=col_start+6;
+		  	  col=col_start+=6;
 			sprintf(str,"[%i%%]",completion/10);
  		     if( ! (draw_mode & D_M_TEST))	  addstr(str);
 			}
 			 break;
 		}
-  }  
+  } else {
+#ifndef WIN32
+	 int a;short b;
+     attr_get(&a,&b,NULL); /* the standard bullet */
+	 attrset(0);  
+#endif
+	 if(data[0]) if( ! (draw_mode & D_M_TEST))  addstr("-");
+	 col=col_start+=2;
+#ifndef WIN32
+	 attrset(a);
+#endif	 
+  }
 
 		 for(pos=0;pos<=strlen(data);pos++)
 		    switch(data[pos]){
@@ -341,7 +359,7 @@ ui_draw (Node * node, char *input, int mode)
   lines=draw_node(middle_line, indentlevel(node), node_getdata(node),D_M_WRAP+(node_right(node)?D_M_CHILD:0),node_calc_complete(node));
   attrset (A_BOLD);
  
-if(mode!=UI_MODE_GETSTR && mode !=UI_MODE_IMPORT && mode != UI_MODE_SEARCH && mode != UI_MODE_CONFIRM && mode != UI_MODE_ERROR )
+if(mode!=UI_MODE_INFO && mode!=UI_MODE_GETSTR && mode !=UI_MODE_IMPORT && mode != UI_MODE_SEARCH && mode != UI_MODE_CONFIRM && mode != UI_MODE_ERROR )
   draw_node(middle_line, indentlevel(node), input,D_M_WRAP,node_calc_complete(node));
   attrset (A_NORMAL);  
 }

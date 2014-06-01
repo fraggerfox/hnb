@@ -32,6 +32,7 @@ Options include:\n\
 \n\
 \t-h  or --help\t\tthis message\n\
 \t-v  or --version\tprints the version\n\
+\t-t  o --tutorial\tloads the tutorial instead of a database\n\
 \n\n", db_file);
 }
 
@@ -43,10 +44,29 @@ Node *pos;
 
 
 #define undefined_key(a,c)\
-		    {if(c!=UI_IGNORE){char msg[50];\
+		    {if(c!=UI_IGNORE){char msg[80];\
 	  	    sprintf(msg," No action assigned to '%s'(%id) in %s-mode",keyname(c),c,a);\
 		    ui_draw(pos, msg, UI_MODE_ERROR);\
 			sleep(1);}}\
+
+#define info(a)\
+		    {ui_draw(pos, a, UI_MODE_INFO);\
+			sleep(1);}\
+
+#define infof(a,b)\
+		    {char msg[80];\
+	  	    sprintf(msg,a,b);\
+			ui_draw(pos, msg, UI_MODE_INFO);\
+			sleep(1);}\
+
+			
+#ifdef WIN32
+
+#undef undefined key(a,c)
+#define undefined key(a,c)
+
+
+#endif
 
 
 
@@ -148,10 +168,7 @@ app_edit ()
 
 	  cursor_pos++;
 	  } else {              /* undefined keycode */
-	    char msg[50];
-  	    sprintf(msg," No action assigned to '%s'(%id) in edit-mode",keyname(c),c);
-	    ui_draw(pos, msg, UI_MODE_ERROR);
-		sleep(1);
+			undefined_key("edit",c);		
 	  }
 	  break;	  
 	  
@@ -232,7 +249,7 @@ app_mark ()  /* add visual cue in this one? */
 	    stop = 1;
 	  break;
 	  default:
-			undefined_key("edit",c);
+			undefined_key("mark",c);
 	  break;
 	  };
       };
@@ -255,16 +272,23 @@ app_quit ()
 	case 'x':
 	case 'X':
 	case UI_QUIT:
-      ascii_export ( tree_root(), db_file);
+	  if (db_file[0] != (char)255){
+	  	 ascii_export ( tree_root(), db_file);
+		 infof(" wrote stuff to '%s'",db_file);
+		}
       return (1);
       break;
     case 'q':
     case 'Q':
+	  info(" quitting without saving.");
       return (1);
 	case 's':
 	case 'S':
-		ascii_export ( tree_root(), db_file);
-		return(0);
+	  if (db_file[0] != (char)255){
+	  	 ascii_export ( tree_root(), db_file);
+		 infof(" wrote stuff to '%s'",db_file);
+		}
+      return (0);
 		break;
 	case 'C':case 'c':
 	case UI_ESCAPE:
@@ -276,14 +300,20 @@ app_quit ()
 }
 
 void app_search(){
-  char *query[100];  
+  char query[100];  
   Node *query_start=pos;
   int query_start_level=nodes_left(pos);
   strcpy((char *)query,"Find: ");
   ui_draw(pos,(char *)query,UI_MODE_GETSTR);  /* query user for search term */
   
   pos=node_recursive_match((char *)query,pos);
-  
+
+  if(pos==0){
+  	infof(" search for '%s' returned emptyhanded",query);
+	pos=query_start;
+	return;
+  };
+    
   while( pos!=0 && (nodes_left(pos)>=query_start_level))
     { int c;
       ui_draw( pos, (char *)query, UI_MODE_SEARCH);
@@ -314,6 +344,7 @@ void app_search(){
         break;
       };       
   };
+  info(" end of search");
   pos=query_start;
 }
 
@@ -336,11 +367,17 @@ void app_export(){
   c = ui_input ();
   switch (c)
     {
+	    case '?':
+		  strcpy((char *)filename,"Save help-include file in:");
+		  ui_draw(pos,(char *)filename,UI_MODE_GETSTR);
+		  if(strlen(filename)) help_export ( node_top(pos), filename);
+		  stop=1;		
+		break;
 	    case 'h':
 	    case 'H':
 		  strcpy((char *)filename,"Save output in:");
 		  ui_draw(pos,(char *)filename,UI_MODE_GETSTR);
-		  if(strlen(filename)) html_export ( node_top(pos), filename);		  
+		  if(strlen(filename)) html_export ( node_top(pos), filename);
 		  stop=1;		
 		break;
 	    case 'a':
@@ -407,7 +444,12 @@ app_navigate ()
    		  if(strlen(filename))pos=ascii_import(pos,filename);
 	}
 		break;
-	
+
+	case UI_SAVE:
+		if (db_file[0] != (char)255){ ascii_export ( tree_root(), db_file);
+		 infof(" wrote stuff to '%s'",db_file);
+		}
+		break;
 
 	case UI_HELP:
 	   help_level++;
@@ -662,6 +704,10 @@ main (int argc, char **argv)
 	  printf("%s\n",VERSION);
 	  exit (0);
 	}
+	  else if (!strcmp (sw, "-t") || !strcmp (argv[i], "--tutorial"))
+	{
+		db_file[0] = (char)255;	
+	}	
       else if (!strcmp (sw, "-ui"))
 	{
 	  ui = argv[++i];
@@ -686,7 +732,9 @@ main (int argc, char **argv)
   tree_init ();
 
   pos = tree_root ();
-  pos = ascii_import (pos, db_file);
+  if (db_file[0] != (char)255) pos = ascii_import (pos, db_file);
+  if(nodes_right(pos)==0 &&  nodes_down(pos)==0 && nodes_up(pos)==0)
+	  pos = help_import(pos);
 
   ui_init ();
 

@@ -1,166 +1,203 @@
-<html>
-<head>
-	<title>tree exported from hnb</title>
-</head>
-<body>
-<ul>
-	<li>HIERARCHICAL NOTEBOOK
-	  <ul>
-		<li>hierarchical notebook (hnb) is program to organize, many kinds of data in one place, for example adresses, todo lists, ideas, book "reviews", brainstorming, organizing a speech, making a  structured packing list random notes, and probably many more I  haven't thought of yet..
-	  </ul>
-	<li>HOW TO GET hnb?
-	  <ul>
-		<li>new releases of hnb will appear on the sourceforge project page http://sourceforge.net/projects/hnb/
-	  </ul>
-	<li>INSTALLING hnb
-	  <ul>
-		<li>if you've got a source release you must first compile hnb,.. see further down in this file for instructions.
-		<li>Windows
-		  <ul>
-			<li>the windows binary distribution, is a .zip file	containing the executable, this readme file, an sample database, and the licence for hnb's use.
-			<li>the binary is standalone, so you can just copy it wherever you'd like it to reside.
-		  </ul>
-		<li>Linux 
-		  <ul>
-			<li>the linux binary distribution is a .tar.gz file	containing the executable, this readme file, a an sample database, and the licence for hnb's use.
-			<li>the binary is dynamically linked against ncurses just place it anywere in your path.. like /usr/bin, /usr/local/bin or /home/user/bin
-		  </ul>
-	  </ul>
-	<li>COMPILING hnb
-	  <ul>
-		<li>I've only tried to compile hnb using linux, the only dependencies are ncurses so it should compile on most any unix by just typing make.
-		<li>I cross compile the win32 binary using mingw32, the Makefile is probably a mess by most standards, but it works for me (tm), and will be replaced by something more appropriate at some other time.
-	  </ul>
-	<li>USAGE DOCUMENTATION
-	  <ul>
-		<li>hopefully hnb is quite selfdocumenting, but the file sample.hnb contains some explaination of concepts and ideas behind hnb invoke hnb like this to look at the file.
-		<li>hnb sample.hnb
-	  </ul>
-	<li>CHANGELOG
-	  <ul>
-		<li>0.3b
-		  <ul>
-			<li>added registry functions, and a small sample programed called reg
-			<li>small bugfix for node recurse()  (go right, and to top)
-		  </ul>
-		<li>0.3 15.oct 2000
-		  <ul>
-			<li>fixed registry
-			<li>implemented node2path
-			<li>first rendition of cgi-bin browser
-			<li>wordwrap
-			<li>resize components when terminal is resized
-			<li>changed display of help at the bottom
-			<li>various interface cleanups,.. (ingoring keys etc..)
-			<li>pageup/pagedown implemented (jumps a predefined 10 nodes by default)
-			<li>changed menu/quit interface,.. there is one big menu now,.
-			<li>which contains most of the thinkable options
-			<li>it is activated by esc/f1/f10/ctrl+k
-		  </ul>
-		<li>0.4 march 2001
-		  <ul>
-			<li>fixed tab'ing into children of empty nodes bug
-			<li>fixed first node bug of wordwrap
-			<li>made wordwrap wrap at end instead of end-indent
-		  </ul>
-		<li>0.5
-		  <ul>
-			<li>help item's update
-			<li>added insert capability to insert a node below the current
-		  </ul>
-		<li>0.5a
-		  <ul>
-			<li>the guadec hacked fixes on strics computer
-			<li>
-			<li>added search functionality, still not added real keyboard bindings, nor input of needle for the search, but the callbacks are in place
-			<li>fixed the display of confirm mode in curses ui.
-			<li>implemented reparenting
-			<li>cleaned up node remove
-		  </ul>
-		<li>0.6b 11 april 2001
-		  <ul>
-			<li>something went wrong in the versioning,.. but what the heck..
-			<li> 
-			<li>added load,save and display of todo in standard file format
-			<li>should be foolproof, and still keeps the file human readable
-			<li>when adding a child by navigating,.. the parents node were reset to 0 for no apparent reason.
-			<li>changed to bz2 format on distribution file
-		  </ul>
-		<li>0.6c
-		  <ul>
-			<li>rearranged input structures
-			<li>added todo checkboxes
-			<li>added error mode to display modes
-			<li>rewamped the helpline system
-		  </ul>
-		<li>0.6d
-		  <ul>
-			<li>fixed resizing
-			<li>added input of search term in find
-			<li>made search case insensitive
-			<li>refined search control interface
-			<li>made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
-		  </ul>
-		<li>0.7 13 april 2001
-		<li>0.7a
-		  <ul>
-			<li>making autoupdate of higher level todo work properly
-			  <ul>
-				<li>recursively move towards root
-				<li>only check nodes with visible todo boxes
-			  </ul>
-			<li>ascii export
-			  <ul>
-				<li>just saves the current sublevel of the tree to a file in hnbs standard file format
-			  </ul>
-			<li>html export
-			  <ul>
-				<li>makes an nicely formatted html file with unordered lists,
-				<li>doesn't escape any html by itself
-			  </ul>
-			<li>latex export
-			  <ul>
-				<li>in a kind of hackish way, not entirely sure what I could use it for
-				<li>requires sed for a nasty replace hack
-				<li>doesn't work for deeper nesting levels than four
-				<li>won't work in win32,.. (sed fails)
-			  </ul>
-			<li>postscript export
-			  <ul>
-				<li>based on the latex export
-				<li>uses system calls and requires latex, and dvips
-				<li>won't work in win32 latex export fails and latex dvips etc,.. is unix stuff
-			  </ul>
-			<li>made the default(and only behaviour be to display percentage complete on partially done todo items,.. shouldn't incurr too much overhead,,.. (altough it recalculates for all visible nodes for each character input)
-			<li>loading(insertion) of an external file into the data
-		  </ul>
-		<li>0.8 15 april 2001
-	  </ul>
-	<li>TODO
-	  <ul>
-		<li>moving
-		  <ul>
-			<li>make the selected node, be dragged instead of warped
-		  </ul>
-		<li>buffer limits
-		  <ul>
-			<li>they are high,.. but somebody typing a biiig node could crash it
-		  </ul>
-		<li>different collapse modes?
-		<li>gtk 2.0
-		  <ul>
-			<li>there is a new interface to bind things so I can use my own codestructue :))
-		  </ul>
-		<li>curses interface
-		  <ul>
-			<li>in editing mode, use reverse video as cursor instead of underscorehack
-			<li>copy node and substree
-		  </ul>
-		<li>make default format xml, and move the current format into an text export/import filter thing.
-		  <ul>
-			<li>perhaps the text filter should be kind of enhanced from the current format,.. but backwards compatible,.. add bullets, and ability to use newline within a node?
-		  </ul>
-	  </ul>
-	<li>author: Øyvind Kolås / pippin@users.sourceforge.net
-</ul>
-</body></html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<TITLE>tree exported from hnb</TITLE>
+</HEAD>
+<BODY>
+<UL>
+	<LI>HIERARCHICAL NOTEBOOK
+	  <UL>
+		<LI>hierarchical notebook (hnb) is program to organize, many kinds of data in one place, for example adresses, todo lists, ideas, book "reviews", brainstorming, organizing a speech, making a  structured packing list random notes, and probably many more I  haven't thought of yet..
+	  </UL>
+	<LI>HOW TO GET hnb?
+	  <UL>
+		<LI>new releases of hnb will appear on the sourceforge project page http://sourceforge.net/projects/hnb/
+	  </UL>
+	<LI>INSTALLING hnb
+	  <UL>
+		<LI>if you've got a source release you must first compile hnb,.. see further down in this file for instructions.
+		<LI>Windows
+		  <UL>
+			<LI>the windows binary distribution, is a .zip file	containing the executable, this readme file, an sample database, and the licence for hnb's use.
+			<LI>the binary is standalone, so you can just copy it wherever you'd like it to reside.
+		  </UL>
+		<LI>Linux 
+		  <UL>
+			<LI>the linux binary distribution is a .tar.gz file	containing the executable, this readme file, a an sample database, and the licence for hnb's use.
+			<LI>the binary is dynamically linked against ncurses just place it anywere in your path.. like /usr/bin, /usr/local/bin or /home/user/bin
+		  </UL>
+	  </UL>
+	<LI>COMPILING hnb
+	  <UL>
+		<LI>I've only tried to compile hnb using linux, the only dependencies are ncurses so it should compile on most any unix by just typing make.
+		<LI>I cross compile the win32 binary using mingw32, the Makefile is probably a mess by most standards, but it works for me (tm), and will be replaced by something more appropriate at some other time.
+	  </UL>
+	<LI>USAGE DOCUMENTATION
+	  <UL>
+		<LI>If you start hnb without any parameters and no default database, or with the -t or --tutorial option, hnb will load a special tutorial database.
+	  </UL>
+	<LI>CHANGELOG
+	  <UL>
+		<LI>0.3b
+		  <UL>
+			<LI>added registry functions, and a small sample programed called reg
+			<LI>small bugfix for node recurse()  (go right, and to top)
+		  </UL>
+		<LI>0.3 15.oct 2000
+		  <UL>
+			<LI>fixed registry
+			<LI>implemented node2path
+			<LI>first rendition of cgi-bin browser
+			<LI>wordwrap
+			<LI>resize components when terminal is resized
+			<LI>changed display of help at the bottom
+			<LI>various interface cleanups,.. (ingoring keys etc..)
+			<LI>pageup/pagedown implemented (jumps a predefined 10 nodes by default)
+			<LI>changed menu/quit interface,.. there is one big menu now,.
+			<LI>which contains most of the thinkable options
+			<LI>it is activated by esc/f1/f10/ctrl+k
+		  </UL>
+		<LI>0.4 march 2001
+		  <UL>
+			<LI>fixed tab'ing into children of empty nodes bug
+			<LI>fixed first node bug of wordwrap
+			<LI>made wordwrap wrap at end instead of end-indent
+		  </UL>
+		<LI>0.5
+		  <UL>
+			<LI>help item's update
+			<LI>added insert capability to insert a node below the current
+		  </UL>
+		<LI>0.5a
+		  <UL>
+			<LI>the guadec hacked fixes on strics computer
+			<BR><BR>
+			<LI>added search functionality, still not added real keyboard bindings, nor input of needle for the search, but the callbacks are in place
+			<LI>fixed the display of confirm mode in curses ui.
+			<LI>implemented reparenting
+			<LI>cleaned up node remove
+		  </UL>
+		<LI>0.6b 11 april 2001
+		  <UL>
+			<LI>something went wrong in the versioning,.. but what the heck..
+			<LI> 
+			<LI>added load,save and display of todo in standard file format
+			<LI>should be foolproof, and still keeps the file human readable
+			<LI>when adding a child by navigating,.. the parents node were reset to 0 for no apparent reason.
+			<LI>changed to bz2 format on distribution file
+		  </UL>
+		<LI>0.6c
+		  <UL>
+			<LI>rearranged input structures
+			<LI>added todo checkboxes
+			<LI>added error mode to display modes
+			<LI>rewamped the helpline system
+		  </UL>
+		<LI>0.6d
+		  <UL>
+			<LI>fixed resizing
+			<LI>added input of search term in find
+			<LI>made search case insensitive
+			<LI>refined search control interface
+			<LI>made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
+		  </UL>
+		<LI>0.7 13 april 2001
+		<LI>0.7a
+		  <UL>
+			<LI>making autoupdate of higher level todo work properly
+			  <UL>
+				<LI>recursively move towards root
+				<LI>only check nodes with visible todo boxes
+			  </UL>
+			<LI>ascii export
+			  <UL>
+				<LI>just saves the current sublevel of the tree to a file in hnbs standard file format
+			  </UL>
+			<LI>html export
+			  <UL>
+				<LI>makes an nicely formatted html file with unordered lists,
+				<LI>doesn't escape any html by itself
+			  </UL>
+			<LI>latex export
+			  <UL>
+				<LI>in a kind of hackish way, not entirely sure what I could use it for
+				<LI>requires sed for a nasty replace hack
+				<LI>doesn't work for deeper nesting levels than four
+				<LI>won't work in win32,.. (sed fails)
+			  </UL>
+			<LI>postscript export
+			  <UL>
+				<LI>based on the latex export
+				<LI>uses system calls and requires latex, and dvips
+				<LI>won't work in win32 latex export fails and latex dvips etc,.. is unix stuff
+			  </UL>
+			<LI>made the default(and only behaviour be to display percentage complete on partially done todo items,.. shouldn't incurr too much overhead,,.. (altough it recalculates for all visible nodes for each character input)
+			<LI>loading(insertion) of an external file into the data
+		  </UL>
+		<LI>0.8 15 april 2001
+		<LI>0.8a
+		  <UL>
+			<LI>undefined keyboard debugging in win32 port
+			<LI>added in-binary tutorial, and export mode for the include file
+			<LI>changed curses mode to raw, to avoid ctrl+c, ctrl+s, ctrl+z ctrl+q etc.. aborting the app.
+			<LI>upon request from Marck Rintsch, ctrl+s now saves the file
+			<LI>added more visual feedback when saving, quitting and such
+			<LI>added an standard bullet on all entries.
+		  </UL>
+		<LI>0.9 15 april 2001 end of easter holdidays
+	  </UL>
+	<LI>TODO
+	  <UL>
+		<LI>moving
+		  <UL>
+			<LI>make the selected node, be dragged instead of warped
+		  </UL>
+		<LI>buffer limits
+		  <UL>
+			<LI>they are high,.. but somebody typing a biiig node could crash it
+		  </UL>
+		<LI>different collapse modes?
+		  <UL>
+			<LI>only display first line of parents?
+		  </UL>
+		<LI>gtk 2.0
+		  <UL>
+			<LI>there is a new interface to bind things so I can use my own codestructue :))
+		  </UL>
+		<LI>curses interface
+		  <UL>
+			<LI>in editing mode, use reverse video as cursor instead of underscorehack
+			<LI>ctrl+space apparently doesn't work in win32
+			<LI>copy node and substree
+		  </UL>
+		<LI>make default format xml, and move the current format into an text export/import filter thing.
+		  <UL>
+			<LI>perhaps the text filter should be kind of enhanced from the current format,.. but backwards compatible,.. add bullets, and ability to use newline within a node?
+		  </UL>
+		<LI>more entities on each node
+		  <UL>
+			<LI>current entities:
+			  <UL>
+				<LI>title/data
+				<LI>todo item
+				<LI>done/not done
+			  </UL>
+			<LI>future items:
+			  <UL>
+				<LI>created date
+				<LI>modified date
+				<LI>note(why not a subnode,.. "that's a hack"?!)
+				<LI>due date, for project planning
+				<LI>priority
+				<LI>make an own details dialog for each node to modify such things.. it will be easier than loads of shortcuts,.. (I think)
+			  </UL>
+		  </UL>
+		<LI>bulletmode
+		  <UL>
+			<LI>bullet, number, abcd, ABCD, checkbox, none
+		  </UL>
+		<LI>purge todo items on lower levels
+	  </UL>
+	<LI>author: Øyvind Kolås / pippin@users.sourceforge.net
+</UL>
+</BODY></HTML>

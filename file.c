@@ -289,7 +289,14 @@ html_export (Node * node, char *filename)
 
   tnode = node;
   lastlevel=0;
-  fprintf (file, "<html>\n<head>\n\t<title>tree exported from hnb</title>\n</head>\n<body>\n<ul>\n");	  
+  fprintf (file, 
+"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n\
+<HTML>\n\
+<HEAD>\n\
+	<TITLE>tree exported from hnb</TITLE>\n\
+</HEAD>\n\
+<BODY>\n\
+<UL>\n");	  
   while ((tnode != 0) & (nodes_left (tnode) >= startlevel))
     {
       level = nodes_left (tnode) - startlevel;
@@ -298,20 +305,24 @@ html_export (Node * node, char *filename)
 
 	  if(level>lastlevel){
 		  for (cnt = 0; cnt <= level-1; cnt++){fprintf (file, "\t");};
-		  fprintf (file, "  <ul>\n");
+		  fprintf (file, "  <UL>\n");
 	  }
 	  if(level<lastlevel){
 		  int level_diff=lastlevel-level;	  	
 	  	  
 		  for(;level_diff;level_diff--){
 			  for (cnt = 0; cnt <= level+level_diff-1; cnt++){fprintf (file, "\t");};
-			  fprintf (file, "  </ul>\n");
+			  fprintf (file, "  </UL>\n");
 
 		  };
 	  }
 	  for (cnt = 0; cnt <= level; cnt++){fprintf (file, "\t");};
 	  
-	  fprintf (file, "<li>%s%s\n",(flags&F_todo?(flags&F_done?"[X] ":"[&nbsp] "):""),data);	
+	  if(data[0]!=0){
+	  	fprintf (file, "<LI>%s%s\n",(flags&F_todo?(flags&F_done?"[X] ":"[&nbsp] "):""),data);	
+	  } else {
+	    fprintf (file, "<BR><BR>\n");
+	  };
 
 	  lastlevel=level;
       tnode = node_recurse (tnode);
@@ -321,12 +332,12 @@ html_export (Node * node, char *filename)
 	  	  
 		  for(;level_diff;level_diff--){
 			  for (cnt = 0; cnt <= level+level_diff-1; cnt++){fprintf (file, "\t");};
-			  fprintf (file, "  </ul>\n");
+			  fprintf (file, "  </UL>\n");
 
 		  };
 }
 
-  fprintf (file, "</ul>\n</body></html>");
+  fprintf (file, "</UL>\n</BODY></HTML>");
   fclose (file);
 }
 
@@ -343,7 +354,7 @@ latex_export (Node * node, char *filename)
 
   tnode = node;
   lastlevel=0;
-  fprintf (file, "\\documentclass{article}\n\
+  fprintf (file, "\\documentclass[a4paper,11pt]{article}\n\
 \\usepackage[T1]{fontenc}\n\
 \\usepackage[latin1]{inputenc}\n\
 \n\
@@ -403,3 +414,46 @@ rm hnb.tmp.tex",filename,filename);
   
 }
 
+Node *help_import(Node * node){
+  npos=node;
+  
+  startlevel=nodes_left(node);
+
+  #include "tutorial.inc"
+  
+  if (node_getflags (node) & F_temp)
+    node = node_remove (node);
+  return (node);
+}
+
+void
+help_export (Node * node, char *filename)
+{
+  Node *tnode;
+  int level, flags, startlevel,lastlevel,cnt;
+  char *data;
+  FILE *file;
+
+  file = fopen (filename, "w");
+  startlevel = nodes_left (node);
+
+  tnode = node;
+  lastlevel=0;
+  fprintf (file, "#define i(a,b,c) import_node(a,c,b)\n\n");
+  while ((tnode != 0) & (nodes_left (tnode) >= startlevel))
+    {
+      level = nodes_left (tnode) - startlevel;
+      flags = node_getflags (tnode);
+      data = node_getdata (tnode);
+
+	  for (cnt = 0; cnt < level; cnt++){fprintf (file, "\t");};
+	  
+	  fprintf (file, "i(%i,\"%s\",%i);\n",level,data,flags);
+
+	  lastlevel=level;
+      tnode = node_recurse (tnode);
+    };
+	level=0;
+
+  fclose (file);
+}

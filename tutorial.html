@@ -1,0 +1,160 @@
+<html>
+<head>
+	<title>tree exported from hnb</title>
+</head>
+<body>
+<ul>
+	<br><br>
+	<li>Welcome to 'hierachical notebook'
+	<br><br>
+	<li>Navigate using your arrow keys, right takes you a level further down in the tree, left brings you up a level, up and down navigates amongst the siblings.
+	<li>An entry followed by two dots have subentries.
+	<br><br>
+	<li>usage documentation
+	  <ul>
+		<li>In the bottom of your terminal window you see a list of allowed commands, a letter with a caret (^) in front means that you should press control and the letter.
+		<li>pressing F1 cycles two different help screens
+		<br><br>
+		<li>navigation
+		  <ul>
+			<li>you navigate the tree by using the arrow keys.
+			<li>pageup and pagedown skips up and down by 10 items.
+			<li>by starting to type the start of an sibling entry, the focus will skip to a node beginning with those characters, pressing tab will select that node, tabbing again will go to the sublevel, just like filename completion in a unix shell.
+			<li>to find a node press ctrl+f, enter a search term, and follow the instructions at the bottom of the screen.
+		  </ul>
+		<li>data entry/modification
+		  <ul>
+			<li>to insert a node at a location, press insert, and a new node will appear below the current node.
+			<li>pressing enter will edit the current node.
+			<li>the entry completion feature explained in navigation will also insert a new node if you press enter after typing something that is not already exist as a node, the new node will be inserted as the bottommost sibling at the current level.
+		  </ul>
+		<li>todo lists
+		  <ul>
+			<li>pressing ctrl+t will toggle a checkmark to the left of the current entry
+			<li>new nodes created below this node will also have a checkmark.
+			<li>pressing ctrl+d will check the checkbox, 
+			<li>the upperlevel todo items will be checked if all the sublevel items are checked off, if just some sublevels are checked off a percentage will be shown insted of the checkmark.
+		  </ul>
+		<li>removing nodes
+		  <ul>
+			<li>pressing delete or backspace while navigating will remove
+			<li>a node, if the node has children you must confirm the
+			<li>deletion
+		  </ul>
+		<li>exporting to other formats
+		  <ul>
+			<li>pressing ctrl+e will bring up the export menu
+			<li>it will write the siblings and sublevels of the current node to a file.
+			<li>the most useful is perhaps the html export mode, hnb itself doesn't sport a nice printing interface, but the html can be printed nicely from an webbrowser.
+		  </ul>
+		<li>saving/quitting
+		  <ul>
+			<li>pressing [esc] or ctrl+x will give you the choices to,
+			<li>save
+			<li>quit
+			<li>save and quit,..
+			<li>amongst other options
+		  </ul>
+		<li>command line parameters
+		  <ul>
+			<li>usage: hnb [options] [file]
+			<li> 
+			<li>if file is omitted hnb will edit the default database
+			<li>you can find out which file is the default file
+			<li>by using the help option
+			<li> 
+			<li>OPTIONS:
+			<li>  -h, --help    - display usage and options
+			<li>  -v, --version - display the version of hnb
+		  </ul>
+	  </ul>
+	<li>sample data:
+	  <ul>
+		<li>books in my bookshelf
+		  <ul>
+			<li>Aldous Huxley, Brave New World
+			<li>Conan Doyle, The Adventures of Sherlock Holmes
+			<li>Edgar Allan Poe, Selected works
+			<li>Geogre Orwell, Animal Farm
+			<li>Harper Lee, To Kill a Mockingbird
+			<li>J R R Tolkien, The Lord Of The Rings
+			  <ul>
+				<li>Three Rings for the Eleven-kings under the sky
+				<li>  Seven for the Dwarf-lords in their halls of stone,
+				<li>Nine for Mortal Men doomed to die,
+				<li>  One for the Dark Lord on his dark throne
+				<li>In the Land of Mordor where shadows lie.
+				<li>  One Ring to rule them all, One Ring to find them,
+				<li>  One Ring to bring them all and in the darkness bind them
+				<li>In the Land of Mordor where shadows lie.
+			  </ul>
+			<li>Jack London, Livsgnisten og andre noveller
+			<li>Knut Hamsun, Pan
+			<li>Language Myths
+			<li>Milton, Paradise Lost
+			  <ul>
+				<li>Rivers in hell
+				  <ul>
+					<li>Abhorred Styx, the flood of deadly hate
+					<li>Sad Acheron of sorrow, black and deep;
+					<li>Cocytus , named of lamentation loud
+					<li>Heard on the rueful stream; fierce Phlegethon,
+					<li>Whose waves of torrent fire inflame with rage.
+					<li>Far off from these, a slow and silent stream,
+					<li>Lethe, the river of oblivion, rolls
+					<li>Her watery labyrinth, whereof who drinks
+					<li>Forthwith his former state and being forgets,
+					<li>Forgets both joy and grief, pleasure and pain.
+				  </ul>
+				<li>'famous quote' (in sandman among others),..
+				  <ul>
+					<li>The mind is it's own place, and in itself
+					<li>Can make a Heaven of Hell, a Hell of Heaven.
+					<li>What matter where, if I be still the same,
+					<li>And what I should be, all but less than he
+					<li>Whom thunder hath made greater? Here at least
+					<li>We shall be free; the Almighty hath not built
+					<li>Here for his envy, will not drive us hence;
+					<li>Here we may reign secure, and, in my choice,
+					<li>To reign is worth ambition, though in Hell:
+					<li>Better to reign in Hell than serve in Heaven.
+				  </ul>
+			  </ul>
+			<li>Oscar Wilde, The Picture of Dorian Gray
+			<li>Philip K. Dick, Do Androids Dream of Electronic Sheep (Bladerunner)
+			<li>Pokus 1
+			<li>Pokus 2
+			<li>Tarjei Vesaas, Fuglane
+		  </ul>
+		<li>cd's in my collection
+		  <ul>
+			<li>none, it was stolen,
+			<li>I surive on mp3's at the moment
+		  </ul>
+		<li>[&nbsp] packing for the journey there and back again
+		  <ul>
+			<li>[&nbsp] clothes
+			  <ul>
+				<li>[X] 4x underwear
+				<li>[&nbsp] extra trousers
+				<li>[X] 3 shirts
+				<li>[&nbsp] winter clothes
+				<li>[&nbsp] extra pair of whoes
+			  </ul>
+			<li>[&nbsp] stuff
+			  <ul>
+				<li>[&nbsp] music
+				<li>[&nbsp] reading material
+				<li>[X] money
+			  </ul>
+		  </ul>
+	  </ul>
+	<li>the future of hnb
+	  <ul>
+		<li>at the moment the curses version is nearing feature completion, I will most probably make a gtk+ port of it.
+		<li>I have vague vaporware plans to make it into an collaborative, tool,.. seperating all of the interface completely from the backend, and making http, gtk+, curses, and perhaps some soap or someting client for it.
+	  </ul>
+	<br><br>
+	<li>This data was loaded, because you didn't specify any database to load, and no default database was wound in your home directory.
+</ul>
+</body></html>
