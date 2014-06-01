@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+	<TITLE>tree exported from hnb</TITLE>
+</HEAD>
+<BODY>
+<UL>
+	<LI>HIERARCHICAL NOTEBOOK
+	  <UL>
+		<BR><BR>
+		<LI>hierarchical notebook (hnb) is program to organize, many kinds of data
+		<LI>in one place, for example adresses, todo lists, ideas, book "reviews",
+		<LI>brainstorming, organizing a speech, making a  structured packing list 
+		<LI>random notes, and probably many more I  haven't thought of yet..
+		<BR><BR>
+	  </UL>
+	<BR><BR>
+	<LI>HOW TO GET hnb?
+	  <UL>
+		<LI>new releases and information about hnb will appear at hnb's homepage
+		<BR><BR>
+		<LI>http://sourceforge.net/projects/hnb/
+		<BR><BR>
+	  </UL>
+	<LI>INSTALLING hnb
+	  <UL>
+		<LI>if you've got a source release you must first compile hnb,..
+		<LI>see further down in this file for instructions.
+		<BR><BR>
+		<LI>Windows
+		  <UL>
+			<LI>the windows binary distribution, is a .zip file	containing the
+			<LI>executable, this readme file, an sample database, and the 
+			<LI>licence for hnb's use. the binary is standalone, so you can 
+			<LI>just copy it wherever you'd like it to reside.
+		  </UL>
+		<LI>Linux 
+		  <UL>
+			<LI>the linux binary distribution is a .tar.gz file	containing the
+			<LI>executable, this readme file, a an sample database, and the
+			<LI>licence for hnb's use. The binary is dynamically linked 
+			<LI>against ncurses just place it anywere in your path.. like
+			<LI>/usr/bin, /usr/local/bin or /home/user/bin
+			<BR><BR>
+		  </UL>
+	  </UL>
+	<LI>COMPILING hnb
+	  <UL>
+		<BR><BR>
+		<LI>hnb uses automake/autoconf installing it is as simple as:
+		<BR><BR>
+		<LI>./configure
+		<LI>make
+		<LI>su
+		<LI>(enter root password)
+		<LI>make install
+		<BR><BR>
+		<BR><BR>
+	  </UL>
+	<LI>USAGE DOCUMENTATION
+	  <UL>
+		<LI>If you start hnb without any parameters and no default database, or
+		<LI>with the -t or --tutorial option, hnb will load a special tutorial
+		<LI>database.
+		<BR><BR>
+	  </UL>
+	<LI>CHANGELOG
+	  <UL>
+		<LI>1.5 19 may 2001
+		  <UL>
+			<LI>switched to autoconf/automake
+			<LI>joining/splitting of nodes.
+			<LI>hooks for priority setting
+			  <UL>
+				<LI>(press ^P on a todo node)
+			  </UL>
+			<LI>added import/export of xml
+			<LI>optimizations
+			<LI>update to manpage
+			<LI>update documentatino
+			<LI>default format is now xml
+			<LI>commented all headerfunctions
+		  </UL>
+		<LI>1.4 16 may 2001
+		  <UL>
+			<LI>added preferences saving/loading
+			<LI>replaced tab char in display with a space.
+			<LI>removal of temporary node, when issuing insert in a new leaf.
+			<LI>cli mode, for use in scripts etc.
+			<LI>pipe export by Karsten Hilbert
+			<LI>automatic generation of README.html
+		  </UL>
+		<LI>1.3 14 may 2001
+		  <UL>
+			<LI>bloat
+			<LI>various feedback changes
+			<LI>debug mode for my own sake
+			<LI>added collapseviews
+		  </UL>
+		<LI>1.2 12 may 2001
+		  <UL>
+			<LI>added mouse navigation
+			<LI>code cleanups
+			<LI>improved navigation in edit mode
+			<LI>improved pgup/pgdn
+		  </UL>
+		<LI>1.1 10 may 2001
+		  <UL>
+			<LI>ran all the files through indent
+			  <UL>
+				<LI>indent -bad -bap -br -ts4 -ce -ci4 -i4 -cli4 -cbi0 -ss -di0 -nbc -npsl -T Node -brs -ip4 -bbo --line-length78 
+			  </UL>
+			<LI>changed the editor cursor
+			<LI>minor code tweaks and cleanups
+			<LI>added manpage by Andras BALI
+			<LI>switched to bold indication of subnodes
+			<LI>fixed grabbing of nodes (copy/move)
+			<LI>improved tree.c, multiple trees are now possible
+		  </UL>
+		<LI>1.0 21 april 2001
+		  <UL>
+			<LI>changed ctrl+space for marking to ctrl+g in win32 port
+			<LI>bullet system for all nodes ( +/- [X] [ ] )
+			<LI>added copying feature
+			<LI>better user feedback when moving
+			<LI>various fixes
+		  </UL>
+		<LI>0.9 15 april 2001 end of easter holdidays
+		  <UL>
+			<LI>undefined keyboard debugging in win32 port
+			<LI>added in-binary tutorial, and export mode for the include file
+			<LI>changed curses mode to raw
+			<LI>upon request from Marck Rintsch, ctrl+s now saves the file
+			<LI>added more visual feedback when saving, quitting and such
+			<LI>added an standard bullet on all entries.
+		  </UL>
+		<LI>0.8 15 april 2001
+		  <UL>
+			<LI>ascii export
+			<LI>html export
+			  <UL>
+				<LI>(doesn't escape any html by itself)
+			  </UL>
+			<LI>latex export
+			  <UL>
+				<LI>doesn't work for deeper nesting levels than four
+			  </UL>
+			<LI>postscript export
+			  <UL>
+				<LI>based on the latex export
+				<LI>uses system calls and requires latex, and dvips
+			  </UL>
+			<LI>loading(insertion) of an external file into the db
+			<LI>added done percentage
+		  </UL>
+		<LI>0.7 13 april 2001
+		  <UL>
+			<LI>rearranged input structures
+			<LI>added todo checkboxes
+			<LI>added error display
+			<LI>remade the help system
+			<LI>fixed resizing
+			<LI>made search case insensitive
+			<LI>refined search control interface
+		  </UL>
+		<LI>0.6b 11 april 2001
+		  <UL>
+			<LI>the guadec hacked fixes on strics computer
+			<BR><BR>
+			<LI>worked on search ability
+			<LI>fixed the display of confirm mode in curses ui.
+			<LI>added reparenting
+			<LI>cleaned up node_remove
+			<LI> 
+			<LI>added load,save and display of todo in standard file format
+			<LI>changed to bz2 format on distribution file
+		  </UL>
+		<LI>0.5
+		  <UL>
+			<LI>help item's update
+			<LI>added insert in the interface
+		  </UL>
+		<LI>0.4 march 2001
+		  <UL>
+			<LI>added registry functions
+			<LI>small bugfix for node recurse()  (go right, and to top)
+			<LI>fixed tab'ing into children of empty nodes bug
+			<LI>fixed wordwrap
+		  </UL>
+		<LI>0.3 15.oct 2000
+		  <UL>
+			<LI>first rendition of cgi-bin browser
+			<LI>wordwrap
+			<LI>added registry
+			<LI>added resize functionality
+			<LI>pageup/pagedown
+			<LI>changes to help/confirming interface
+		  </UL>
+	  </UL>
+	<LI>AUTHORS
+	  <UL>
+		<LI>hnb authors
+		<BR><BR>
+		<LI>Øyvind Kolås       <pippin@users.sourceforge.net>
+		  <UL>
+			<LI>project maintainer
+		  </UL>
+		<LI>Andras BALI        <drewie@bigfoot.com>
+		  <UL>
+			<LI>Debian Package
+			<LI>manual page
+		  </UL>
+		<LI>Karsten Hilbert    <Karsten.Hilbert@gmx.net>
+		  <UL>
+			<LI>pipe export
+		  </UL>
+	  </UL>
+	<LI>BUGS
+	  <UL>
+		<LI>slashes (/) inside nodes are not escaped correctly in cli mode
+	  </UL>
+	<LI>TODO
+	  <UL>
+		<LI>buffer limits
+		  <UL>
+			<LI>they are high,.. but a really long node might crash it
+		  </UL>
+		<LI>more entities on each node
+		  <UL>
+			<LI>current entities:
+			  <UL>
+				<LI>priority
+				<LI>title/data
+				<LI>todo item
+				<LI>done/not done
+			  </UL>
+			<LI>future items:
+			  <UL>
+				<LI>created date
+				<LI>modified date
+				<LI>due date, for project planning
+				<LI>details dialog for each node to modify such things
+				<LI>cronological id
+			  </UL>
+		  </UL>
+		<LI>purge todo items on lower levels
+		<LI>shuffle action
+		<LI>curses interface
+		  <UL>
+			<LI>tin like confirm mode
+			  <UL>
+				<LI>display [N] in bold,..
+				<LI>pressing Y returns Yes
+				<LI>pressing N returns N
+				<LI>up toggles Y
+				<LI>down toggles N
+				<LI>left cancels
+				<LI>right says yes
+			  </UL>
+			<LI>"context" menu for mouse mode
+			<LI>go away from centerline centric display approach
+		  </UL>
+		<LI>cli interface
+		  <UL>
+			<LI>make '/' inside node names appear correctly in pwd, and prompt
+			<LI>maybe avoiding static buffers is even more important here than in the curses version (due to possible scripted input),.. but then I'd have to fix path.c as well.. <g>
+		  </UL>
+		<LI>gtk 2.0
+		  <UL>
+			<LI>start
+		  </UL>
+		<LI>how to implement cloning
+		  <UL>
+			<LI>linked list
+			  <UL>
+				<LI>add a flag called ghost
+				<LI>add a Node *ghost; var to all nodes.
+				<LI>the node that sets up the symlink is set F_ghost, and Node *Right points to the children of the original node.
+				<LI>the destination points it's Node *ghost to the node that referred to it.
+				<LI>if a new ghost is made of any of the two other nodes, it sets it's own F_ghost attribute. Follows the links to the originating ghost, (->child -> parent) sets it's *right node pointing to it, follows the *ghost link until the 0, and hooks itself in there.
+				<LI>when removing the original node you reparent the children to the next node in the link list, and removes the F_ghost attribute from that node.
+				<LI>when removing one of the ghosts, you must tidy up the ghost link list, and free that node(but none of it's data)
+			  </UL>
+			<LI>in the ascii data format just say node_no(link) is linked here
+			<LI>the userinterface should have no notion of it's path,.. but perhaps a node history...
+			<LI>functions that must be changed
+			  <UL>
+				<LI>node_swap
+				  <UL>
+					<LI>if a node with F_ghost is moved, don't reparent children.
+				  </UL>
+				<LI>subtree_copy
+				  <UL>
+					<LI>nahh, tough one,.. just make a duplicate that isn't linked with the rest? TBD
+				  </UL>
+				<LI>node_recurse
+				  <UL>
+					<LI>ignore ghosts thereby avoiding loops
+				  </UL>
+				<LI>node_backrecurse
+				<LI>node_insert_up
+				<LI>node_insert_down
+				<LI>node_remove
+			  </UL>
+		  </UL>
+	  </UL>
+</UL>
+</BODY></HTML>
