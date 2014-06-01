@@ -38,11 +38,6 @@
 	  </UL>
 	<LI>CHANGELOG
 	  <UL>
-		<LI>0.3b
-		  <UL>
-			<LI>added registry functions, and a small sample programed called reg
-			<LI>small bugfix for node recurse()  (go right, and to top)
-		  </UL>
 		<LI>0.3 15.oct 2000
 		  <UL>
 			<LI>fixed registry
@@ -59,6 +54,8 @@
 		  </UL>
 		<LI>0.4 march 2001
 		  <UL>
+			<LI>added registry functions, and a small sample programed called reg
+			<LI>small bugfix for node recurse()  (go right, and to top)
 			<LI>fixed tab'ing into children of empty nodes bug
 			<LI>fixed first node bug of wordwrap
 			<LI>made wordwrap wrap at end instead of end-indent
@@ -86,13 +83,6 @@
 			<LI>when adding a child by navigating,.. the parents node were reset to 0 for no apparent reason.
 			<LI>changed to bz2 format on distribution file
 		  </UL>
-		<LI>0.6c
-		  <UL>
-			<LI>rearranged input structures
-			<LI>added todo checkboxes
-			<LI>added error mode to display modes
-			<LI>rewamped the helpline system
-		  </UL>
 		<LI>0.6d
 		  <UL>
 			<LI>fixed resizing
@@ -100,6 +90,13 @@
 			<LI>made search case insensitive
 			<LI>refined search control interface
 			<LI>made todocheckboxes become autocheckin for one level(parent),.. but not recursively yet. but it seeds the idea of what is to come.
+		  </UL>
+		<LI>0.6c
+		  <UL>
+			<LI>rearranged input structures
+			<LI>added todo checkboxes
+			<LI>added error mode to display modes
+			<LI>rewamped the helpline system
 		  </UL>
 		<LI>0.7 13 april 2001
 		<LI>0.7a
@@ -145,13 +142,21 @@
 			<LI>added an standard bullet on all entries.
 		  </UL>
 		<LI>0.9 15 april 2001 end of easter holdidays
+		<LI>0.9a
+		  <UL>
+			<LI>bloat
+			<LI>changed the bullet/indentation system, the bullets are now aligned, children are no longer indicated by trailing dots but by a + bullet instead of - bullet, [ ] removed from nodes which children are partially done.
+			<LI>when moving a node, the moving is now displayed graphically to give a better feedback to the user.
+			<LI>renamed moving of node to marking of node,.. now you can also copy the marked node, as well as move it.
+			<LI>fixed a bug, with checkbox not inherited where it should be.
+			<LI>changed ctrl+space for marking to ctrl+g in win32 port, I think the win32 port now is fully usable.
+			<LI>fixed a bug, pertaining to startup with files that don't exist,.. tutorial would show.. even tough it shouldn't
+		  </UL>
+		<LI>1.0 released 21 april 2001
 	  </UL>
+	<LI>BUGS
 	<LI>TODO
 	  <UL>
-		<LI>moving
-		  <UL>
-			<LI>make the selected node, be dragged instead of warped
-		  </UL>
 		<LI>buffer limits
 		  <UL>
 			<LI>they are high,.. but somebody typing a biiig node could crash it
@@ -167,8 +172,6 @@
 		<LI>curses interface
 		  <UL>
 			<LI>in editing mode, use reverse video as cursor instead of underscorehack
-			<LI>ctrl+space apparently doesn't work in win32
-			<LI>copy node and substree
 		  </UL>
 		<LI>make default format xml, and move the current format into an text export/import filter thing.
 		  <UL>
@@ -192,11 +195,12 @@
 				<LI>make an own details dialog for each node to modify such things.. it will be easier than loads of shortcuts,.. (I think)
 			  </UL>
 		  </UL>
-		<LI>bulletmode
+		<LI>bulletmodes
 		  <UL>
 			<LI>bullet, number, abcd, ABCD, checkbox, none
 		  </UL>
 		<LI>purge todo items on lower levels
+		<LI>shuffle mode
 	  </UL>
 	<LI>author: Øyvind Kolås / pippin@users.sourceforge.net
 </UL>

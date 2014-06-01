@@ -5,7 +5,7 @@
 #include "stdio.h"
 #define UI_C
 #include "ui.h"
-
+																																			#define hnbgimp
 int nodes_above;
 int middle_line;
 int nodes_below;
@@ -128,7 +128,12 @@ int line;
 		i(" ^S "," save");		
 		i("del"," remove");
 
-		i("^space"," move");
+#ifndef WIN32
+		i("^space"," grab");
+#endif
+#ifdef WIN32
+		i(" ^G "," grab");
+#endif		
 		i(" TAB "," match completion");
 		break;
 	case UI_MODE_EDIT:
@@ -188,12 +193,13 @@ int line;
 		break;
 	case UI_MODE_MARKED:
 		line=LINES-2;pos=0;clr;
-		i("","");i("","");i("","");
-		i("arrows"," move");
-		i("space"," drop");
-		i("Esc,C"," cancel");
+		pos++;
+		i("arrows"," navigate");pos++;
+		i("space"," move");
+		i("C Enter"," copy");
+		i("Esc,Q"," cancel");
 		line=LINES-1;pos=0;clr;			
-		i("","node grabbed, move to destianation and drop node");
+		i("","node grabbed, move the ghost to new position");
 		break;
 	case UI_MODE_ERROR:
 	    line=LINES-1;pos=0;clr;
@@ -226,11 +232,14 @@ int line;
 		i("","");
 		i("","");
 		break;
+																																									#ifdef hnbgimp
+																																										case 11111:line=LINES-2;pos=0;clr;i(" hnb-gimp "," ver -0.1");addch(' ');addstr(message);i("","");i("","");i("ESC,Q"," quit");i("arrows"," draw");i(" X "," toggle color");line=LINES-1;pos=0;clr;	i("","");i("","");i("","");i(" I "," invert image");i("","");i(" C "," clear canvas");break;
+																																									#endif	
   };
 }
 
 #define indentstart 1
-#define indentspace 5
+#define indentspace 3
 
 int startlevel = 0;
 
@@ -251,44 +260,42 @@ int draw_node(int line_start, int col_start, char *data, int draw_mode, int comp
 	int col_end= COLS; /* -col_start-1; */
 	move(line_start, col_start);
 
-	if ( draw_mode & D_M_CHILD ) col_end -= 3;  /* need space to show we've got a subnode*/
+/*	if ( draw_mode & D_M_CHILD ) col_end -= 3;*/  /* need space to show we've got a subnode*/
 	
 	if( draw_mode & D_M_WRAP ){
 		 int pos, col=col_start;
-		 char word[100];
+		 char word[200];         /* maximum displayed (not stored) word length */
 		 word[0]=0;	 
 
 
 	move(line_start,col);
 
-  if(completion!=-1){						/* todo bullets */
+  if(completion>-1){						/* todo bullets */
 	    switch(completion){
 			case 0:
+			 if(col!=0)move(line_start,col-1);
 		     if( ! (draw_mode & D_M_TEST))	  addstr("[ ] ");
-		  	  col=col_start+=4;			 
+		  	  col=col_start+=3;			 
 			 break;
 			case 1000:
+			 if(col!=0)move(line_start,col-1);
  		     if( ! (draw_mode & D_M_TEST))	  addstr("[X] ");
-		  	  col=col_start+=4;
+		  	  col=col_start+=3;
 			 break;
 			default:{char str[10];
-		  	  col=col_start+=6;
-			sprintf(str,"[%i%%]",completion/10);
+			sprintf(str,"%2i%% ",completion/10);
+if(col!=0){move(line_start,col-1);}else {col_start+=1;};
  		     if( ! (draw_mode & D_M_TEST))	  addstr(str);
+		  	  col=col_start+=3;			 
 			}
 			 break;
 		}
+/*		if( ! (draw_mode & D_M_TEST))addch((draw_mode & D_M_CHILD)?'+':' ');*/
   } else {
-#ifndef WIN32
-	 int a;short b;
-     attr_get(&a,&b,NULL); /* the standard bullet */
-	 attrset(0);  
-#endif
-	 if(data[0]) if( ! (draw_mode & D_M_TEST))  addstr("-");
-	 col=col_start+=2;
-#ifndef WIN32
-	 attrset(a);
-#endif	 
+
+	 if(completion==-1)if(data[0]) if( ! (draw_mode & D_M_TEST))  addstr((draw_mode & D_M_CHILD)?"+  ":"-  ");
+	 col=col_start+=3;
+
   }
 
 		 for(pos=0;pos<=strlen(data);pos++)
@@ -300,8 +307,7 @@ int draw_node(int line_start, int col_start, char *data, int draw_mode, int comp
 						lines_used++;
 
 			      if (LINES <= lines_used+line_start)
-					return lines_used+1;  /* avoid overflow whilst
-											line breaking*/
+					return lines_used+1;  /* avoid drawing past the screen */
 						
 					};
 						move(line_start+lines_used,col);
@@ -315,15 +321,19 @@ int draw_node(int line_start, int col_start, char *data, int draw_mode, int comp
 						word[0]=0;
 					break;
 				default:
-					if(strlen(word)<98){
+					if( (strlen(word)<198) ){          
 						word[strlen(word)+1]=0;
 						word[strlen(word)]=data[pos];
 					};
+					if (strlen(word)>col_end-col_start){
+						/* wordbreak with hyphen,..?*/
+					}
+					
 					break;
 			};
 	} else if( ! (draw_mode & D_M_TEST)) addnstr(data, col_end-col_start );
 			
-	if( ! (draw_mode & D_M_TEST)) if ( draw_mode & D_M_CHILD ) addstr(" ..");
+/*	if( ! (draw_mode & D_M_TEST)) if ( draw_mode & D_M_CHILD ) addstr(" ..");*/
 	
 	lines_used++;
 	
@@ -360,7 +370,7 @@ ui_draw (Node * node, char *input, int mode)
   attrset (A_BOLD);
  
 if(mode!=UI_MODE_INFO && mode!=UI_MODE_GETSTR && mode !=UI_MODE_IMPORT && mode != UI_MODE_SEARCH && mode != UI_MODE_CONFIRM && mode != UI_MODE_ERROR )
-  draw_node(middle_line, indentlevel(node), input,D_M_WRAP,node_calc_complete(node));
+  draw_node(middle_line, indentlevel(node), input,D_M_WRAP,-2);
   attrset (A_NORMAL);  
 }
 
@@ -375,7 +385,6 @@ if(mode!=UI_MODE_INFO && mode!=UI_MODE_GETSTR && mode !=UI_MODE_IMPORT && mode !
   while (tnode != 0)
     {
       line+=draw_node(line, indentlevel(tnode), node_getdata(tnode),D_M_WRAP+(node_right(tnode)?D_M_CHILD:0),node_calc_complete(tnode));
-    
       tnode = down (tnode);
       if (middle_line + nodes_below <= line)
 	tnode = 0;
@@ -394,6 +403,22 @@ if(mode!=UI_MODE_INFO && mode!=UI_MODE_GETSTR && mode !=UI_MODE_IMPORT && mode !
 		getstr(&input[0]);
 		noecho();
 	};
+/* it causes compile time warnings so, I uncomment it when I need it */
+
+/*	
+	if(mode==UI_MODE_DEBUG){
+		int pos;char msg[80];int t;
+		#define ipf(a,b,c) snprintf(msg,80,b,c);i(a,msg);
+		int line;
+		line=0;pos=0;clr;i("       ","");ipf("data:","  %s",node_getdata(node));
+		line=1;pos=0;clr;i(" debug ","");ipf("flags:"," %i",node_getflags(node));pos+=2;ipf("/\\"," %i",((t=(int)node_up(node))& 4095));
+		line=2;pos=0;clr;i("       ","");ipf("level:"," %i",nodes_left(node));pos+=1;ipf("<-"," %i",(t=(int)node_left(node))&4095);ipf("","%i",(int)node&4095);ipf("->"," %i",(t=(int)node_right(node))&4095);
+		line=3;pos=0;clr;i("       ","");ipf("input:"," %s",input);pos+=2;ipf("\\/"," %i",(t=(int)node_down(node))&4095);ipf("\\\\//"," %i",(t=(int)node_down(node_down(node)))&4095);
+		line=4;pos=0;clr;i("                                ","");
+	    line=LINES-1;pos=0;clr;i(" press any key ","");
+	
+	};
+*/	
 }
 
 void
@@ -402,11 +427,20 @@ ui_end ()
   clear ();
   refresh();
   endwin ();
-}
-
+}																													
+																														#ifdef hnbgimp
+																															#define pset(a,b,c) v[b][a]=c;
+																															#define pget(a,b) v[b][a];
+																																		#define mva(a,b,c) mvaddch(a,b,c)
+																																#define cw 33
+																																	#define ch 17
+/*get this function tells what we want to do to the main loop														*/	/*char qixels[16]=" ,'L`/~P._\\bJd\\H";*/char qixels[16]=" ,'L`/~Pcw\\b]d\\@";int v[32][64];/*
+  of the main program*/																									void cls(){int x,y;for(x=0;x<64;x++)for(y=0;y<32;y++)pset(x,y,0);}void draw(int xp,int yp){int x,y;for(x=0;x<16;x++)for(y=0;y<32;y++){mva(x+yp+1,y+xp+1, qixels[v[x*2][y*2]*2+v[x*2+1][y*2]+v[x*2][y*2+1]*4+v[x*2+1][y*2+1]*8]);}for(x=xp;x<=xp+cw;x++){mva(yp,x,'_');mva(yp+ch,x,'~');};for(y=yp;y<=yp+ch;y++){mva(y,xp+cw,'|'); mva(y,xp,'|'); };mva(yp,xp,'.');mva(yp,xp+cw,'.');mva(yp+ch,xp,'`');mva(yp+ch,xp+cw,'\'');move(0,0);}
+																														#endif			
 int
 ui_input ()
 {
+
   int c;
   c=getch();
   switch(c){
@@ -415,9 +449,11 @@ ui_input ()
     nodes_above = middle_line;
     nodes_below = LINES-middle_line;
 	c=getch();
-	
     return UI_IGNORE;
-	break;	
+	break;																										
+																												#ifdef hnbgimp 
+																											case KEY_F(12):{int c=0;int x=5,y=5,i=1;erase();help_draw(11111,"");draw(2,2);refresh();while(c!=27){c=getch();switch(c){case 8:case KEY_UP:y--;break;case 2:case KEY_DOWN:y++;break;case 4:case KEY_LEFT:x--;break;case 6:case KEY_RIGHT:x++;break;case 'i':case 'I':{int x,y;for(y=31;y>=0;y--)for(x=63;x>=0;x--){pset(x,y,!pget(x,y));draw(2,2);refresh();}};case 'x':case 'X':i=!i;break;case 'c':cls();break;case 'q':case KEY_F(12):c=27;break;}x=x>63?0:x<0?63:x;y=y>31?0:y<0?31:y;pset(x,y,i);pset(x,y,!pget(x,y));draw(2,2);refresh();pset(x,y,!pget(x,y));}return UI_IGNORE;}
+																												#endif
   }
   
   return(c);

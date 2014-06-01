@@ -1,1 +1,1 @@
-#define VERSION "hierarchical notebook ver. 0.9"
+#define VERSION " hierarchical notebook ver. 1.0"

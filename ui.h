@@ -40,7 +40,16 @@
 #define UI_TOGGLE_TODO 20/* ctrl+t */
 #define UI_TOGGLE_DONE 4 /* ctrl+d */
 
+#define UI_DEBUG	KEY_F(11)
+
 #define UI_MARK 0
+
+#ifdef WIN32
+
+#undef UI_MARK
+#define UI_MARK  7 /* ctrl+G*/
+
+#endif
 
 #define UI_IGNORE 1111
 
@@ -57,6 +66,7 @@
 #define UI_MODE_SEARCH   12
 #define UI_MODE_EXPORT   13
 #define UI_MODE_IMPORT 	 14
+#define UI_MODE_DEBUG 	 15
 
 void ui_init();
 void ui_draw(Node *node,char *input, int mode);

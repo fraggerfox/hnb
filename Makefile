@@ -36,7 +36,7 @@ cgi-bin.o: cgi-bin.c
 cgi-bin: cgi-bin.o node.o tree.o tokenizer.o path.o file.o cgi-bin.o
 	gcc -o cgi-bin cgi-bin.o file.o node.o tree.o tokenizer.o path.o
 version.h: VERSION
-	echo \#define VERSION \"hierarchical notebook ver. `cat VERSION`\">version.h
+	echo \#define VERSION \" hierarchical notebook ver. `cat VERSION`\">version.h
 clean: 
 	rm -rf *.o *~ hnb hnb.exe reg DEADJOE cgi-bin core a.out
 strip: hnb

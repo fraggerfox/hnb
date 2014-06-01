@@ -5,7 +5,9 @@ at the left.. (like the model presented to the
 user) */
 
 #include <stdio.h>
+
 #include <assert.h>
+
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
@@ -73,6 +75,11 @@ node_insert_up (Node * node)
     temp->down = new;
 
   new->left = node->left;
+
+  if(node_left(new)){    /* make tree consistant */
+     temp=node_left(new);
+	 temp->right=new;
+  }
 
   return new;
 }
@@ -366,8 +373,11 @@ int tree_free(){
 }
 
 #define look into node_swap and wether it can be done easilier
-
 #define swp(a,b,t)	t=a;a=b;b=t;
+
+/*
+   swaps all the data contained in the two specified node structures
+*/
 
 void
 node_swap (Node * nodeA, Node * nodeB)
@@ -378,6 +388,9 @@ node_swap (Node * nodeA, Node * nodeB)
   Node *tnode;
   int tint;
   char *tstr;
+  
+  if(nodeA==root)root=nodeB;
+     else if(nodeB==root)root=nodeA;
 
   swp (nodeA->right, nodeB->right, tnode);
   swp (nodeA->flags, nodeB->flags, tint);
@@ -406,7 +419,6 @@ node_swap (Node * nodeA, Node * nodeB)
 	  tnode->left = nodeB;
 	};
     };
-
 }
 
 void node_update_parents_todo(Node *pos){

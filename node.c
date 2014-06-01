@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include "node.h"
+
+#define assert(a)
 
 void
 node_setdata (Node * node, char *data)

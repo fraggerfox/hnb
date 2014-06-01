@@ -62,8 +62,8 @@ Node *pos;
 			
 #ifdef WIN32
 
-#undef undefined key(a,c)
-#define undefined key(a,c)
+#undef undefined_key(a,c)
+#define undefined_key(a,c)
 
 
 #endif
@@ -191,12 +191,62 @@ app_edit ()
   stop = 0;
 }
 
+Node *npos;
+int tstartlevel;
+
+static void  /* this is the same function I use in file,
+                perhaps I could make it and populate function
+				in tree.c instead,.. */
+import_node (int level, int flags, char *data)
+{
+  level = level + tstartlevel;
+
+  while (nodes_left (npos) > level)
+    npos = node_left (npos);
+
+  if (nodes_left (npos) == level)
+    npos = node_insert_down (npos);
+
+  if (nodes_left (npos) < level)
+    npos = node_insert_right (npos);
+
+  node_setflags (npos, flags);
+  node_setdata (npos, data);
+}
+
 void
-app_mark ()  /* add visual cue in this one? */
+node_duplicate_tree(Node *source,Node *target){
+ int level, flags, sstartlevel;
+  char *data;
+
+    tstartlevel=nodes_left(target);
+	
+	node_setflags(target,node_getflags(source));
+	npos=target;
+
+	if(nodes_right(source)){
+	   source=node_right(source);
+       sstartlevel=nodes_left(source);	   
+	   while((source!=0) & (nodes_left(source) >= sstartlevel)){
+		  level = nodes_left (source) - sstartlevel+1;
+          flags = node_getflags (source);
+          data = node_getdata (source);
+		  import_node(level,flags,data);
+ 	      source=node_recurse(source);		  
+	   }
+	}
+	
+	
+}
+
+void
+app_mark ()  
 {
   {
     int stop = 0;
     Node *marked = pos;
+	pos=node_insert_up(pos);
+	node_setdata(pos,node_getdata(marked));	
     input[0] = 0;
     while (!stop)
       {
@@ -206,48 +256,74 @@ app_mark ()  /* add visual cue in this one? */
 	switch (c)
 	  {
 	  case UI_UP:
-	    if (node_up (pos))
-	      pos = node_up (pos);
+	    if (nodes_up (pos)){
+		  if(node_up(pos)==marked){
+		     if(nodes_up(marked)){
+		 	   node_swap(pos,node_up(marked));
+		       pos=node_up (marked);			    
+			 }
+		  }else{
+		  node_swap(pos,node_up(pos));
+	      pos=node_up (pos);
+		  }
+		}
 	    break;
-	  case UI_DOWN:
-	    if (node_down (pos))
-	      pos = node_down (pos);
+	  case UI_DOWN:	  
+	    if (nodes_down (pos)){
+		  if(node_down(pos)==marked){
+		     if(nodes_down(marked)){
+		 	   node_swap(pos,node_down(marked));
+		       pos=node_down (marked);			    
+			 }
+		  }else{
+		  node_swap(pos,node_down(pos));
+	      pos=node_down (pos);
+		  }
+		}
 	    break;
 	  case UI_LEFT:
-	    if (node_left (pos)){
-		  if(node_getflags(pos)&F_temp){
-		     pos=node_remove(pos);
-		  } else {
-	      pos = node_left (pos);
-		  };
+	    if (node_left (pos)){   /* only if there are nodes to the left */
+			Node *tnode=node_insert_down(node_left(pos));
+				node_swap(tnode,pos);
+				node_remove(pos);
+				pos=tnode;
   	    };
 	    break;
-	  case UI_RIGHT:
-	    if (pos != marked) {
-	      if (node_right (pos)){
-			pos = node_right (pos);
-		  } else {
-		  	if(!(node_getflags(pos)&F_temp)){
-			  	pos = node_insert_right (pos);
-				node_setflags(pos,F_temp);
-			};
-		  };
-		};			
+	  case UI_RIGHT:	    
+	  	if(nodes_up(pos)&&(node_up(pos)!=marked)){	/* only if there is a node above*/
+			if(node_right(node_up(pos))){ /* if there is children*/
+				Node *tnode=node_insert_up(node_right(node_up(pos)));
+				node_swap(tnode,pos);
+				node_remove(pos);
+				pos=tnode;
+			}else{          /* if there are no children */
+				Node *tnode=node_insert_right(node_up(pos));
+				node_swap(tnode,pos);
+				node_remove(pos);
+				pos=tnode;
+			}
+		}
 	    break;
 	  case ' ':
-	  case UI_ENTER:
-	    if(!(node_getflags(pos)&F_temp)){
-	    pos = node_insert_down (pos);
-		};
-	    node_swap (pos, marked);
+	    node_swap (marked,pos);
 	    node_remove (marked);
 	    stop = 1;
 	    break;
-      case UI_ESCAPE:
+		
+	/* clone?????,.. this is the place to add symlinks,.. but how to implement it in the structure?*/	
+
+	  case UI_ENTER:		
 	  case 'c':
-	  case 'C':
+	  case 'C':/*copy*/
+	    node_duplicate_tree(marked,pos);
+		stop=1;	  	
+		break;
+      case UI_ESCAPE:
+	  case 'q':case 'Q':
 	    stop = 1;
-	  break;
+		node_remove(pos);
+		pos=marked;
+	  	break;
 	  default:
 			undefined_key("mark",c);
 	  break;
@@ -326,8 +402,7 @@ void app_search(){
             return;
           }
           break;
-        case 'c':
-        case 'C':
+        case 'c':case 'C':case 'q':case 'Q':
 		case UI_ESCAPE:
          {
           pos=query_start;
@@ -433,6 +508,7 @@ app_navigate ()
       c = ui_input ();
       switch (c)
 	{
+	case UI_DEBUG:  ui_draw(pos,input,UI_MODE_DEBUG);getch();break;
 	case UI_EXPORT: app_export();    break;
 	case UI_QUIT:   stop=app_quit();   break;
     case UI_FIND:   app_search();      break;
@@ -505,6 +581,7 @@ app_navigate ()
          first_moved=tnode;
 
          while(node_down(pos)){
+		   ui_draw(pos,"da loop",UI_MODE_DEBUG);getch();
            tnode=node_insert_down(node_bottom(node_right(pos)));
            node_swap(node_down(pos),tnode);
            node_remove(node_down(pos));          
@@ -612,6 +689,10 @@ app_navigate ()
 		{
 		  pos = node_insert_down (node_bottom (pos));
 		  node_setdata (pos, input);
+		  if(node_getflags( node_left(pos)) & F_todo){
+		  	node_setflags(pos,F_todo);
+  	      node_update_parents_todo(pos);}
+
 		};
 	      input[0] = 0;
 	    };
@@ -685,7 +766,7 @@ app_navigate ()
 int
 main (int argc, char **argv)
 {
-  int i;
+  int i;int def_db=0;
   char *ui;
   db_file[0] = 0;
 
@@ -726,15 +807,19 @@ main (int argc, char **argv)
 #ifdef WIN32
       sprintf (db_file, "C:\\hnb_data");
 #endif
+     def_db=1;
     };
 
   input[0] = 0;
   tree_init ();
 
   pos = tree_root ();
-  if (db_file[0] != (char)255) pos = ascii_import (pos, db_file);
-  if(nodes_right(pos)==0 &&  nodes_down(pos)==0 && nodes_up(pos)==0)
-	  pos = help_import(pos);
+  if (db_file[0] == (char)255)pos = help_import(pos);
+     else pos = ascii_import (pos, db_file);
+	 
+  if(nodes_right(pos)==0 &&  nodes_down(pos)==0 && nodes_up(pos)==0 && def_db)
+	  pos=help_import(pos);
+
 
   ui_init ();
 
