@@ -627,10 +627,10 @@ void app_prefs (){
 		ui_draw (pos, input, UI_MODE_PREFS);
 		c = ui_input ();
 		switch (c) {
-			case UI_QUIT:case UI_ESCAPE:case UI_PREFS:
+			case UI_QUIT:case UI_ESCAPE:case UI_PREFS:case 'x':case 'c':case 'X':
 				stop = 1;
 				break;
-			case UI_SAVE:
+			case UI_SAVE:case 's':case 'S':
 					save_prefs(pos);
 					tree_free(pos);
 					pos=tpos;
@@ -639,7 +639,7 @@ void app_prefs (){
 					prefs.showpercent=percent;
 					return;
 				break;
-			case 1:	/* ctrl+A apply */
+			case 1:	case 'a':case 'A':
 					apply_prefs(pos);
 					percent=prefs.showpercent;
 					prefs.showpercent=0;
@@ -1136,7 +1136,7 @@ int main(int argc,char **argv){
 			if(!xml_check(prefs.db_file)){
 				fprintf(stderr,"%s does not seem to be a xml file, aborting.\n\
 if this is an old ascii hnb file, you can convert it with:\n\
-\thnb -a \"%s\" \"export -x %s\"\n", prefs.db_file, prefs.db_file, prefs.db_file);
+\thnb -a \"%s\" \"export -s %s\"\n", prefs.db_file, prefs.db_file, prefs.db_file);
 				exit(1);
 			}
 		}

@@ -44,6 +44,9 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.6.3
+		fixed sorting segfault
+		compiles with bsd curses?
 	1.6.2 27 may 2001
 		changed percentage calculation algorithm
 		cleanup of the node drawing code
@@ -174,6 +177,7 @@ AUTHORS
 		libxml2 import/export
 BUGS
 	slashes (/) inside nodes are not escaped correctly in cli mode
+	bullets/todo boxes, doesn't check that the line is writeable (top of screen on multiline nodes)
 TODO
 	buffer limits
 		they are high,.. but a really long node might crash it

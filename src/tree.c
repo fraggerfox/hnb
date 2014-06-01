@@ -396,7 +396,7 @@ int cmp_descdata(Node *a,Node *b){
 }
 
 int cmp_todo(Node *a,Node *b){
-	if( !a->flags && !b->flags )	/* accessing data directly for speed, */
+	if( !(a->flags) && !(b->flags) )	/* accessing data directly for speed, */
 		return(strcmp(a->data,b->data));	
 
 	if((a->flags&F_todo) <(b->flags&F_todo))return 1; /*  all todos at top */
@@ -419,7 +419,7 @@ int cmp_todo(Node *a,Node *b){
 Node *quicksort(Node *Top, Node *Bottom, int (*cmp) (Node *a, Node *b) )
 {
 	Node *part, *j;
-	if( Bottom!=Top && (Bottom != Top && node_down(Bottom)!=Top) ){
+	if( Bottom && Top && Bottom!=Top && (Bottom != Top && node_down(Bottom)!=Top) ){
 		j=node_up(Bottom);
 		
 		if(j==Top){

@@ -646,7 +646,7 @@ Node *xml__import (Node *node, char *filename,int generic){
 	int level=0;		/* keeps track of nesting, for the tree insertion */	
 	int swallow=0;
 	int flags=0;		/* for usage with hnb's dtd only */
-	int priority=0;
+	int priority=0;		/* --"-- */
 	import_state_t	ist;
 	
 	int line=0;
@@ -670,8 +670,7 @@ Node *xml__import (Node *node, char *filename,int generic){
 		if(prefs.debug)fprintf(stderr,"[%4i,%4i,%i]",line,dpos,level);
 		while(buf[cnt]){		/* process buffer */
 			if(dpos>bufsize){
-				fprintf(stderr,"\n\n!!!! input buffer exceeded in line '%i',\
-reducing 50 bytes, data will be lost !!! \n\n",line);
+				fprintf(stderr,"\n\n!!!! input buffer exceeded in line '%i', reducing 50 bytes, data will be lost !!! \n\n",line);
 					dpos-=50;
 					data[dpos]=0;
 			}
@@ -739,7 +738,7 @@ reducing 50 bytes, data will be lost !!! \n\n",line);
 				if(buf[cnt]==swallow){
 					swallow=0;
 				}
-			}else if (in_spec_tag) {					/* <?|! in tag thingum>*/
+			}else if (in_spec_tag) {		/* <?|! in tag thingum>*/
 				switch(buf[cnt]){
 					case '<':in_spec_tag++;		/* count <>'s*/
 						data[dpos++]=buf[cnt];
@@ -770,7 +769,7 @@ reducing 50 bytes, data will be lost !!! \n\n",line);
 					
 					data[dpos=got_data=0]=0;
 				}
-			} else { 								/* > outside <tags*/
+			} else { 						/* > outside <tags*/
 				if(buf[cnt]=='<'){/*tag start*/
 					if(got_data){
 						import_node (&ist,level-(generic?0:3),
@@ -1038,7 +1037,7 @@ Node *libxml_populate(import_state_t *is, xmlNodePtr root, int level)
 				free(s);
 				flags = 0;
 			}
-			libxml_populate(cur, level+1);
+			libxml_populate(is,cur, level+1);
 		}
 		cur = cur->next;
 	}

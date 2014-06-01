@@ -1,3 +1,6 @@
+1.6.3
+	fixed sorting segfault
+	compiles with bsd curses?
 1.6.2 27 may 2001
 	changed percentage calculation algorithm
 	cleanup of the node drawing code

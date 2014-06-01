@@ -88,15 +88,50 @@ void ui_init (){
 	bkgdset(' '+COLOR_PAIR(UI_COLOR_BG));
 }
 
-#define att_menuitem	{attrset(A_NORMAL);if(prefs.bold_menuitm)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_MENUITM));}
-#define att_menutext	{attrset(A_NORMAL);if(prefs.bold_menutxt)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_MENUTXT));}
-#define att_normal		{attrset(A_NORMAL);attron(COLOR_PAIR(UI_COLOR_BG));}
+#define att_menuitem	{attrset(A_NORMAL);\
+					if(prefs.bold_menuitm)\
+						attron(A_BOLD);\
+					else\
+						attroff(A_BOLD);\
+					attron(COLOR_PAIR(UI_COLOR_MENUITM));\
+				}
 
-#define att_node		{if(prefs.bold_node)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_NODE));}
-#define att_nodec		{if(prefs.bold_nodec)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_NODEC));}
+#define att_menutext	{attrset(A_NORMAL);\
+					if(prefs.bold_menutxt)\
+						attron(A_BOLD);\
+					else\
+						attroff(A_BOLD);\
+					attron(COLOR_PAIR(UI_COLOR_MENUTXT));\
+				}
 
-#define att_bullet		{if(prefs.bold_bullet)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_BULLET));}
-#define att_priority	{if(prefs.bold_priority)attron(A_BOLD);else attroff(A_BOLD);attron(COLOR_PAIR(UI_COLOR_PRIORITY));}
+#define att_normal	{attrset(A_NORMAL);\
+					attron(COLOR_PAIR(UI_COLOR_BG));\
+				}
+
+#define att_node		{if(prefs.bold_node)\
+					attron(A_BOLD);\
+				else\
+					attroff(A_BOLD);\
+				attron(COLOR_PAIR(UI_COLOR_NODE));}
+
+#define att_nodec		{if(prefs.bold_nodec)\
+					attron(A_BOLD);\
+				else\
+					attroff(A_BOLD);\
+				attron(COLOR_PAIR(UI_COLOR_NODEC));}
+
+#define att_bullet	{if(prefs.bold_bullet)\
+					attron(A_BOLD);\
+				else\
+					attroff(A_BOLD);\
+				attron(COLOR_PAIR(UI_COLOR_BULLET));}
+
+#define att_priority	{if(prefs.bold_priority)\
+					attron(A_BOLD);\
+				else\
+					attroff(A_BOLD);\
+				attron(COLOR_PAIR(UI_COLOR_PRIORITY));\
+				}
 
 
 Node *up (Node *sel,Node *node){
@@ -254,9 +289,9 @@ void help_draw (int mode, char *message){
 			i ("arrows", " move");
 			i ("return", " change");md(UI_ENTER);
 			pos++;
-			i ("^A", " apply");md(UI_INSERT);
-			i ("^S", " save");md(UI_REMOVE);
-			i ("^X", " cancel");md(UI_QUIT);
+			i ("A", " apply");md('a');
+			i ("S", " save");md('s');
+			i ("X", " cancel");md('x');
 			break;
 		case UI_MODE_HELP2:mdc();m_warp;
 			break;
@@ -505,16 +540,39 @@ int startlevel = 0;
 int hnb_edit_posup=0;			/*contains the cursor pos for up/down*/
 int hnb_edit_posdown=0;			/*from here when in editing mode*/
 
-/* returns the completion status a node should have*/
-#define done_status(a)					(prefs.showpercent?\
-					node_calc_complete (a)\
-				:\
-					node_getflag(a,F_todo)?\
-						node_getflag(a,F_done)?\
-							1000\
-						:0\
-					:-1)
+int prefs_bullet_empty=0;		/*could be made a preference, but I'm not sure*/
 
+/* returns the completion status a node should have*/
+int done_status(Node *a){
+int completion;
+
+	if(prefs.showpercent){
+		completion=node_calc_complete(a);
+	} else {
+		if(node_getflag(a,F_todo)){
+			if(node_getflag(a,F_done)){
+				completion=1000;
+			} else {
+				completion=0;
+			}
+		} else {
+			completion=-1;
+		}
+	}
+	
+	if(!prefs_bullet_empty && completion==-1){
+		char *data=node_getdata(a);
+		int j=0;
+		completion=-2;
+		while(data[j]){
+			if(data[j++]!=' '){
+				completion=-1;
+				break;
+			}
+		}
+	}
+	return completion;
+}
 
 /* 	draws a single item,
 
@@ -554,10 +612,11 @@ int draw_item (int line_start, int col_start, char *data,
 
 /* draw bullet */
 
-	if( ! (draw_mode & D_M_TEST )){
+	if( ! (draw_mode & D_M_TEST ) && (line_start>=0)){
 
 		att_bullet;
-		if(completion==-1){	
+		if(completion ==-2){
+		}else if(completion==-1){	
 			move(line_start,col_start-2);	
 			switch(prefs.bulletmode){
 				case BULLET_NONE:
@@ -588,7 +647,7 @@ int draw_item (int line_start, int col_start, char *data,
 					}
 			}
 		}
-		if(prefs.showpercent && priority && completion!=-1){
+		if(prefs.showpercent && priority && completion>=0){
 				att_priority;
 				addch(priority+48);
 		}
@@ -746,15 +805,15 @@ void ui_draw (Node *node, char *input, int mode){
 				indentlevel (node),
 				node_getdata (node),
 				(node_right (node) ? D_M_CHILD : 0),
-				-1, 0,0);
-		attrset (A_BOLD);
+				-2, 0,0);
 		/* the search input */
+		attrset(A_NORMAL);
 		if (mode == UI_MODE_HELP0 || mode == UI_MODE_HELP1 || mode == UI_MODE_HELP2)
 			draw_item (middle_line,
 				indentlevel (node),
 				input,
 				0,
-				-1,
+				done_status(node),
 				0,0);
 		}
 		attrset (A_NORMAL);
@@ -875,6 +934,7 @@ int ui_input ()
 			prefs.eleet_mode= !prefs.eleet_mode;
 			return UI_IGNORE;
 			break;
+#ifdef KEY_RESIZE
 		case KEY_RESIZE:
 			middle_line = LINES / 3;
 			nodes_above = middle_line;
@@ -882,6 +942,7 @@ int ui_input ()
 			c = getch ();
 			return UI_IGNORE;
 			break;
+#endif			
 #ifdef MOUSE			
 	case KEY_MOUSE:
 		getmouse(&mouse);

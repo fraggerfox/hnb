@@ -101,7 +101,21 @@ Node* export(Node *pos, char *params){
 		return pos;
 	}
 	
-	ptr_export ((Node *) node_top (pos), params);	
+	switch(format){
+		case FORMAT_ASCII:
+			ascii_export (node_top (pos), params);
+			break;
+		case FORMAT_HTML:
+			html_export (node_top (pos), params);		
+			break;
+		case FORMAT_HNB:
+			hnb_export(node_top(pos),params);
+			break;
+		case FORMAT_XML:
+			xml_export(node_top(pos),params);
+			break;			
+	}
+
 	return pos;
 }
 
@@ -137,7 +151,20 @@ Node* import(Node *pos, char *params){
 		fprintf(stderr,"just must specify a file to import\n");
 		return pos;
 	}
-	ptr_import ((Node *) node_top (pos), params);
+	
+	switch(format){
+		case FORMAT_ASCII:
+			pos=ascii_import (node_bottom (pos), params);
+			break;
+		case FORMAT_HNB:
+			pos=hnb_import(node_bottom(pos),params);
+			break;
+		case FORMAT_XML:
+			pos=xml_import(node_bottom(pos),params);
+			break;
+	}
+	
+	
 	
 	return pos;
 }
