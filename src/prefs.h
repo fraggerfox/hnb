@@ -7,7 +7,7 @@
 #define FORMAT_HTML		3
 #define FORMAT_LIBXML	4
 
-#define RC_REV 4
+#define RC_REV 6
 
 typedef struct{
 	int 
@@ -102,6 +102,8 @@ typedef struct{
 	int indent;
 	int bulletmode;
 	int showpercent;
+	int keepwhitespace;
+	int fixedfocus;
 }Tprefs;
 
 extern Tprefs prefs;

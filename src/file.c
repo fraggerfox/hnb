@@ -67,7 +67,9 @@ void import_node (import_state_t *is, int level, int flags,
 	node_setflags (is->npos, flags);
 	node_setpriority (is->npos, priority);	
 	node_setdata (is->npos, data);
-	node_update_parents_todo(is->npos);
+
+/*	node_update_parents_todo(is->npos); commented out due to major slowdown
+when importing */ 
 }
 
 Node *ascii_import (Node *node, char *filename){
@@ -390,7 +392,7 @@ void html_export (Node *node, char *filename){
 			 (flags & F_todo ? (flags & F_done ? "[X] " : "[&nbsp] ")
 				  : ""), data);
 		} else {
-			fprintf (file, "<!-- empty line?,.. nahh -->\n");
+			fprintf (file, "<!-- empty line in input -->\n");
 		}
 	
 		lastlevel = level;
@@ -608,12 +610,19 @@ char *xml_unquote(char *in,int generic){
 				else transform("quot",'"')
 				else transform("apos",'\'')
 				break;
-			case ' ':/*white space*/
-			case '\t': case 13: case 10: 
+			case ' ':/* white space */
+			case '\t': case 13: case 10:
+			if(!prefs.keepwhitespace){
 				if(out[0] && out[outpos-1]!=' '){
 					out[outpos++]=' ';
 					out[outpos]=0;
 				}
+			} else  {
+				/*if(out[0])*/{
+					out[outpos++]=' ';
+					out[outpos]=0;
+				}
+			}
 				break;
 			default:
 				out[outpos++]=in[inpos];
@@ -848,12 +857,13 @@ libxml_export_data(FILE * file, char *data)
 }
 
 static char *
-libxml_export_node_pre (FILE * file, int flags, char *data_orig)
+libxml_export_node_pre (FILE * file, Node *node, int flags, char *data_orig)
 {
 	int i = 1;
 	int j;
 	char *data;
 	char prefix[] = "(hnbnode) ";
+	unsigned char priority;
 	if(data_orig[0] != '(' && flags&F_todo)
 	{
 		data = (char *)malloc(strlen(data_orig) + strlen(prefix) + 1);
@@ -880,15 +890,17 @@ libxml_export_node_pre (FILE * file, int flags, char *data_orig)
 		{
 			j++;
 		}
+		priority = node_getpriority(node);
+		fprintf (file, "<%s title=\"%s\" ",&data[1], &data[j]);
 		if(flags&F_todo)
 		{
-			fprintf (file, "<%s title=\"%s\" todo=\"%s\">\n",
-				&data[1], &data[j],(flags&F_done)?"done":"");
+			fprintf (file, "todo=\"%s\" ", (flags&F_done)?"done":"");
 		}
-		else
+		if(priority != 0)
 		{
-			fprintf (file, "<%s title=\"%s\">\n", &data[1], &data[j]);
+			fprintf (file, "priority=\"%i\" ", priority);
 		}
+		fprintf (file, ">\n");
 	}
 	else
 	{
@@ -922,7 +934,7 @@ void libxml_rec(Node * node, FILE *file)
 	flags = node_getflags (node);
 	data = node_getdata (node);
 
-	moddata = libxml_export_node_pre(file, flags, data);
+	moddata = libxml_export_node_pre(file, node, flags, data);
 	tnode = node_right(node);
 	while(tnode)
 	{
@@ -956,6 +968,7 @@ Node *libxml_populate(import_state_t *is, xmlNodePtr root, int level)
 	int len = 1;
 	static char *notitle = "";
 	static char *delim = "\n";
+	unsigned char priority = 0;
 	data = notitle;
 	while(cur)
 	{
@@ -977,6 +990,7 @@ Node *libxml_populate(import_state_t *is, xmlNodePtr root, int level)
 
 
 				
+				priority = 0;
 				sbuf = (char *)malloc(1);  sbuf[0]=0;
 				prop = cur->properties;
 				while(prop)
@@ -984,6 +998,10 @@ Node *libxml_populate(import_state_t *is, xmlNodePtr root, int level)
 					if(!strcmp("title", prop->name))
 					{
 						data = xmlGetProp(cur,XMLCHAR("title"));
+					}
+					else if(!strcmp("priority", prop->name))
+					{
+						priority = (unsigned char)atol(xmlGetProp(cur,XMLCHAR("priority")));
 					}
 					else if(!strcmp("todo", prop->name))
 					{
@@ -1033,7 +1051,7 @@ Node *libxml_populate(import_state_t *is, xmlNodePtr root, int level)
 				{
 					sprintf(s, "%s", data);
 				}
-				import_node (is,level, flags, 0, s);
+				import_node (is,level, flags, priority, s);
 				free(s);
 				flags = 0;
 			}

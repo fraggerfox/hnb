@@ -342,29 +342,29 @@ Node* ls(Node *pos, char *params){
 			}
 		}
 		
-		fprintf(stderr,"%s",node_getdata(tnode));
+		fprintf(stdout,"%s",node_getdata(tnode));
 	
 	if(indicate_sub)
 		if(node_right(tnode)){
-			printf("\t(.. ");
+			fprintf(stdout,"\t(.. ");
 				paren=1;
 			}
 	
 	if(indicate_todo)
 		if(node_getflag(tnode,F_todo)){
-			if(!paren)printf("\t(");
+			if(!paren)fprintf(stdout,"\t(");
 				if(node_getflag(tnode,F_done)){		
-					printf("done");
+					fprintf(stdout,"done");
 				} else {
-					printf("not done");
+					fprintf(stdout,"not done");
 				}
 				paren=1;
 			}
 	
 	if(paren){
-		fprintf(stderr,")\n");
+		fprintf(stdout,")\n");
 		} else {
-			fprintf(stderr,"\n");
+			fprintf(stdout,"\n");
 		}
 		
 		if(recurse){
@@ -386,6 +386,7 @@ typedef struct{
 } VariableT;
 
 VariableT Variable[]={
+	{"helplvl",	&prefs.help_level,	NULL,"level of help provided to user"},
 	{"debug",	&prefs.debug,		NULL,"view debug information"},
 	{"format",	&prefs.format,		NULL,"the format of this file"},
 	{"def_format",&prefs.def_format,NULL,"default format (and format of default db)"},
@@ -523,7 +524,7 @@ Node *help(Node *pos, char *params){
 	if(params[0]==0){ /* show all help */
 	  int j=0;
 	
-		printf("HELP:\n");	  
+		fprintf(stderr,"HELP:\n");	  
 	  
 		while(Command[j].name!=NULL){
 			fprintf(stderr,"%s\t- %s\n",
@@ -535,7 +536,7 @@ Node *help(Node *pos, char *params){
 	
 	} else { /* show help for specified command */
 		int j=0;
-		printf("HELP for '%s'\n\n",params);
+		fprintf(stderr,"HELP for '%s'\n\n",params);
 		
 		while(Command[j].name!=NULL){
 			if(!strcmp(params,Command[j].name)){
@@ -569,12 +570,15 @@ Node *docmd(Node *pos,char * commandline){
 	while(Command[j].name!=NULL){
 		if(!strcmp(command,Command[j].name)){
 			pos=Command[j].func(pos,params);
+			fflush(stderr);
+			fflush(stdout);			
 			return pos;
 		}
 		j++;
 	}
 	
-	printf("unknown command '%s' type '?' to see allowed commands.\n",command);
+	fprintf(stderr,"unknown command '%s' type '?' to see allowed commands.\n",command);	
+	fflush(stderr);
 	return pos;
 }
 
@@ -585,6 +589,7 @@ Node *cli(Node *pos){
 	
 	do{
 		fprintf(stderr,"%s>",path_strip(node2path(pos)));
+		fflush(stderr);
 		fgets(commandline,4096,stdin);
 		commandline[strlen(commandline)-1]=0;
 		pos=docmd(pos,commandline);

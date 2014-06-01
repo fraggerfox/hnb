@@ -1,0 +1,57 @@
+Date: Sat, 21 Jul 2001 16:33:46 -0700
+From: Paul Evans <pevans@catholic.org>
+To: hnb-general <hnb-general@lists.sourceforge.net>
+Subject: [hnb] Script to do hnb inserts from the clipboard
+----------------------------------------------------------
+
+Attached is the script I've been using to add notes to hnb.
+
+Use:
+Highlight some text with your mouse and press whatever hotkey you assign it 
+to. You could put it on a toolbar button or an icon depending on your distro 
+and personal tastes. The clipboard text will be placed into a node named 
+'OnlineNotes' in the default (.hnb) file. To help you remember why you took 
+the note in the first place, the name of each individual node is named after 
+the title of the window you were in when you invoked the script + the time to 
+make it unique:
+
+    OnlineNotes
+        [LTP]_Quick_Hack_-_Konqueror-13:42:13
+        8.13.1_Popen3_Objects_-_Konqueror-13:46:03
+            Fri-20-Jul-2001-13:46:03
+            8.13.1 Popen3 Objects 
+            Instances of the Popen3 class have the following methods: 
+            poll ()  etc.
+
+Install:
+Make the script executable and put it somewhere in your path. It uses 'xsel' 
+by Ville Herva to access the clipboard. The source for 'xsel' is a tiny 9k 
+uncompressed, which you can get at :
+
+http://v.iki.fi/~vherva/xsel/        I've noticed other good things from .fi
+
+The site has a couple of binaries and a copy-paste cmd line for compiling. 
+The compile line is also in the comments of the code near the beginning.
+
+Attaching something to a hotkey under X can be very simple or a royal pain, 
+depending on your desktop of choice. I wrote a bit about it (using 'xclip' 
+instead of 'xsel') in this: http://www.linuxgazette.com/issue67/evans.html
+Sadly, I was rushed and forgot to mention Mr. Herva's 'xsel' ,but he has 
+since fixed why I didn't use it before and it has more functionality too. 
+
+Whichever method you choose to run the script, call it like this 'clipmanip 
+-n', because it can do some other things with the clipboard. Read through it 
+and just delete what you don't want if you like. I use ctrl+shift+n to take a 
+note and the 'menu' key to bring up an xterm with hnb in it.
+
+The script still produces a '~/notes.txt' file in addition to doing the 
+insert on 'hnb'. Just comment out line 103 to avoid that behaviour. I'm 
+keeping it as a kind of backup for now.
+
+-- 
+Regards, Paul Evans
+
+p.s. the script does a grep to look for an existing 'OnlineNotes' node. I 
+admit defeat with popen3(). All I ever read back was either 'Welcome to hnb'  
+etc. on standard error, or 50-60 bytes of ANSI on standard out. Works fine 
+manually from an xterm, so I have no idea.

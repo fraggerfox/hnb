@@ -44,6 +44,10 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.8 30 aug 2001
+		changed the default window scrolling behaviour to move the cursorbar instead of the whole screen when possible
+		integrated libxml support changes from orang@imonk.com
+		added flag to keep whitespace when loading xml file
 	1.7 6 jul 2001
 		made the tutorial saveable, if opened in place of the default db
 		fixed sorting segfault
@@ -197,7 +201,6 @@ TODO
 	shuffle action
 	curses interface
 		"context" menu for mouse mode
-		go away from centerline centric display approach
 	cli interface
 		make '/' inside node names appear correctly in pwd, and prompt
 		maybe avoiding static buffers is even more important here than in the curses version (due to possible scripted input),.. but then I'd have to fix path.c as well.. <g>
@@ -225,6 +228,11 @@ TODO
 			node_insert_up
 			node_insert_down
 			node_remove
-	make a dead tree copy of he source for examination
+	make a dead tree copy of the source for examination
 		enscript *.h *.c -E  --output uts.ps -U 2 -j
 	backspace/delete behaviour, experiment to find good solution
+	win32 port
+		make sure it works
+		check key behaviour
+	html export
+		make the html legal,.. ( <li> overnode <ul> <li>hei </li><li>der</li> </li> )

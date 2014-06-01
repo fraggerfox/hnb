@@ -34,7 +34,7 @@
 #endif			
 	#define hnbgimp
 int nodes_above;
-int middle_line;
+int active_line;
 int nodes_below;
 
 #ifdef MOUSE
@@ -60,9 +60,9 @@ void ui_init (){
 	intrflush (stdscr, TRUE);
 	keypad (stdscr, TRUE);
 	nonl ();
-	raw ();						/* enable the usage of ctl+c,ctrl+q,ctrl+z.. */	
+	raw ();			/* enable the usage of ctl+c,ctrl+q,ctrl+z.. */	
 	noecho ();
-	middle_line = LINES / 3;
+	active_line = LINES / 3;
 	#ifdef MOUSE
 	if(prefs.mouse)
 		mousemask(BUTTON1_PRESSED,NULL);
@@ -77,13 +77,13 @@ void ui_init (){
 		init_pair(UI_COLOR_MENUTXT,	 prefs.fg_menutxt,prefs.bg_menutxt);
 		init_pair(UI_COLOR_NODE,	 prefs.fg_node,prefs.bg_node);
 		init_pair(UI_COLOR_NODEC,	 prefs.fg_nodec,prefs.bg_nodec);
-		init_pair(UI_COLOR_BULLET,   prefs.fg_bullet,prefs.bg_bullet);
+		init_pair(UI_COLOR_BULLET,	prefs.fg_bullet,prefs.bg_bullet);
 		init_pair(UI_COLOR_PRIORITY, prefs.fg_priority,prefs.bg_priority);
 		init_pair(UI_COLOR_BG,		 COLOR_WHITE,prefs.bg);
 	}
 	/* COLS ? */
-	nodes_above = middle_line;
-	nodes_below = LINES - middle_line;
+	nodes_above = active_line;
+	nodes_below = LINES - active_line;
 
 	bkgdset(' '+COLOR_PAIR(UI_COLOR_BG));
 }
@@ -189,8 +189,7 @@ Node *down (Node *sel,Node *node){
 
 
 /* this function draws a line at the top of the screen with various debug info,.. for tracing errors in the tree
-   code, they seem to turn up every once in a while,.. but more and more seldomly
-*/
+   code, they seem to turn up every once in a while,.. but more and more seldomly */
 
 void debug(Node *node,int mode){
 	char buf[10];
@@ -725,20 +724,50 @@ int draw_item (int line_start, int col_start, char *data,
 extern int hnb_nodes_up;
 extern int hnb_nodes_down;
 
-void ui_draw (Node *node, char *input, int mode){
+void ui_draw (Node *node, Node *lastnode,char *input, int mode){
 	static int ignore_next=0;
+/*	static Node *lastnode;*/
 	int lines;
-	
+	static struct {
+		int parent;
+		int child;
+		int up;
+		int down;
+		}lines2={1,1,1,1};
 	/*FIXME?: calculate .. startlevel,.. making the interface move right if the  nodes are really nested */
+	/* do some magic to figure out which line is the active one */	
+
+	if(!prefs.fixedfocus){
+		#define KEEPLINES 5
+	
+		int maxline=LINES-(prefs.help_level?prefs.help_level==1?6:1:2)-KEEPLINES;
+		if(node_up(node)==lastnode){
+			active_line+=lines2.down;
+		} else if (node_down(node)==lastnode){
+			if(active_line>KEEPLINES)
+				active_line-=lines2.up;
+		} else if (node_left(node)==lastnode){
+			active_line+=lines2.child;
+		} else if (node_right(node) && node_right(node)==node_top(lastnode)){
+			active_line-=lines2.parent;
+		}
+		if(active_line>maxline)	/*if we overlap with help,.. move up*/
+			active_line=maxline;
+		if(active_line<KEEPLINES)
+			active_line=KEEPLINES;
+	}
+	lines2.down=0;
+	lines2.up=0;
+	lines2.parent=0;
+	lines2.child=0;
+	
+	nodes_above = active_line;
+	nodes_below = LINES - active_line;
 	
 	if(!ignore_next)
-		if (/*mode != UI_MODE_QUIT &&
-			mode != UI_MODE_CONFIRM &&*/
-			mode != UI_MODE_ERROR &&
+		if ( mode != UI_MODE_ERROR &&
 			mode != UI_MODE_INFO &&
-			/*mode != UI_MODE_GETSTR &&
-			mode != UI_MODE_EXPORT &&
-			mode != UI_MODE_IMPORT && */mode != UI_MODE_DEBUG)
+			mode != UI_MODE_DEBUG)
 	/* draw the nodes */
 	{
 	hnb_nodes_up=0;
@@ -751,7 +780,8 @@ void ui_draw (Node *node, char *input, int mode){
 #endif
 /* draw nodes above selected node */
 	{
-		int line = middle_line;
+		Node *prev_down=node; /* to aid pgup/pgdn */
+		int line = active_line;
 			Node *tnode = up (node,node);
 
 	while (tnode) {
@@ -767,6 +797,10 @@ void ui_draw (Node *node, char *input, int mode){
 				done_status(tnode),
 				0,
 				node_getpriority(tnode));
+		if(!lines2.up && node_down(tnode)==node)
+				lines2.up=active_line-line;
+		if(!lines2.parent && node_right(node) && node_right(tnode)==node_top(node))
+				lines2.parent=active_line-line;
 #ifdef MOUSE						   
 	if(prefs.mouse && line>0){
 		mouse_node[line]=tnode;
@@ -774,34 +808,41 @@ void ui_draw (Node *node, char *input, int mode){
 		mouse_xstart[line]=indentlevel(tnode)+3;
 	}
 #endif
-	tnode = up (node,tnode);
-		if (middle_line - nodes_above >= line)
-			tnode = 0;
-			hnb_nodes_up++;
-			}
-		}
+	if(node_down(tnode)==prev_down){
+		hnb_nodes_up++;
+		prev_down=tnode;
+	}
 
+	tnode = up (node,tnode);
+		if (active_line - nodes_above >= line)
+			tnode = 0;
+	}
+
+if(!lines2.parent)
+	lines2.parent=active_line;
+
+	}
 /* draw the selected node.. */
 
 #ifdef MOUSE			
 	if(prefs.mouse){			   
-		mouse_node[middle_line]=node;
-		mouse_todo[middle_line]=node_getflag(node,F_todo)?1:0;
-		mouse_xstart[middle_line]=indentlevel(node)+3;
+		mouse_node[active_line]=node;
+		mouse_todo[active_line]=node_getflag(node,F_todo)?1:0;
+		mouse_xstart[active_line]=indentlevel(node)+3;
 	}
 #endif
 
 	if(mode== UI_MODE_EDIT || mode == UI_MODE_EDITR){
-		lines =draw_item (middle_line,
+		lines =draw_item (active_line,
 			indentlevel (node),
 			node_getdata (node),
 			D_M_EDIT+ (node_right (node) ? D_M_CHILD : 0),
 			done_status(node),(int)input,
 			node_getpriority(node));
-	} else {				
+	} else {
 		attrset (A_REVERSE);
 			/* the selected node */
-		lines = draw_item (middle_line,
+		lines = draw_item (active_line,
 				indentlevel (node),
 				node_getdata (node),
 				(node_right (node) ? D_M_CHILD : 0),
@@ -809,7 +850,7 @@ void ui_draw (Node *node, char *input, int mode){
 		/* the search input */
 		attrset(A_NORMAL);
 		if (mode == UI_MODE_HELP0 || mode == UI_MODE_HELP1 || mode == UI_MODE_HELP2)
-			draw_item (middle_line,
+			draw_item (active_line,
 				indentlevel (node),
 				input,
 				0,
@@ -819,20 +860,22 @@ void ui_draw (Node *node, char *input, int mode){
 		attrset (A_NORMAL);
 
 		/* bullet */
-		draw_item (middle_line,
+		draw_item (active_line,
 			indentlevel (node),
 			"",
 			(node_right (node) ? D_M_CHILD : 0),
 			done_status(node),
 			0,node_getpriority(node));
-		
+lines2.child=lines;		
 
 /* draw lines below selected node */
 		{
+		Node *prev_up=node; /* to aid pgup/pgdn */		
 		Node *tnode = down (node,node);
 
-		lines += middle_line;
-
+		lines += active_line;
+            if(lines >= LINES)
+			tnode=0;
 		while (tnode) {
 #ifdef MOUSE						   
 	if(prefs.mouse){
@@ -841,16 +884,24 @@ void ui_draw (Node *node, char *input, int mode){
 			mouse_xstart[lines]=indentlevel(tnode)+3;
 	}
 #endif
+			if(!lines2.down && node_up(tnode)==node)
+				lines2.down=lines-active_line;
 			lines += draw_item (lines,
 				indentlevel (tnode),
 				node_getdata (tnode),
 				(node_right (tnode) ? D_M_CHILD : 0),
 				done_status(tnode),
 				0,node_getpriority(tnode));
+
+			if(node_up(tnode)==prev_up){
+				hnb_nodes_down++;				
+				prev_up=tnode;
+			}
+
 			tnode = down (node,tnode);
-			if (middle_line + nodes_below <= lines)
+			if (lines >= LINES)
 				tnode = 0;
-			hnb_nodes_down++;
+
 		}
 	}
 
@@ -886,6 +937,10 @@ void ui_draw (Node *node, char *input, int mode){
 	refresh ();
 	ignore_next=0;
 	if(mode==UI_MODE_INFO || mode==UI_MODE_ERROR)ignore_next=1;
+
+  hnb_nodes_up++;
+  hnb_nodes_down++;
+
 }
 
 void ui_end ()
@@ -926,22 +981,19 @@ int ui_input ()
 		case 22:
 			prefs.collapse_mode++;
 			if(prefs.collapse_mode>COLLAPSE_END)prefs.collapse_mode=0;
-			ui_draw (pos, "", UI_MODE_HELP0 + prefs.help_level);			
-			ui_draw(pos,collapse_names[prefs.collapse_mode],UI_MODE_INFO);
+			ui_draw (pos,pos, "", UI_MODE_HELP0 + prefs.help_level);			
+			ui_draw(pos,pos,collapse_names[prefs.collapse_mode],UI_MODE_INFO);
 			return UI_IGNORE;
-			break;
 		case KEY_F(10):
 			prefs.eleet_mode= !prefs.eleet_mode;
 			return UI_IGNORE;
-			break;
 #ifdef KEY_RESIZE
 		case KEY_RESIZE:
-			middle_line = LINES / 3;
-			nodes_above = middle_line;
-			nodes_below = LINES - middle_line;
+			active_line = LINES / 3;
+			nodes_above = active_line;
+			nodes_below = LINES - active_line;
 			c = getch ();
 			return UI_IGNORE;
-			break;
 #endif			
 #ifdef MOUSE			
 	case KEY_MOUSE:
@@ -982,7 +1034,7 @@ int ui_input ()
 				if(mouse.x<mouse_xstart[mouse.y])
 					return(UI_LEFT);
 				if(mouse.x>=mouse_xstart[mouse.y]){
-					if(mouse.y==middle_line){
+					if(mouse.y==active_line){
 						if(node_right(pos))
 							pos=node_right(pos);
 					} else {					
@@ -995,9 +1047,9 @@ int ui_input ()
 				return UI_IGNORE;
 			  }
 
-	  	if( mouse.y > middle_line ) 
+	  	if( mouse.y > active_line ) 
 			return UI_DOWN;
-		if( mouse.y < middle_line ) 
+		if( mouse.y < active_line ) 
 		 	return UI_UP;			  
 			  
 		}

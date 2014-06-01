@@ -72,17 +72,17 @@ Node *pos;
 #define undefined_key(a,c)\
 	{if(c!=UI_IGNORE){char msg[80];\
 	sprintf(msg," No action assigned to '%s'(%id) in %s-mode",keyname(c),c,a);\
-	ui_draw(pos, msg, UI_MODE_ERROR);\
+	ui_draw(pos,pos, msg, UI_MODE_ERROR);\
 	}}\
 
 #define info(a)\
-	{ui_draw(pos, a, UI_MODE_INFO);\
+	{ui_draw(pos,pos, a, UI_MODE_INFO);\
 	}\
 
 #define infof(a,b)\
 	{char msg[80];\
 	sprintf(msg,a,b);\
-	ui_draw(pos, msg, UI_MODE_INFO);\
+	ui_draw(pos,pos, msg, UI_MODE_INFO);\
 	}\
 
 #ifdef WIN32
@@ -157,7 +157,7 @@ int app_edit (int restricted){
 	c = 0;
 	
 	while (!stop) {
-		ui_draw (pos, (char *) cursor_pos, restricted?UI_MODE_EDITR:UI_MODE_EDIT);
+		ui_draw (pos,pos, (char *) cursor_pos, restricted?UI_MODE_EDITR:UI_MODE_EDIT);
 		c = key2action(ui_input (),'e');
 		switch (c) {
 			case UI_RIGHT:
@@ -243,7 +243,7 @@ int app_edit (int restricted){
 					input[strlen(input)]=' ';
 					input[strlen(input)+1]=0;
 					if(node_right(node_down(pos))){
-						ui_draw(pos, "won't remove it has children", UI_MODE_ERROR);
+						ui_draw(pos, pos,"won't remove it has children", UI_MODE_ERROR);
 					} else {
 						node_remove(node_down(pos));
 					}
@@ -327,18 +327,19 @@ void app_mark (){
 	{
 		int stop = 0;
 		Node *marked = pos;
-		
+		Node *prevpos=pos;
 		pos = node_insert_down (pos);
 		node_setdata (pos, "-=- destination -=-");
 		input[0] = 0;
 		while (!stop) {
 			int c;
 			
-			ui_draw (pos, node_getdata(marked), UI_MODE_MARKED);
+			ui_draw (pos,pos, node_getdata(marked), UI_MODE_MARKED);
+			prevpos=pos;
 			c = key2action(ui_input (),'m');
 			switch (c) {
 				case UI_DEBUG:
-					ui_draw (pos, input, UI_MODE_DEBUG);
+					ui_draw (pos,pos, input, UI_MODE_DEBUG);
 					getch ();
 					break;
 				case UI_UP:
@@ -355,6 +356,7 @@ void app_mark (){
 						pos = node_down (pos);
 						if (pos == marked)
 							marked = node_up (pos);
+						prevpos=pos;
 					}
 					break;
 				case UI_LEFT:
@@ -419,7 +421,7 @@ void app_mark (){
 int app_quit (){	/* returns 1 when user says quit */
 	int c;
 	
-	ui_draw (pos, input, UI_MODE_QUIT);
+	ui_draw (pos,pos, input, UI_MODE_QUIT);
 	c = key2action(ui_input (),'q');
 	switch (c) {
 		case 'y':
@@ -430,7 +432,7 @@ int app_quit (){	/* returns 1 when user says quit */
 			if (prefs.db_file[0] != (char) 255) {
 				ptr_export ((Node *) node_root (pos), 
 					prefs.db_file);
-				ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
+				ui_draw (pos, pos,input, UI_MODE_HELP0 + prefs.help_level);
 				infof (" wrote stuff to '%s'", prefs.db_file);
 			}
 			return (1);
@@ -444,7 +446,7 @@ int app_quit (){	/* returns 1 when user says quit */
 			if (prefs.db_file[0] != (char) 255) { /* fixme eehh? */
 				ptr_export ((Node *) node_root (pos), 
 					prefs.db_file);
-				ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
+				ui_draw (pos,pos, input, UI_MODE_HELP0 + prefs.help_level);
 				infof (" wrote stuff to '%s'", prefs.db_file);
 			}
 			return (0);
@@ -465,13 +467,13 @@ void app_search (){
 	int query_start_level = nodes_left (pos);
 	
 	/* query user for search term */
-	ui_draw (pos, (char *) query, UI_MODE_GETSTR);	
+	ui_draw (pos, pos,(char *) query, UI_MODE_GETSTR);	
 	
 	pos = node_recursive_match ((char *) query, pos);
 	
 	if (pos == 0) {
 		pos = query_start;
-		ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
+		ui_draw (pos, pos,input, UI_MODE_HELP0 + prefs.help_level);
 		infof (" search for '%s' returned emptyhanded", query);
 		return;
 	}
@@ -479,7 +481,7 @@ void app_search (){
 	while (pos != 0 && (nodes_left (pos) >= query_start_level)) {
 		int c;
 		
-		ui_draw (pos, (char *) query, UI_MODE_SEARCH);
+		ui_draw (pos, pos,(char *) query, UI_MODE_SEARCH);
 		c = key2action( ui_input (),'f');
 		switch (c) {
 			case 's':
@@ -510,7 +512,7 @@ void app_search (){
 		}
 	}
 	pos = query_start;
-	ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
+	ui_draw (pos,pos, input, UI_MODE_HELP0 + prefs.help_level);
 	info (" end of search");
 }
 
@@ -518,7 +520,7 @@ void app_remove (){
 	if (node_right (pos)) {
 		int c;
 		
-		ui_draw (pos, "node has children, really remove?", UI_MODE_CONFIRM);
+		ui_draw (pos,pos, "node has children, really remove?", UI_MODE_CONFIRM);
 		c = key2action(ui_input (),'r');
 		if ((c == 'y') || (c == 'Y'))
 			pos = node_remove (pos);
@@ -532,19 +534,19 @@ void app_export (){
 	char filename[100];
 	
 	while (!stop) {
-		ui_draw (pos, "", UI_MODE_EXPORT);
+		ui_draw (pos, pos,"", UI_MODE_EXPORT);
 		c = key2action(ui_input (),'x');
 		switch (c) {
 			case 'x':case 'X':
 				strcpy ((char *) filename, "File to save hnb xml output in:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos, pos,(char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					hnb_export (node_top (pos), filename);
 				stop = 1;
 				break;
 			case '?':
 				strcpy ((char*) filename, "Save help-include file in:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					help_export (node_top (pos), filename);
 				stop = 1;
@@ -552,7 +554,7 @@ void app_export (){
 			case 'h':
 			case 'H':
 				strcpy ((char *) filename, "File to save html output in:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					html_export (node_top (pos), filename);
 				stop = 1;
@@ -560,7 +562,7 @@ void app_export (){
 			case 'a':
 			case 'A':
 				strcpy ((char *) filename, "File to save ascii output in:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					ascii_export (node_top (pos), filename);
 				stop = 1;
@@ -568,7 +570,7 @@ void app_export (){
 			case 'g':
 			case 'G':
 				strcpy ((char *) filename, "File to save general xml output in:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					xml_export (node_top (pos), filename);
 				stop = 1;
@@ -577,7 +579,7 @@ void app_export (){
 			case 's':
 			case 'S':
 				strcpy ((char *) filename, "File to save stylized xml output in:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					libxml_export (node_top (pos), filename);
 				stop = 1;
@@ -585,7 +587,7 @@ void app_export (){
 #endif
 			case '|':
 				strcpy ((char *) filename, "command line (%s for file):");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (!strlen (filename))
 					return;
 				ui_end();
@@ -614,12 +616,12 @@ void app_import (){
 	char filename[100];
 	
 	while (!stop) {
-		ui_draw (pos, "", UI_MODE_IMPORT);
+		ui_draw (pos,pos, "", UI_MODE_IMPORT);
 		c = key2action(ui_input (),'i');
 		switch (c) {
 			case 'x':case 'X':
 				strcpy ((char *) filename, "xml file to import:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					pos=hnb_import (node_top (pos), filename);
 				stop = 1;
@@ -627,7 +629,7 @@ void app_import (){
 			case 'a':
 			case 'A':
 				strcpy ((char *) filename, "ascii file to import:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					pos=ascii_import (node_top (pos), filename);
 				stop = 1;
@@ -635,7 +637,7 @@ void app_import (){
 			case 'g':
 			case 'G':
 				strcpy ((char *) filename, "general xml file to import:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					pos=xml_import (node_top (pos), filename);
 				stop = 1;
@@ -644,7 +646,7 @@ void app_import (){
 			case 's':
 			case 'S':
 				strcpy ((char *) filename, "stylized xml file to import:");
-				ui_draw (pos, (char *) filename, UI_MODE_GETSTR);
+				ui_draw (pos,pos, (char *) filename, UI_MODE_GETSTR);
 				if (strlen (filename))
 					pos=libxml_import (node_top (pos), filename);
 				stop = 1;
@@ -672,7 +674,7 @@ void app_prefs (){
 	while (!stop) {
 		int c,action;
 		
-		ui_draw (pos, input, UI_MODE_PREFS);
+		ui_draw (pos,pos, input, UI_MODE_PREFS);
 		action=key2action(ui_input(),'p');
 	
 		switch (action) {
@@ -685,7 +687,7 @@ void app_prefs (){
 					pos=tpos;
 					prefs.showpercent=percent;
 					prefs.collapse_mode=collapse;
-					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
+					ui_draw (pos,pos, input, UI_MODE_HELP0 + prefs.help_level);
 					infof (" saved config in %s", prefs.rc_file);
 					return;
 				break;
@@ -710,7 +712,7 @@ void app_prefs (){
 				switch node_getpriority(pos){
 					case 4:/*shortcut*/
 						node_setdata(node_right(pos),"-1");
-						ui_draw (pos, input, UI_MODE_PREFS);						
+						ui_draw (pos,pos, input, UI_MODE_PREFS);						
 						infof(" custom keybinding removed",NULL);						
 					break;
 				}
@@ -745,8 +747,8 @@ void app_prefs (){
 						t=getch();
 						sprintf(data,"%i",t);
 						node_setdata(node_right(pos),data);
-						ui_draw (pos, input, UI_MODE_PREFS);
-						ui_draw (pos, input, UI_MODE_PREFS);						
+						ui_draw (pos,pos, input, UI_MODE_PREFS);
+						ui_draw (pos,pos, input, UI_MODE_PREFS);						
 						infof(" %s assigned to action",keyname(t));
 						}
 						break;
@@ -774,15 +776,17 @@ void app_navigate (){
 #define chktemp		if (node_getflag(pos,F_temp)){\
 					pos = node_remove (pos);\
 					node_update_parents_todo (pos);\
+					prevpos=pos;\
 				}
 
 
 	int stop = 0;
+	Node *prevpos=pos;	/* which node we visited previous time */
 	
 	while (!stop) {
 		int c;
-		
-		ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
+		ui_draw (pos, prevpos,input, UI_MODE_HELP0 + prefs.help_level);
+		prevpos=pos;
 		c = key2action(ui_input (),'n');
 		switch (c) {
 			case UI_EXPORT:
@@ -793,18 +797,21 @@ void app_navigate (){
 				break;
 			case UI_FIND:
 				app_search ();
+				prevpos=pos;
 				break;
 			case UI_MARK:
 				app_mark ();
+				prevpos=pos;				
 				break;
 			case UI_IMPORT:
 				app_import();
+				prevpos=pos;				
 				break;
 			case UI_SAVE:
 				if (prefs.db_file[0] != (char) 255) {
 					ptr_export ((Node *) node_root (pos), 
 						prefs.db_file);
-					ui_draw (pos, input, UI_MODE_HELP0 + prefs.help_level);
+					ui_draw (pos, pos,input, UI_MODE_HELP0 + prefs.help_level);
 					infof (" wrote stuff to '%s'", prefs.db_file);
 				}
 				break;
@@ -823,18 +830,21 @@ void app_navigate (){
 				break;
 			case UI_SORT:
 				pos = node_sort_siblings (pos);
+				prevpos=pos;				
 				break;
 			case UI_LOWER:
 				pos = node_lower(pos);
-				node_update_parents_todo (pos);				
+				node_update_parents_todo (pos);
+				prevpos=pos;
 				break;
 			case UI_RAISE:
 				pos = node_raise(pos);
+				prevpos=pos;
 				break;
 			case UI_TOP:
 				chktemp;
 				input[0] = 0;
-				pos = node_root (pos);
+				pos = node_root (pos);				
 				break;
 			case UI_UP:
 				chktemp else {
@@ -866,7 +876,7 @@ void app_navigate (){
 				input[0] = 0;
 				{
 					int n;
-					for (n = 0; n < hnb_nodes_down-1; n++)
+					for (n = 0; n < hnb_nodes_down; n++)
 						if (node_down (pos))
 							pos = node_down (pos);
 				}
@@ -907,6 +917,7 @@ void app_navigate (){
 			case UI_REMOVE:
 				app_remove ();
 				node_update_parents_todo (pos);
+				prevpos=pos;
 				break;
 			case UI_COMPLETE:
 				if (strcmp (input, node_getdata (pos)) == 0) {
@@ -957,14 +968,21 @@ void app_navigate (){
 				break;
 			case UI_PREFS:
 				app_prefs();
+				prevpos=pos;
 				break;
+			case UI_PREFS+1:
+				ui_end();			
+				pos=cli(pos);
+				prevpos=pos;
+				ui_init();
+				break;				
 			case UI_PRIORITY: /* ^P priority */
 				if (node_getflag(pos,F_todo))	{
 					if(node_getpriority(pos))
 						sprintf(input,"Current priority [%i], enter new (1-5) press return to keep",node_getpriority(pos));
 					else 
 						sprintf(input,"Current priority [--], enter new (1-5) press return to keep");					
-					ui_draw (pos, input, UI_MODE_GETSTR);
+					ui_draw (pos, pos,input, UI_MODE_GETSTR);
 					if (strlen (input)){
 						int p=atoi(input);
 						if(p>=0 && p<6)
@@ -982,7 +1000,7 @@ void app_navigate (){
 					input[strlen (input) - 1] = 0;
 					if (node_getflag(pos,F_temp))	
 						if (node_up (pos))
-							pos = node_remove (pos);
+							prevpos=pos = node_remove (pos);
 				}
 				break;
 			case UI_INSERT:
@@ -1057,7 +1075,6 @@ int main(int argc,char **argv){
 		0,	/*debug*/
 		0,0,0
 	};
-	
 	{/*parse commandline*/
 		for (argno = 1; argno < argc; argno++) {
 			if ( !strcmp(argv[argno], "-h") 
@@ -1152,8 +1169,11 @@ int main(int argc,char **argv){
 	}
 
 	pos=load_prefs();
+
 	apply_prefs(pos);
+
 	tree_free(pos);
+
 	
 	/* ovveride the prefs with commandline specified options*/
 		if(cmdline.debug)
@@ -1262,6 +1282,8 @@ let hnb install a new default one.\n\nNew features:",prefs.rc_file);
 		case 0:fprintf(stderr," toggle mouse support,");
 		case 1:fprintf(stderr," priority colors,");
 		case 2:case 3:fprintf(stderr," keyboard customization");
+		case 4:fprintf(stderr," keeping of whitespace");
+		case 5:fprintf(stderr," fixed/moving focusbar");
 	}
 	fprintf(stderr,"\n");
 	}

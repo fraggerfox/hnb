@@ -62,7 +62,7 @@ MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
-EXTRA_DIST = configure reconf Makefile.win32
+EXTRA_DIST = configure reconf Makefile.win32 contrib
 SUBDIRS = src doc util
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -356,12 +356,15 @@ dist-win:
 	make -f Makefile.win32 dist
 
 # to make it much easier for me to take snapshots,.. 
-scp: distwin dist
-	scp1 hnb-*.tar.gz hnb-*-win32.zip pippin@hnb.sourceforge.net:www/files
+#scp: distwin dist
+#	scp1 hnb-*.tar.gz hnb-*-win32.zip pippin@hnb.sourceforge.net:www/files
 
-# yet more convenience for me,.. for updating the website	
+scp: dist
+	scp hnb-*.tar.gz pippin@hnb.sourceforge.net:www/files
+
+# yet more convenience for me,.. for updating the website
 webupdate: www/*
-	scp1 www/* pippin@hnb.sourceforge.net:www/
+	scp www/* pippin@hnb.sourceforge.net:www/
 	touch webupdate
 
 util/asc2c:

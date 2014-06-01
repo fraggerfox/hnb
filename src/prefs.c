@@ -72,7 +72,9 @@ COLOR_BLACK,	/*bg_priority */
 1,				/*mouse		*/
 4,				/*indent	*/
 BULLET_NONE,	/*bulletmode*/
-1				/*showpercent*/
+1,		/*showpercent*/
+0,		/*keep whitespace*/
+0		/*fixed focusbar*/
 };
 
 typedef struct{
@@ -156,6 +158,7 @@ void write_def_rc(){
 */
 
 void apply_prefs(Node *node){
+	static int iter=0;
 	char color[20];
 
 	#define radio(a,b,c)	if(node_getflag( matchpath2node(a,node_root(node)),F_done))	b=c;
@@ -180,7 +183,9 @@ void apply_prefs(Node *node){
 	radio("/int/tree/bull/-",prefs.bulletmode,BULLET_MINUS);
 	
 	check("/int/tree/bull/show",prefs.showpercent);
-	getint("/int/tree/indent/",prefs.indent);	
+	getint("/int/tree/indent/",prefs.indent);
+	
+	check("/int/tree/fixed",prefs.fixedfocus);
 
 /* colors */	
 	string( "/int/col/back/",color);prefs.bg=name2color(color);
@@ -214,6 +219,7 @@ void apply_prefs(Node *node){
 	radio("/file/default file format/lib",prefs.def_format,FORMAT_LIBXML);	
 
 	check("/file/xml/cudd",prefs.xml_cuddle);
+	check("/file/xml/keep white",prefs.keepwhitespace);
 
 	check("/misc/debug",prefs.debug);
 
@@ -269,6 +275,8 @@ void apply_prefs(Node *node){
 	prefs.def_help_level=prefs.help_level;
 	prefs.def_collapse_mode=prefs.collapse_mode;
 	
-	ui_init();
-	ui_end();
+	if(iter++){/*don't do curses stuff first time we run check the config*/
+		ui_end();
+		ui_init();
+	}
 }

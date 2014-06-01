@@ -117,7 +117,7 @@ void ui_end();
    *input varies from mode to mode, in GETSTR mode input
    is owerwritten with the value input
 */
-void ui_draw(Node *node,char *input, int mode);
+void ui_draw(Node *node,Node *lastnode,char *input, int mode);
 
 /* waits until a curses event occurs, translates it according
    to the defines above in this file, and returns the new

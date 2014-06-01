@@ -7,26 +7,26 @@
 <UL>
 <LI>HIERARCHICAL NOTEBOOK</LI>
   <UL>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
 	<LI>hierarchical notebook (hnb) is program to organize, many kinds of data</LI>
 	<LI>in one place, for example adresses, todo lists, ideas, book "reviews",</LI>
 	<LI>brainstorming, organizing a speech, making a  structured packing list </LI>
 	<LI>random notes, and probably many more I  haven't thought of yet..</LI>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
   </UL>
-<!-- empty line?,.. nahh -->
+<!-- empty line in input -->
 <LI>HOW TO GET hnb?</LI>
   <UL>
 	<LI>new releases and information about hnb will appear at hnb's homepage</LI>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
 	<LI>http://sourceforge.net/projects/hnb/</LI>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
   </UL>
 <LI>INSTALLING hnb</LI>
   <UL>
 	<LI>if you've got a source release you must first compile hnb,..</LI>
 	<LI>see further down in this file for instructions.</LI>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
 	<LI>Windows</LI>
 	  <UL>
 		<LI>the windows binary distribution, is a .zip file	containing the</LI>
@@ -41,31 +41,37 @@
 		<LI>licence for hnb's use. The binary is dynamically linked </LI>
 		<LI>against ncurses just place it anywere in your path.. like</LI>
 		<LI>/usr/bin, /usr/local/bin or /home/user/bin</LI>
-		<!-- empty line?,.. nahh -->
+		<!-- empty line in input -->
 	  </UL>
   </UL>
 <LI>COMPILING hnb</LI>
   <UL>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
 	<LI>hnb uses automake/autoconf installing it is as simple as:</LI>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
 	<LI>./configure</LI>
 	<LI>make</LI>
 	<LI>su</LI>
 	<LI>(enter root password)</LI>
 	<LI>make install</LI>
-	<!-- empty line?,.. nahh -->
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
+	<!-- empty line in input -->
   </UL>
 <LI>USAGE DOCUMENTATION</LI>
   <UL>
 	<LI>If you start hnb without any parameters and no default database, or</LI>
 	<LI>with the -t or --tutorial option, hnb will load a special tutorial</LI>
 	<LI>database.</LI>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
   </UL>
 <LI>CHANGELOG</LI>
   <UL>
+	<LI>1.8 30 aug 2001</LI>
+	  <UL>
+		<LI>changed the default window scrolling behaviour to move the cursorbar instead of the whole screen when possible</LI>
+		<LI>integrated libxml support changes from orang@imonk.com</LI>
+		<LI>added flag to keep whitespace when loading xml file</LI>
+	  </UL>
 	<LI>1.7 6 jul 2001</LI>
 	  <UL>
 		<LI>made the tutorial saveable, if opened in place of the default db</LI>
@@ -195,7 +201,7 @@
 	<LI>0.6b 11 april 2001</LI>
 	  <UL>
 		<LI>the guadec hacked fixes on strics computer</LI>
-		<!-- empty line?,.. nahh -->
+		<!-- empty line in input -->
 		<LI>worked on search ability</LI>
 		<LI>fixed the display of confirm mode in curses ui.</LI>
 		<LI>added reparenting</LI>
@@ -229,7 +235,7 @@
 <LI>AUTHORS</LI>
   <UL>
 	<LI>hnb authors</LI>
-	<!-- empty line?,.. nahh -->
+	<!-- empty line in input -->
 	<LI>Øyvind Kolås       <pippin@users.sourceforge.net></LI>
 	  <UL>
 		<LI>project maintainer</LI>
@@ -286,7 +292,6 @@
 	<LI>curses interface</LI>
 	  <UL>
 		<LI>"context" menu for mouse mode</LI>
-		<LI>go away from centerline centric display approach</LI>
 	  </UL>
 	<LI>cli interface</LI>
 	  <UL>
@@ -331,11 +336,20 @@
 			<LI>node_remove</LI>
 		  </UL>
 	  </UL>
-	<LI>make a dead tree copy of he source for examination</LI>
+	<LI>make a dead tree copy of the source for examination</LI>
 	  <UL>
 		<LI>enscript *.h *.c -E  --output uts.ps -U 2 -j</LI>
 	  </UL>
 	<LI>backspace/delete behaviour, experiment to find good solution</LI>
+	<LI>win32 port</LI>
+	  <UL>
+		<LI>make sure it works</LI>
+		<LI>check key behaviour</LI>
+	  </UL>
+	<LI>html export</LI>
+	  <UL>
+		<LI>make the html legal,.. ( <li> overnode <ul> <li>hei </li><li>der</li> </li> )</LI>
+		  </UL>
 	  </UL>
 </UL>
 </BODY></HTML>
