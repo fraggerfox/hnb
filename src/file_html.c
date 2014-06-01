@@ -29,6 +29,7 @@
 #include "cli.h"
 #include "tree.h"
 #include "file.h"
+#include "query.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
@@ -79,6 +80,7 @@ static int export_html (char *params, void *data)
 	char *cdata;
 	FILE *file;
 
+	if(!strcmp(filename,"*"))filename=query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -119,10 +121,7 @@ static int export_html (char *params, void *data)
 		}
 
 		indent (level, "\t");
-/*
- * FIXME use html_quote here?
- *
- */
+
 		if (cdata[0] != 0) {
 			fprintf (file, "<LI>%s%s</LI>\n",
 					 (flags & F_todo ? (flags & F_done ? "[X] " : "[&nbsp] ")
@@ -162,7 +161,7 @@ static void htmlcss_export_nodes (FILE * file, Node *node, int level)
 		fprintf (file, "\n");
 		indent (level, "\t");
 		fprintf (file, "<div>");	
-		fprintf (file, "%s", html_quote (data));/* FIXME: use iconv to really create UTF-8 */
+		fprintf (file, "%s", html_quote (data));
 
 		if (node_right (node)) {
 			htmlcss_export_nodes (file, node_right (node), level + 1);
@@ -184,6 +183,7 @@ static int export_htmlcss (char *params, void *data)
 	char *filename = params;
 	FILE *file;
 
+	if(!strcmp(filename,"*"))filename=query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else

@@ -32,6 +32,7 @@
 
 #include "file.h"
 #include "prefs.h"
+#include "query.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
@@ -164,6 +165,7 @@ static int export_xml (char *params, void *data)
 	char *filename = params;
 	FILE *file;
 
+	if(!strcmp(filename,"*"))filename=query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else
@@ -230,6 +232,7 @@ static int import_xml (char *params, void *data)
 
 	nodedata[0] = 0;
 
+	if(!strcmp(filename,"*"))filename=query;
 	file = fopen (filename, "r");
 	if (!file) {
 		cli_outfunf ("xml import, unable to open \"%s\"", filename);
@@ -369,7 +372,7 @@ static int import_xml (char *params, void *data)
 		node = xml_cuddle_nodes (node);
 
 	cli_outfunf ("xml import - imported \"%s\"", filename);
-
+	xml_tok_cleanup(s);
 	return (int) node;
 }
 

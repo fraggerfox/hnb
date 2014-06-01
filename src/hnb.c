@@ -284,6 +284,7 @@ int main (int argc, char **argv)
 			break;
 	}
 
+	cli_cleanup();
 	tree_free (pos);
 
 	return 0;

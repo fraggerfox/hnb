@@ -175,10 +175,8 @@ Node *path2node_make (char *path, Node *root)
 	/aaa/bbb/ccc
 	for the node (ccc) specified 
 	
-	FIXME: it uses a static char array,.. that is reused..
-	probably not the best way.. but..
+	returns the path from a static array
 */
-
 char *node2path (Node *node)
 {
 	static char path[2048];

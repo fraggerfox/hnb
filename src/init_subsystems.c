@@ -20,6 +20,7 @@ void init_movenode();
 void init_nodetest();
 void init_outdent_indent();
 void init_prefs();
+void init_query();
 void init_remove();
 void init_search();
 void init_sort();
@@ -55,6 +56,7 @@ void init_subsystems(){
  init_nodetest();
  init_outdent_indent();
  init_prefs();
+ init_query();
  init_remove();
  init_search();
  init_sort();

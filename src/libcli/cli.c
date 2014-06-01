@@ -198,6 +198,26 @@ static int nop (char *params, void *data)
 }
 
 static int inited = 0;
+
+void cli_cleanup(void){
+	inited=0;
+	cli_outfun  = default_output;
+	cli_precmd  = NULL;
+	cli_postcmd  = NULL;
+	cli_unknown = default_unknown_command;
+	cli_width = 40;
+
+	while(items){
+		ItemT *titem=items;
+		if(items->name)free(items->name);
+		if(items->usage)free(items->usage);
+		if(items->help)free(items->help);
+		items=items->next;
+		free(titem);
+		titem=NULL;
+	}
+}
+
 static void init_cli (void)
 {
 	cli_add_command ("quit", nop, "quits the application");

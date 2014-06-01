@@ -31,7 +31,6 @@ COMPILING hnb
 	
 	hnb uses a custom Makefile, that should work on most unix'ish systems with a curses library.
 	
-	./configure
 	make
 	su
 	(enter root password)
@@ -44,6 +43,10 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.9.15
+		outdent fixed to be more efficient and work as intended
+		added export context
+		changed all import/export functions to use the query variable if filename passed is *
 	1.9.14
 		bugfix: The new sort and shuffle functions could result in dataloss when saved.
 		new feature: expand/collapse and expand_all/collapse_all are new bindable functions, expand/collapse is bound to +/- in the default config file, they force portions of the tree to stay open even when you leave it.

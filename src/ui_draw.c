@@ -493,8 +493,8 @@ static struct {
 };
 
 
-/* FIXME: make backup?,.. and make sure data is present,.. (or draw_node will crash) 
-*/
+/* FIXME: make backup?,.. and make sure data is present,.., make possiblity to write back? */
+
 int display_format_cmd(char *params, void *data){
 	char *p=params;
 	int width;

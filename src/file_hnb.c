@@ -33,6 +33,7 @@
 
 #include "file.h"
 #include "prefs.h"
+#include "query.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
@@ -120,12 +121,15 @@ static int export_hnb (char *params, void *data)
 	char *filename = params;
 	FILE *file;
 
+	
 	while (*params && (*params != ' '))
 		params++;
 	if (*params == ' ') {
 		*params = 0;
 		params++;
 	}
+
+	if(!strcmp(filename,"*"))filename=query;
 
 	if (!strcmp (filename, "-"))
 		file = stdout;
@@ -180,7 +184,7 @@ static int import_hnb (char *params, void *data)
 
 	FILE *file;
 
-
+	if(!strcmp(filename,"*"))filename=query;
 	file = fopen (filename, "r");
 	if (!file) {
 		cli_outfunf ("hnb import, unable to open \"%s\"", filename);
@@ -286,7 +290,7 @@ static int import_hnb (char *params, void *data)
 		node = node_remove (node);	/* remove temporary node, if tree was empty */
 
 	cli_outfunf ("hnb import - imported \"%s\"", filename);
-
+	xml_tok_cleanup(s);
 	return (int) node;
 }
 

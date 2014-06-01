@@ -1,5 +1,5 @@
 /*
- * search.c -- recursive search for hnb
+ * query.c -- querying the user for input
  *             
  *
  * Copyright (C) 2001,2003 Øyvind Kolås <pippin@users.sourceforge.net>
@@ -24,39 +24,22 @@
 #include "prefs.h"
 #include "ui.h"
 #include <cli.h>
-#include "query.h"
 
-/************** search ************************/
+char query[100];
 
-static int next_match_cmd(char *params,void *data){
+static int getquery_cmd(char *params,void *data){
 	Node *pos=(Node *)data;
-	pos = node_recursive_match ((char *) query, pos);
-
-	if(pos==NULL){
-		docmdf(pos,"status reached bottom of tree and '%s' not found", query);
-		return (int)data;
-	}
-	return (int)pos;
-}
-
-static int prev_match_cmd(char *params,void *data){
-	Node *pos=(Node *)data;
-	pos = node_backrecursive_match ((char *) query, pos);
-
-	if(pos==NULL){
-		docmdf(pos,"status reached top of tree and '%s' not found", query);
-		return (int)data;
-	}
+	strcpy(query,"");
+	ui_getstr(params,&query[0]);
 	return (int)pos;
 }
 
 /*
-!init_search();
+!init_query();
 */
-void init_search(){
-	cli_add_command ("prev_match", prev_match_cmd, "");
-	cli_add_help("prev_match","Moves backwards in the tree to the prior match");
-	cli_add_command ("next_match", next_match_cmd, "");
-	cli_add_help("next_match","Moves forward in the tree to the next match");
+void init_query(){
+	cli_add_command ("getquery", getquery_cmd, "<prompt>");
+	cli_add_help("getquery","Input a string from the user (put into the variable query, used by amongst other function the search function, and at least some of the export/import functions");
+	cli_add_string("query",query,"last query (also settable as a variable)");
 }
 

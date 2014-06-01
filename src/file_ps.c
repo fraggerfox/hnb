@@ -30,6 +30,7 @@
 #include "cli.h"
 #include "tree.h"
 #include "file.h"
+#include "query.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
@@ -87,6 +88,7 @@ static int export_ps (char *params, void *data)
 	char *cdata;
 	FILE *file;
 
+	if(!strcmp(filename,"*"))filename=query;
 	if (!strcmp (filename, "-"))
 		file = stdout;
 	else

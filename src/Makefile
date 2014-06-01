@@ -1,5 +1,5 @@
 LIBS=-lcurses libcli/libcli.a
-CFLAGS=-I.. -Ilibcli -DHAVE_CONFIG_H -Wall -O2 
+CFLAGS=-I.. -Ilibcli -DHAVE_CONFIG_H -Wall -O2
 
 CFILES=$(wildcard *.c)
 OBJS=$(patsubst %.c,%.o,$(CFILES))

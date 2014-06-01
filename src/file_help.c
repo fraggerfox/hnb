@@ -28,7 +28,7 @@
 #include "cli.h"
 #include "tree.h"
 #include "file.h"
-
+#include "query.h"
 
 #define transform(a,b) case a:\
 						{int j=0;char * msg=b;\
@@ -71,6 +71,7 @@ static int export_help (char *params, void *data)
 	char *cdata;
 	FILE *file;
 
+	if(!strcmp(filename,"*"))filename=query;
 	file = fopen (filename, "w");
 	if (!file) {
 		cli_outfunf ("help export, unable to open \"%s\"", filename);

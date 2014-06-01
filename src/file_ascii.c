@@ -28,6 +28,7 @@
 #include "cli.h"
 #include "tree.h"
 #include "file.h"
+#include "query.h"
 
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
@@ -41,6 +42,9 @@ static int import_ascii (char *params, void *data)
 	import_state_t ist;
 	char cdata[bufsize];
 	FILE *file;
+
+	
+	if(!strcmp(filename,"*"))filename=query;
 
 	file = fopen (filename, "r");
 	if (file == NULL) {
@@ -102,6 +106,8 @@ static int export_ascii (char *params, void *data)
 	int level, flags, startlevel;
 	char *cdata;
 	FILE *file;
+
+	if(!strcmp(filename,"*"))filename=query;
 
 	if (!strcmp (filename, "-"))
 		file = stdout;

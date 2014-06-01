@@ -1,4 +1,4 @@
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -g -O2
 
 OBJS = cli.o cli_history.o 
 

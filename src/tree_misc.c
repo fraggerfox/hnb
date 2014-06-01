@@ -103,20 +103,37 @@ static int cmd_outdent (char *params, void *data)
 	Node *pos=(Node *)data;
 
 	if (node_left (pos)) {
-		Node *tnode, *snode;
-		tnode = node_insert_down(node_left(pos));
-		node_swap(pos,tnode);
-		snode=tnode;
-		while(node_down(snode)){
-			Node *bnode=node_down(snode);
-			tnode=node_insert_down(node_bottom(pos));
-			node_swap(tnode,bnode);
-			node_remove(tnode);			
-		}
-		node_remove(snode);		
+		Node *target_node=node_left(pos);
+		Node *last_node=node_bottom(pos);
+		Node *first_node=pos;
+		Node *prev_up=node_up(pos);
+		Node *prev_target_down=node_down(target_node);
+		Node *tnode;
+		
+		tnode=first_node;
+		while(tnode!=last_node){
+			tnode->left=target_node->left;
+			tnode=tnode->down;
+		};
+		tnode->left=target_node->left;
+		
+		first_node->up=target_node;
+		target_node->down=first_node;
+		last_node->down=prev_target_down;
+
+		if(prev_target_down)
+			prev_target_down->up=last_node;
+		
+		if(prev_up){
+			prev_up->down=NULL;
+		} else {
+			target_node->right=NULL;
+		}		
 	}
 	return (int)pos;
 }
+
+/*	FIXME: no real need for a temporary node */
 
 static int cmd_indent (char *params, void *data)
 {
@@ -133,13 +150,15 @@ static int cmd_indent (char *params, void *data)
 		node_swap(pos,tnode);
 		snode=tnode;
 		
-		while(node_down(snode)){
-			Node *bnode=node_down(snode);
-			tnode=node_insert_down(node_bottom(pos));
-			node_swap(tnode,bnode);
-			node_remove(tnode);
+		node_up(snode)->down=NULL;
+		snode->up=pos;
+		pos->down=snode;
+
+		while(snode){
+			snode->left=pos->left;
+			snode=node_down(snode);
 		}
-		node_remove(snode);
+		node_remove(node_down(pos));
 	}
 	return (int)pos;
 }
@@ -185,8 +204,7 @@ void init_remove(){
 static int commandline_cmd (char *params, void *data){
 	Node *pos=(Node *)data;
 
-	char commandline[80]; /* FIXME: there is a bug either here or in ui_getstr,. that overflows a buf,. if I exchange this and
-							the above line,.. things crashes on cancelling the commandline editing */
+	char commandline[80];
 
 	do{
 		strcpy(commandline,"");
@@ -228,8 +246,6 @@ void init_insertbelow(){
 	cli_add_command ("insert_below", insert_below_cmd, "");
 	cli_add_help ("insert_below","Adds a new node immediatly below the active");
 }
-
-
 
 /*
 	TODO:

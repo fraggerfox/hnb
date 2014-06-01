@@ -30,6 +30,8 @@ void cli_split(char *orig, char *head, char **tail);
 void cli_add_help(char *name,char *helptext);
 
 
+void cli_cleanup(void);
+
 void
 cli_add_item (char *name,
 		  int *integer, char *string,
