@@ -19,15 +19,6 @@
  */
 
 
-/*
-!cli cli_add_command ("export_help", export_help, "<filename>");
-!clid int export_help ();
-!cli cli_add_command ("import_help",import_help, "<filename>");
-!clid int import_help ();
-
-*/
-
-
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -71,7 +62,7 @@ static char *help_quote (char *in)
 	return (out);
 }
 
-int export_help (char *params, void *data)
+static int export_help (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -113,7 +104,7 @@ int export_help (char *params, void *data)
 	return (int) node;
 }
 
-int import_help (char *params, void *data)
+static int import_help (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	import_state_t ist;
@@ -127,3 +118,10 @@ int import_help (char *params, void *data)
 	return (int) (node);
 }
 
+/*
+!init_file_help();
+*/
+void init_file_help(){
+	cli_add_command ("export_help", export_help, "<filename>");
+	cli_add_command ("import_help", import_help, "<filename>");
+}

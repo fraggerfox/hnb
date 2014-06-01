@@ -18,16 +18,6 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-/*
-!cli cli_add_command ("export_html", export_html, "<filename>");
-!clid int export_html ();
-!cli cli_add_command ("export_htmlcss", export_htmlcss, "<filename>");
-!clid int export_htmlcss ();
-
-*/
-
-
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -78,7 +68,7 @@ static char *html_quote (const char *in)
 }
 
 
-int export_html (char *params, void *data)
+static int export_html (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -186,7 +176,7 @@ static void htmlcss_export_nodes (FILE * file, Node *node, int level)
 }
 
 
-int export_htmlcss (char *params, void *data)
+static int export_htmlcss (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -227,4 +217,12 @@ fprintf (file, "\n</body></html>\n");
 
 	cli_outfunf ("html export, saved output in \"%s\"", filename);
 	return (int) node;
+}
+
+/*
+!init_file_html();
+*/
+void init_file_html(){
+	cli_add_command ("export_html", export_html, "<filename>");
+	cli_add_command ("export_htmlcss", export_htmlcss, "<filename>");
 }

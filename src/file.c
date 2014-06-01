@@ -23,8 +23,14 @@
 #include <config.h>
 #endif
 
+#include <stdio.h> 
+#include <string.h>
+#include <stdlib.h>
+
 #include "tree.h"
 #include "file.h"
+#include "prefs.h"
+#include "ui_cli.h"
 
 void init_import (import_state_t * is, Node *node)
 {
@@ -55,4 +61,98 @@ Node *import_node (import_state_t * is, int level, int flags,
 	return is->npos;
 /*	node_update_parents_todo(is->npos); commented out due to major slowdown
 when importing */
+}
+
+/* returns 1 if the first couple of lines of file contains 'xml' */
+int xml_check (char *filename)
+{
+	FILE *file;
+	char buf[bufsize];
+	int j;
+
+	file = fopen (filename, "r");
+	if (file == NULL)
+		return -1;
+
+	for (j = 0; j < 2; j++) {
+		if (fgets (buf, bufsize, file) == NULL) {
+			fclose (file);
+			return 0;
+		}
+		if (strstr (buf, "xml") != 0) {
+			fclose (file);
+			return 1;
+		}
+	}
+	fclose (file);
+	return 0;
+}
+
+/* returns the node number stored in the comment, if available  */
+int xml_getpos (char *filename)
+{
+	FILE *file;
+	char buf[bufsize];
+	char *s;
+	int j;
+
+	file = fopen (filename, "r");
+	if (file == NULL)
+		return -1;
+
+	for (j = 0; j < 2; j++) {
+		if (fgets (buf, bufsize, file) == NULL) {
+			fclose (file);
+			return 0;
+		}
+		if ((s = strstr (buf, "<!--pos:"))) {
+			fclose (file);
+
+			return atoi (&s[8]);
+		}
+	}
+	fclose (file);
+	return -1;
+}
+
+
+/*returns 1 if file exists*/
+int file_check (char *filename)
+{
+	FILE *file;
+
+	file = fopen (filename, "r");
+	if (file == NULL)
+		return 0;
+	fclose (file);
+	return 1;
+}
+
+
+static int cmd_save(char *params,void *data){
+	Node *pos=(Node *)data;
+					if (prefs.db_file[0] != (char) 255) {
+					{
+						char buf[4096];
+
+						if (prefs.format == format_hnb || prefs.format==format_opml) {
+							sprintf (buf, "export_%s %s %i",
+									 format_name[prefs.format], prefs.db_file,
+									 node_no (pos) - 1);
+						} else {
+							sprintf (buf, "export_%s %s",
+									 format_name[prefs.format],
+									 prefs.db_file);
+						}
+						docmd (node_root (pos), buf);
+					}
+				}
+	return (int)pos;
+}
+/*
+!init_file();
+*/
+void init_file(){
+	cli_add_command ("save", cmd_save, "");
+	cli_add_help("save","Saves the data");
 }

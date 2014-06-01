@@ -43,7 +43,6 @@ static char *ui_action_names[ui_action_terminator-512]={
 "bottom",
 "bskipword",
 "cancel",   
-"cli",
 "command",
 "complete",   
 "confirm", 
@@ -240,22 +239,10 @@ static int string2keycode(char *str){
 	return -1;
 }
 
-/*
-!cli cli_add_command ("bind", ui_bind_cmd, "<key> <action> [parameter]");
-!clid int ui_bind_cmd ();
-
-!cli cli_add_command ("context", ui_context_cmd, "<context>");
-!clid int ui_context_cmd ();
-
-must implement either a macro defining capability to the interpreter, or
-the ability to do multiple actions on a binding.
-
-
-*/
 
 int ui_current_scope=0;
 
-int ui_context_cmd (char *params, void *data){
+static int ui_context_cmd (char *params, void *data){
 	ui_current_scope=string2scope(params);
 	return (int)data;
 }
@@ -268,7 +255,7 @@ static void makebinding(int scope_no, int key, int action, char *action_name, ch
 	ui_binding_count[scope_no]++;
 }
 
-int ui_bind_cmd(char *params, void *data){
+static int ui_bind_cmd(char *params, void *data){
 /*	char context[40];*/
 	char key[40];
 	char action[40];
@@ -380,4 +367,83 @@ char *tidy_keyname (const char *keyname)
 		}
 	}
 	return buf;
+}
+
+
+/*
+!init_ui_binding();
+*/
+
+static int dummy_cmd(char *params,void *data){
+	return (int)data;
+}
+
+void init_ui_binding(){
+	cli_add_command ("bind", ui_bind_cmd, "<key> <action> [parameter]");
+	cli_add_help ("bind","Binds the action, to the specified key, subsequent actions my be bound by using the virtual key '..' thus chaining them together into a small script.");
+	cli_add_command ("context", ui_context_cmd, "<context>");
+	cli_add_help ("context","Changes context, context may be one of 'main', 'lineedit', 'nodeedit', 'confirm' or any other userdefined context.");
+
+/* dummy commands to show the 'builtins' */
+	cli_add_command("backspace", dummy_cmd, "");
+	cli_add_help("backspace", "erase the preceding character");
+	cli_add_command("delete", dummy_cmd, "");
+	cli_add_help("delete","erase the following character");
+
+	cli_add_command("down",   dummy_cmd, "");
+	cli_add_command("left",      dummy_cmd, "");
+	cli_add_command("right",  dummy_cmd, "");
+	cli_add_command("up",  dummy_cmd, "");
+	cli_add_help("down","moves the cursor or selection down");
+	cli_add_help("left", "moves the cursor or selection left");
+	cli_add_help("right", "moves the cursor or selection right");
+	cli_add_help("up", "moves the cursor or selection up");
+
+	cli_add_command("bkill_word", dummy_cmd, "");
+	cli_add_command("kill_word",   dummy_cmd, "");
+	cli_add_help("bkill_word", "erases the preceding word");
+	cli_add_help("bkill_word", "erases the following word");
+
+	cli_add_command("bol",        dummy_cmd, "");
+	cli_add_help("bol","move cursor to beginning of line");
+
+	cli_add_command("top",         dummy_cmd, "");
+	cli_add_command("bottom", dummy_cmd, "");
+	cli_add_help("top","move to the topmost sibling of the current entry");
+	cli_add_help("bottom","move to the bottommost sibling of the current entry");
+
+	cli_add_command("bskipword", dummy_cmd, "");
+	cli_add_command("cancel",    dummy_cmd, "");
+
+	cli_add_command("complete",    dummy_cmd, "");
+	cli_add_help("complete","output possible completions of entered command or variable");
+
+	cli_add_command("confirm",  dummy_cmd, "");
+	cli_add_help("confirm","confirm the question posed, (used in dialogs asking for the users' consent)");
+
+
+	cli_add_command("eol",  dummy_cmd, "");
+	cli_add_help("eol","move to the end of the line");
+
+	cli_add_command("ignore",    dummy_cmd, "");
+
+	cli_add_command("join",         dummy_cmd, "");
+	cli_add_command("split", dummy_cmd, "");
+
+	cli_add_help("join","join the currently edited node with the following sibling");
+	cli_add_help("split","split the currently edited node at the cursor location");
+
+	cli_add_command("kill_line", dummy_cmd, "");
+	cli_add_help("kill_line","erase the currently edited line");
+	
+	cli_add_command("kill_to_bol", dummy_cmd, "");
+	cli_add_command("kill_to_eol", dummy_cmd, "");
+
+	cli_add_command("pagedown", dummy_cmd, "");
+	cli_add_command("pageup",   dummy_cmd, "");
+
+	cli_add_command("skipword", dummy_cmd, "");
+	
+	cli_add_command("unbound", dummy_cmd, "");
+	cli_add_help("unbound","give a message indicating that the pressed key is not bound in the current context");
 }

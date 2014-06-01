@@ -34,6 +34,7 @@
 int nodes_above;
 int active_line;
 int nodes_below;
+int curses_activated=0;
 
 void ui_init ()
 {
@@ -82,7 +83,7 @@ void ui_init ()
 		define_key("\033[d",KEY_SLEFT);
 	#endif	
 
-
+	curses_activated=1;
 	cli_width=COLS;
 
 	if (has_colors ()) {
@@ -99,7 +100,9 @@ void ui_end ()
 	clear ();
 	refresh ();
 	endwin ();
+	curses_activated=0;
 }
+
 
 /*extern Node *pos;
 */

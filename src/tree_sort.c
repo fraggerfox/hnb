@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "tree.h"
+#include "cli.h"
 
 
 #if 0
@@ -118,3 +119,22 @@ Node *node_sort_siblings (Node *node)
 		if a child is done count+= 1000/parts
 		if a child is not done count+= node_calc_complete(child)/parts	
 */
+
+/*
+	TODO: should add criteries for ascending/descending,.. 
+	usage of done status etc..
+*/
+static int sort_cmd (char *params, void *data)
+{
+	Node *pos = (Node *) data;
+
+	return (int) node_sort_siblings (pos);
+}
+
+/*
+!init_sort();
+*/
+void init_sort(){
+		cli_add_command ("sort", sort_cmd, "");
+		cli_add_help("sort","Sorts the siblings of the currently selected node");
+}

@@ -402,3 +402,31 @@ void node_swap (Node *nodeA, Node *nodeB)
 	}
 }
 
+
+#include "file.h"
+
+void tree_duplicate(Node *source, Node *target){
+	int level, flags, priority, startlevel;
+	import_state_t ist;	
+	char *data;
+		
+	node_setflags (target, node_getflags (source));
+	node_setpriority(target, node_getpriority(source));
+	node_setdata (target, node_getdata (source));
+
+	init_import (&ist, target);
+	
+	if (node_right (source)) {
+		source = node_right (source);
+		startlevel = nodes_left (source);
+		while ((source != 0) & (nodes_left (source) >= startlevel)) {
+			level = nodes_left (source) - startlevel + 1;
+			flags = node_getflags (source);
+			priority = node_getpriority(source);
+			data = node_getdata (source);
+
+			import_node (&ist, level, flags, priority, data);
+			source = node_recurse (source);
+		}
+	}
+}

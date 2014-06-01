@@ -25,7 +25,6 @@ enum {
 	ui_action_bottom,
 	ui_action_bskipword,
 	ui_action_cancel,
-	ui_action_cli,
 	ui_action_command,
 	ui_action_complete,
 	ui_action_confirm,

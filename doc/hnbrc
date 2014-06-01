@@ -6,20 +6,72 @@
 # (please be aware that this is the configuration file for a development version,
 #  things might change drastically soon,.. or perhaps later)
 
-##########
-# number of spaces to indent each level relative to the parent level
-#
-indentspaces	2
-
 ########## 
 # what kind of bullets are displayed before each item
 #
-# 0 none
-# 1 +/- 
-# 2 * 
-# 3 - 
+bullet_parent   +
+#bullet_parent   -
+#bullet_parent   *
+#bullet_parent   ·
+bullet_leaf   -
+#bullet_leaf   *
+#bullet_leaf   ·
+
+
+########
+# default format to use available parameters:
+# 0 - xml using hnb DTD
+# 1 - tab indented ascii
+# 2 - xml using no DTD (xml editor)
+# 3 - xml using OPML DTD
+
+default_format 0
+
+#########
 #
-bulletmode	1
+# defining how each node is displayed, the display string syntax is
+# interpreted as follows:
+#
+#   spaces turn into real spaces, i means indentation, - means bullet,
+#   d means the real data of the node, x is a temporary placeholder for
+#   upcoming columntypes,. (for debugging only)
+#
+#   i and x can take an argument specifying how many characters wide
+#   the field should be
+#
+#   until further features are added, only the multiplier after
+#   indentation actually does something
+#
+# 
+display_format i4- d
+
+#########
+# what command is executed when a user wants a action performed on a
+# entry containing an url
+# 
+# * is subsituted for the url
+#
+#web_command opera -remote 'openURL(*)'
+#web_command opera -remote 'openURL(*,new-window)'
+#web_command netscape -remote 'openURL(*)'
+#web_command netscape -remote 'openURL(*,new-window)'
+#web_command mozilla -remote 'openURL(*)'
+#web_command mozilla -remote 'openURL(*,new-window)'
+#web_command konqueror *
+
+web_command galeon -n *
+
+
+#########
+# what command is executed when a user wants a action performed on a
+# entry containing a mailaddress
+# 
+# * is subsituted for the mailaddress
+#
+#mail_command xterm -rv pine *
+
+mail_command xterm -rv +sb mutt *
+
 
 ##########
 # amount of tree displayed
@@ -51,7 +103,7 @@ forced_up	0
 escdelay 100
 
 
-##########
+#########
 # keep whitespace as is when loading file from xml
 #
 keepwhitespace	0
@@ -59,7 +111,7 @@ keepwhitespace	0
 ##########
 # save current position when saving a database
 #
-savepos		1
+savepos		0
 
 xml_cuddle 1
 
@@ -72,7 +124,7 @@ xml_cuddle 1
 
 style menuitem		default/default	reverse
 style menutext		cyan/default normal
-style parentnode	white/default bold
+style parentnode	default/default bold
 style node		default/default	normal
 style bullet		cyan/default	normal
 style selected		yellow/red 	bold
@@ -114,7 +166,7 @@ context main
 	bind  	>		indent
 	bind  	<		outdent
 
-	bind  	/		context search
+	bind  ^F			context search
 	bind	..		save_state
 	bind	..		getquery
 	bind	..		next_match
@@ -124,8 +176,10 @@ context main
 	bind	^X		cut
 	bind	^C		copy
 	bind	^V		paste
+	bind	..		down
 
-	bind	^S		sort
+	bind	^S		save_state
+	bind	..		sort
 
 	bind	backspace	backspace
 	bind	backspace2	backspace
@@ -140,6 +194,12 @@ context main
 
 	bind	^G		context grab
 	bind	..		save_state
+
+	bind	^Z		restore_state
+	bind	^A		action
+
+	bind	f1		status Take a look at ~/.hnbrc to check out the configuration
+	bind	..		status there you will also find details about the available keybindings.
 
 context quitsave
 	helptext Save on exit? |    | Y |es | J |a || | N |o || |ESC| cancel
@@ -236,3 +296,6 @@ context nodeedit
 	bind	esc		cancel
 
 context main
+
+status hnb - hierarchical notebook   http://hnb.sourceforge.net/
+status (c) Øyvind Kolås 2001-2003    pippin@users.sourceforge.net

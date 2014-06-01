@@ -22,10 +22,12 @@
 #include <config.h>
 #endif
 
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
 #include "tree.h"
 #include "ui.h"
 #include "ui_style.h"
-#include <string.h>
 #include "ui_binding.h"
 #include "evilloop.h"
 
@@ -38,17 +40,12 @@
 	
 	status
 	status_display_counter,..
-
 */
 
-/*
-!cli cli_add_command ("helptext", ui_helptext_cmd, "<help for context>");
-!clid int ui_helptext_cmd ();
-*/
 
 static char* ui_helptext[MAX_SCOPES]={0};
 
-int ui_helptext_cmd(char *params,void *data){
+static int ui_helptext_cmd(char *params,void *data){
 	ui_helptext[ui_current_scope]=strdup(params);
 	return (int)data;
 }
@@ -70,25 +67,63 @@ static void status(char *message, int ttl){
 }
 
 void set_status(char *message){
-	status(message,1);
+	char *tbuf, *word, *bp, *dp, *wp;
+	int width;
+	if(!COLS)width=60;
+	else width=COLS+1-2;
+
+	 bp=tbuf=malloc( width );
+	 wp=word=malloc( width );
+     dp=message;
+	
+	*bp=*wp='\0';
+	
+	while(1+1==2){
+		if(isspace(*dp) || *dp=='\0'){
+			if( (bp-tbuf) + (wp-word) +1 < width ){
+				strcpy(bp,word);
+				bp+=(wp-word);
+				*(bp++)=' ';
+				*bp='\0';
+				wp=word;
+				*wp='\0';
+			} else {
+				status(tbuf,1);
+				bp=tbuf;
+				*bp='\0';
+				strcpy(bp,word);
+				bp+=(wp-word);
+				*(bp++)=' ';
+				*bp='\0';
+				wp=word;
+				*wp='\0';
+			}
+			if(!*dp)break;
+		} else {
+			if(wp-word>= width-1){
+				status(tbuf,1);
+				status(word,1);
+				wp=word;
+			}
+			*(wp++)=*dp;
+			*wp='\0';
+		}
+		dp++;
+	}
+	status(tbuf,1);
+	
+	free(word);
+	free(tbuf);
 }
 
-/*
-!cli cli_add_command ("status", ui_status_cmd, "<message>");
-!cli cli_add_command ("status_clear", ui_status_clear_cmd, "");
 
-!clid int ui_status_cmd ();
-!clid int ui_status_clear_cmd ();
-
-*/
-
-int ui_status_cmd(char *params,void *data){
-	status(params,1);
+static int ui_status_cmd(char *params,void *data){
+	set_status(params);
 	return (int)data;
 }
 
 
-int ui_status_clear_cmd(char *params,void *data){
+static int ui_status_clear_cmd(char *params,void *data){
 	status_ttl=0;
 	return (int)data;
 }
@@ -113,14 +148,15 @@ void status_draw(void)
 
 void help_draw (int scope)
 {
+	if(!curses_activated)return;
 	status_draw();
 
 	move(LINES-1,0);
 	ui_style(ui_style_menuitem);
 	{unsigned char *p=ui_helptext[scope];
 	 int style_is_menuitem=1;
- 	 while(*p){
-	 	switch(*p){
+	 while(*p){
+		switch(*p){
 			case '|':
 				if(*(p+1)=='|'){
 					addch('|');
@@ -146,4 +182,16 @@ void help_draw (int scope)
 	clrtoeol();
 	ui_style(ui_style_background);
 	
+}
+
+/*
+!init_ui_overlay();
+*/
+void init_ui_overlay(){
+	cli_add_command ("helptext", ui_helptext_cmd, "<help for context>");
+	cli_add_help("helptext","Defines the helptext for the current context, the character | alternates between the menuitem and the menutext styles, || is the escape sequence for a single pipe.");
+	cli_add_command ("status", ui_status_cmd, "<message>");
+	cli_add_help("status","Adds 'message' as the newest status line.");
+	cli_add_command ("status_clear", ui_status_clear_cmd, "");
+	cli_add_help("status","Clears all status messages off screen.");
 }

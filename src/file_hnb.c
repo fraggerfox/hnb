@@ -19,15 +19,6 @@
  */
 
 
-/*
-!cli cli_add_command ("export_hnb", export_hnb, "<filename>");
-!cli cli_add_command ("import_hnb", import_hnb, "<filename>");
-
-!clid int import_hnb ();
-!clid int export_hnb ();
-*/
-
-
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -126,7 +117,7 @@ static void hnb_export_nodes (FILE * file, Node *node, int level)
 	}
 }
 
-int export_hnb (char *params, void *data)
+static int export_hnb (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -173,7 +164,7 @@ int export_hnb (char *params, void *data)
 }
 
 
-int import_hnb (char *params, void *data)
+static int import_hnb (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -213,6 +204,7 @@ int import_hnb (char *params, void *data)
 				priority = 0;
 				flags = 0;
 				level++;
+				continue;
 			}
 			if (type == t_att && !strcmp (rdata, "done")) {
 				xml_tok_get (s, &rdata);
@@ -303,4 +295,12 @@ int import_hnb (char *params, void *data)
 	cli_outfunf ("hnb import - imported \"%s\"", filename);
 
 	return (int) node;
+}
+
+/*
+!init_file_hnb();
+*/
+void init_file_hnb(){
+	cli_add_command ("export_hnb", export_hnb, "<filename>");
+	cli_add_command ("import_hnb", import_hnb, "<filename>");
 }

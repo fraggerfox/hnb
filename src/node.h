@@ -21,7 +21,7 @@ typedef struct Node {
 	char *data;
 	unsigned int flags;
 	unsigned char priority;
- 	int percent_done;	
+ 	int percent_done;
 	int size;
 } Node;
 

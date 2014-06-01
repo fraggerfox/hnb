@@ -25,12 +25,8 @@
 #include "ui.h"
 #include "ui_cli.h"
 #include "evilloop.h"
-/*
-!cli cli_add_command ("movenode", cmd_movenode, "<up|left|right|down>");
-!clid int cmd_movenode ();
-*/
 
-int cmd_movenode(char *params,void *data){
+static int cmd_movenode(char *params,void *data){
 	Node *pos=(Node *)data;
 	if(!strcmp(params,"left")){	
 		if(node_left(pos)){
@@ -70,38 +66,14 @@ int cmd_movenode(char *params,void *data){
 }
 
 /*
-!cli cli_add_command ("save", cmd_save, "");
-!clid int cmd_save ();
+!init_movenode();
 */
-
-int cmd_save(char *params,void *data){
-	Node *pos=(Node *)data;
-					if (prefs.db_file[0] != (char) 255) {
-					{
-						char buf[4096];
-
-						if (prefs.format == format_hnb) {
-							sprintf (buf, "export_%s %s %i",
-									 format_name[prefs.format], prefs.db_file,
-									 node_no (pos) - 1);
-						} else {
-							sprintf (buf, "export_%s %s",
-									 format_name[prefs.format],
-									 prefs.db_file);
-						}
-						docmd (node_root (pos), buf);
-					}
-				}
-	return (int)pos;
+void init_movenode(){
+	cli_add_command ("movenode", cmd_movenode, "<up|left|right|down>");
 }
 
-/*
-!cli cli_add_command ("outdent", cmd_outdent, "");
-!clid int cmd_outdent ();
-*/
 
-
-int cmd_outdent (char *params, void *data)
+static int cmd_outdent (char *params, void *data)
 {
 	Node *pos=(Node *)data;
 
@@ -122,12 +94,7 @@ int cmd_outdent (char *params, void *data)
 	return (int)pos;
 }
 
-/*
-!cli cli_add_command ("indent", cmd_indent, "");
-!clid int cmd_indent ();
-*/
-
-int cmd_indent (char *params, void *data)
+static int cmd_indent (char *params, void *data)
 {
 	Node *pos=(Node *)data;
 	if (node_up (pos)) {
@@ -153,34 +120,17 @@ int cmd_indent (char *params, void *data)
 	}
 	return (int)pos;
 }
-
-
 /*
-!cli cli_add_command ("toggle_todo", toggle_todo_cmd, "");
-!cli cli_add_command ("toggle_done", toggle_done_cmd, "");
-!clid int toggle_todo_cmd ();
-!clid int toggle_done_cmd ();
+!init_outdent_indent();
 */
-
-int toggle_todo_cmd(char *params,int data){
-	Node *pos=(Node *)data;
-	node_toggleflag (pos, F_todo);
-	return (int)pos;
+void init_outdent_indent(){
+	cli_add_command ("outdent", cmd_outdent, "");
+	cli_add_help("outdent","moves the active item and the following siblings one level to the left");
+	cli_add_command ("indent", cmd_indent, "");
+	cli_add_help("indent","moves the active item and the following siblings one level to the right");
 }
 
-int toggle_done_cmd(char *params,int data){
-	Node *pos=(Node *)data;
-	node_toggleflag (pos, F_done);
-	return (int)pos;
-}
-
-/*
-!cli cli_add_command ("remove", remove_cmd, "");
-!clid int remove_cmd ();
-*/
-
-
-int remove_cmd(char *params,int data){
+static int remove_cmd(char *params,void *data){
 	Node *pos=(Node *)data;
 	if (node_right (pos)) {
 		Tbinding *c;
@@ -190,22 +140,30 @@ int remove_cmd(char *params,int data){
 		ui_draw(pos,pos,"",0 );
 		ui_current_scope=tempscope;
 		c = parsekey (ui_input (), ui_scope_confirm);
-		if (c->action == ui_action_confirm )
+		if (c->action == ui_action_confirm ){
+			docmd(pos,"save_state");
 			pos = node_remove (pos);
+		}
 	} else {
+		docmd(pos,"save_state");
 		pos = node_remove (pos);
 	}
 	return (int)pos;
 }
-
 /*
-!cli cli_add_command ("commandline", commandline_cmd, "");
-!clid int commandline_cmd ();
+!init_remove();
 */
+void init_remove(){
+	cli_add_command ("remove", remove_cmd, "");
+	cli_add_help("remove","Removes the active node, if it has children a confirmation dialog pops up.");
+}
 
-int commandline_cmd (char *params, void *data){
-	char commandline[80];
+
+static int commandline_cmd (char *params, void *data){
 	Node *pos=(Node *)data;
+
+	char commandline[80]; /* FIXME: there is a bug either here or in ui_getstr,. that overflows a buf,. if I exchange this and
+							the above line,.. things crashes on cancelling the commandline editing */
 
 	do{
 		strcpy(commandline,"");
@@ -217,13 +175,15 @@ int commandline_cmd (char *params, void *data){
 	}while(commandline[0]);
 	return (int)pos;
 }
-
 /*
-!cli cli_add_command ("insert_below", insert_below_cmd, "");
-!clid int insert_below_cmd ();
+!init_commandline();
 */
+void init_commandline(){
+	cli_add_command ("commandline", commandline_cmd, "");
+	cli_add_help("commandline","Invokes the interactive commandline in curses mode.");
+}
 
-int insert_below_cmd (char *params, void *data)
+static int insert_below_cmd (char *params, void *data)
 {
 	Node *pos=(Node *)data;
 
@@ -238,199 +198,17 @@ int insert_below_cmd (char *params, void *data)
 	inputbuf[0] = 0;
 	return (int)pos;
 }
-
-
-/************** search ************************
-
-!cli cli_add_command ("prev_match", prev_match_cmd, "");
-!cli cli_add_command ("getquery", getquery_cmd, "");
-!cli cli_add_command ("next_match", next_match_cmd, "");
-!clid int next_match_cmd ();
-!clid int prev_match_cmd ();
-!clid int getquery_cmd ();
-*/
-
-
-int next_match_cmd(char *params,int data){
-	Node *pos=(Node *)data;
-	pos = node_recursive_match ((char *) prefs.query, pos);
-
-	if(pos==NULL){
-		docmdf(pos,"status reached bottom of tree and '%s' not found", prefs.query);
-		return (int)data;
-	}
-
-	/* might evoke a message of wrapping the tree,.. check startlevel as well? */
-
-	return (int)pos;
-}
-
-
-
-int prev_match_cmd(char *params,int data){
-	Node *pos=(Node *)data;
-	pos = node_backrecursive_match ((char *) prefs.query, pos);
-
-
-	if(pos==NULL){
-		docmdf(pos,"status reached top of tree and '%s' not found", prefs.query);
-		return (int)data;
-	}
-
-	/* might evoke a message of wrapping the tree,.. check startlevel as well? */
-
-	return (int)pos;
-}
-
-
-int getquery_cmd(char *params,int data){
-	Node *pos=(Node *)data;
-	strcpy(prefs.query,"");
-	ui_getstr("Search for:",&prefs.query[0]);
-	return (int)pos;
-}
-
-
-/************************* clipboard ************************************/
-
-#include "file.h"
-
 /*
-!cli cli_add_command ("copy", copy_cmd, "");
-!cli cli_add_command ("cut", cut_cmd, "");
-!cli cli_add_command ("paste", paste_cmd, "");
-!clid int copy_cmd ();
-!clid int cut_cmd ();
-!clid int paste_cmd ();
+!init_insertbelow();
 */
-
-static void clipboard_duplicate_tree(Node *source, Node *target){
-	int level, flags, priority, startlevel;
-	import_state_t ist;	
-	char *data;
-		
-	node_setflags (target, node_getflags (source));
-	node_setpriority(target, node_getpriority(source));
-	node_setdata (target, node_getdata (source));
-
-	init_import (&ist, target);
-	
-	if (node_right (source)) {
-		source = node_right (source);
-		startlevel = nodes_left (source);
-		while ((source != 0) & (nodes_left (source) >= startlevel)) {
-			level = nodes_left (source) - startlevel + 1;
-			flags = node_getflags (source);
-			priority = node_getpriority(source);
-			data = node_getdata (source);
-
-			import_node (&ist, level, flags, priority, data);
-			source = node_recurse (source);
-		}
-	}
-}
-
-static Node *clipboard=NULL;
-
-int copy_cmd (char *params, void *data)
-{
-	Node *pos=(Node *)data;
-	if(clipboard!=NULL){
-		tree_free(clipboard);
-	}
-	clipboard=node_new();
-
-	clipboard_duplicate_tree( pos, clipboard);
-	return (int)pos;
-}
-
-int cut_cmd (char *params, void *data)
-{
-	Node *pos=(Node *)data;
-	if(clipboard!=NULL){
-		tree_free(clipboard);
-	}
-	clipboard=node_new();
-
-	clipboard_duplicate_tree( pos, clipboard);
-	pos=node_remove(pos);
-	return (int)pos;
-}
-
-int paste_cmd (char *params, void *data)
-{
-	Node *pos=(Node *)data;
-	if(clipboard==NULL){
-		docmd(pos,"status no data in clipboard");
-	} else {
-		Node *temp;
-		temp=node_insert_down(pos);
-		clipboard_duplicate_tree( clipboard, temp);
-	}
-	return (int)pos;
-}
-
-/*********** one level of undo,.. for some things ****/
-
-/*
-!cli cli_add_command ("save_state", save_state_cmd, "");
-!cli cli_add_command ("restore_state", restore_state_cmd, "");
-!clid int save_state_cmd ();
-!clid int restore_state_cmd ();
-*/
-
-static Node *savedtree=NULL;
-
-int save_state_cmd (char *params, void *data)
-{
-	Node *pos=(Node *)data;
-	Node *i;
-	Node *j;
-	
-	if(savedtree!=NULL){
-		tree_free(savedtree);
-	}
-	savedtree=node_new();
-
-	i=node_root(pos);
-	j=savedtree;
-	do{
-		clipboard_duplicate_tree( i, j);
-		i=node_down(i);
-		j=node_insert_down(j);
-	}while(i!=NULL);
-	j=node_remove(j);
-
-	{int no;
-	 no=node_no(pos);
-	 savedtree=node_root(savedtree);
-	 while(--no)savedtree=node_recurse(savedtree);
-	}
-	
-
-	return (int)pos;
-}
-
-int restore_state_cmd (char *params, void *data)
-{
-	Node *pos=(Node *)data;
-	if(savedtree!=NULL){
-		Node *temp;
-		temp=pos;
-		pos=savedtree;
-		savedtree=temp;
-		node_free(savedtree);
-		savedtree=NULL;		
-	}
-	return (int)pos;
+void init_insertbelow(){
+	cli_add_command ("insert_below", insert_below_cmd, "");
+	cli_add_help ("insert_below","Adds a new node immediatly below the active");
 }
 
 
 
 /*
 	TODO:
-		copy
-		paste
-		cut
 		setting of attributes,.. percentage, size, donebydate etc.
 */

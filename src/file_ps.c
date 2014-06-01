@@ -18,11 +18,6 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
-!cli cli_add_command ("export_ps", export_ps, "<filename>");
-
-!clid int export_ps ();
-*/
 
 
 #if HAVE_CONFIG_H
@@ -82,7 +77,7 @@ static void ps_export_node (FILE * file, int level, int flags, char *data)
 	fprintf (file, "( ) S 10 ss %i LM 0 a (%s ) P\n", level*22,ps_quote(data));
 }
 
-int export_ps (char *params, void *data)
+static int export_ps (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -249,4 +244,12 @@ close\n\
 	if (file != stdout)
 		fclose (file);
 	return (int) node;
+}
+
+/*
+!init_file_ps();
+*/
+void init_file_ps(){
+	cli_add_command ("export_ps", export_ps, "<filename>");
+	cli_add_help("export_ps","Exports the current node, it's siblings and all sublevels to a postscript file suitable for printing");	
 }

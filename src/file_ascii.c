@@ -18,15 +18,6 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
-!cli cli_add_command ("export_ascii", export_ascii, "<filename>");
-!cli cli_add_command ("import_ascii", import_ascii, "<filename>");
-
-!clid int import_ascii ();
-!clid int export_ascii ();
-*/
-
-
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -40,11 +31,11 @@
 #define indent(count,char)	{int j;for(j=0;j<count;j++)fprintf(file,char);}
 
 
-int import_ascii (char *params, void *data)
+static int import_ascii (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
-	int level, flags, cnt;
+	int level, flags;
 	import_state_t ist;
 	char cdata[bufsize];
 	FILE *file;
@@ -58,7 +49,7 @@ int import_ascii (char *params, void *data)
 	init_import (&ist, node);
 
 	while (fgets (cdata, bufsize, file) != NULL) {
-		flags = level = cnt = 0;
+		flags = level = 0;
 
 		/*strip newlines and carrier return  */
 		while (cdata[strlen (cdata) - 1] == 13
@@ -68,26 +59,7 @@ int import_ascii (char *params, void *data)
 		while (cdata[level] == '\t')	/* find the level of this node */
 			level++;
 
-		if (cdata[level] == '[') {	/* read the flags */
-			while (cdata[level + cnt] != ']') {
-				cnt++;
-				switch (cdata[level + cnt]) {
-					case ' ':
-						flags = flags + F_todo;
-						break;
-					case 'x':
-					case 'X':
-					case '*':
-						flags = flags + F_todo + F_done;
-						break;
-					default:
-						break;
-				}
-			}
-			cnt++;
-		}
-
-		import_node (&ist, level, flags, 0, &cdata[level + cnt]);
+		import_node (&ist, level, flags, 0, &cdata[level]);
 	}
 
 	fclose (file);
@@ -111,15 +83,12 @@ static void ascii_export_node (FILE * file, int level, int flags, char *data)
 			fprintf (file, "[X]");
 		else
 			fprintf (file, "[ ]");
-	} else {
-		if (data[0] == '[')		/* escape the first char */
-			fprintf (file, "[]");
 	}
 
 	fprintf (file, "%s\n", data);
 }
 
-int export_ascii (char *params, void *data)
+static int export_ascii (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -156,3 +125,13 @@ int export_ascii (char *params, void *data)
 
 	return (int) node;
 }
+
+
+/*
+!init_file_ascii();
+*/
+void init_file_ascii(){
+	cli_add_command ("export_ascii", export_ascii, "<filename>");
+	cli_add_command ("import_ascii", import_ascii, "<filename>");
+}
+

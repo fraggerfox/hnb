@@ -2,8 +2,8 @@
 
 /* xml/html tokenizer (c) Øyvind Kolås 2002 */
 
-#define inbufsize 1024
-#define outbufsize 1024
+#define inbufsize 4096
+#define outbufsize 4096
 
 enum {
 	t_none,

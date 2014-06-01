@@ -186,5 +186,6 @@ char *node_setdata(Node *node,char *data);
 char *node_getdata(Node *node);
 */
 
+void tree_duplicate(Node *source, Node *target);
 
 #endif /* TREE_H */

@@ -5,6 +5,7 @@ enum {
 	format_hnb = 0,
 	format_ascii,
 	format_xml,
+	format_opml,
 	format_sxml,
 	format_html,
 	format_slides,
@@ -35,8 +36,8 @@ typedef struct {
 	char db_file[100];
 	char default_db_file[100];
 	char query[100];
-	int indent;
-	int bulletmode;
+	char bullet_leaf[4];
+	char bullet_parent[4];
 	int showpercent;
 	int keepwhitespace;
 	int fixedfocus;
@@ -51,7 +52,7 @@ void init_prefs ();
 
 /*  load preferences, from prefs.rc_file
 */
-void load_prefs (char *prefsfile);
+void load_prefs (void);
 
 void write_default_prefs ();
 

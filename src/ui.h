@@ -55,6 +55,8 @@ int ui_input ();
 extern int hnb_edit_posup;
 extern int hnb_edit_posdown;
 
+extern int curses_activated;
+
 void ui_getstr(char *prompt, char *datastorage);
 
 #define undefined_key(a,c)\

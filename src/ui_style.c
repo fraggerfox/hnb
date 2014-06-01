@@ -30,12 +30,6 @@
 
 #include "cli.h"  
 
-/*
-!cli cli_add_command ("style", ui_style_cmd, "<item> <foreground/background> <attributes>");
-!clid int ui_style_cmd ();
-*/
-
-
 typedef struct {
 	char name[16];
 	int att;
@@ -109,7 +103,7 @@ static int string2style(char *str){
 	return -1;
 }
 
-int ui_style_cmd(char *params, void *data){
+static int ui_style_cmd(char *params, void *data){
 	char item[40];
 	char colors[40];
 	char atts[40];
@@ -151,3 +145,15 @@ int ui_style_cmd(char *params, void *data){
 	}
 	return (int)data;
 }
+
+/*
+!init_ui_style();
+*/
+
+void init_ui_style(){
+	cli_add_command ("style", ui_style_cmd, "<element> <foreground/background> <attributes>");
+	cli_add_help("style","Changes the drawing style of 'element' available colors: \
+black, blue, cyan, red, green, magenta, yellow, white and default which uses the standard colors \
+of the terminal. Attrbutes are one or more of: standout, underline, reverse, blink, dim and bold.");
+}
+

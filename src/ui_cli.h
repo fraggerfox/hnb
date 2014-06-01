@@ -21,6 +21,10 @@ Node *docmd (Node *pos, const char *commandline);
 */
 Node *cli (Node *pos);
 
+#ifdef WIN32
+	#define snprintf(a,b,args...) sprintf(a,args)
+#endif
+
 #define docmdf(pos,args...)  \
      do{        char docmdf_buf[100];\
                 snprintf (docmdf_buf, 99, args);\

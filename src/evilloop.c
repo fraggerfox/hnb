@@ -22,7 +22,6 @@
 #include <stdlib.h>
 
 #include "tree.h"
-#include "tree_sort.h"
 #include "tree_todo.h"
 #include "ui.h"
 #include "file.h"
@@ -62,7 +61,6 @@ Node *evilloop (Node *pos)
 					node_update_parents_todo (pos);\
 					prevpos=NULL;\
 				}
-
 
 	int stop = 0;
 	Node *prevpos = pos;		/* which node we visited previous time */
@@ -200,49 +198,6 @@ Node *evilloop (Node *pos)
 				}
 				inputbuf[0] = 0;
 				break;
-			case ui_action_cli:
-				ui_end ();
-				pos = cli (pos);
-				prevpos = pos;
-				ui_init ();
-				break;
-/*			case ui_action_size:
-			if (node_getsize (pos) != -1)
-					sprintf (inputbuf,
-							 "Current size [%i], enter new (0.0-10.0) press return to keep",
-							 node_getsize (pos));
-				else
-					sprintf (inputbuf,
-							 "Current size [--], enter new (0.0-10.0) press return to keep");
-				ui_draw (pos, pos, inputbuf, ui_mode_getstr);
-				if (strlen (inputbuf)) {
-					double p = atof (inputbuf);
-
-					if (p > 0)
-						node_setsize (pos, (int)(p*10.01));
-					else
-						node_setsize (pos, -1);
-				}
-				inputbuf[0] = 0;
-				break;
-			case ui_action_percentage:
-			if (node_getpercent_done (pos) != -1)
-					sprintf (inputbuf,
-							 "Current percent_done [%i], enter new (-1,0..100) press return to keep",
-							 node_getpercent_done (pos));
-				else
-					sprintf (inputbuf,
-							 "Current percent_done [--], enter new (-1,0..100) press return to keep");
-				ui_draw (pos, pos, inputbuf, ui_mode_getstr);
-				if (strlen (inputbuf)) {
-					int p = atoi (inputbuf);
-
-					if (p >= -1 && p <= 100)
-						node_setpercent_done (pos, p);
-				}
-				inputbuf[0] = 0;
-				break;
-*/
 			case ui_action_backspace:
 				if (!strlen (inputbuf)) {
 					/*pos = ui_remove (pos);*/

@@ -18,7 +18,7 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
- #if HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include <config.h>
 #endif
 #include <assert.h>
@@ -36,6 +36,7 @@
 #include "ui_style.h"
 #include "cli.h"
 #include <stdlib.h>
+#include <ctype.h>
 
 int nodes_above;
 int active_line;
@@ -110,192 +111,13 @@ enum {
 	drawmode_completion
 };
 
-/* draws checkbox, percentage completed, size etc.
- * @param line the line to draw it on
- * @param node the node to extract information from
- * @param drawmode onle checked wether it is test or not.
- * @returns number of characters used/needed
- */
-/*static int
-	prefs_showpercent=1,
-    prefs_showbox=1,
-	prefs_bulletmode=BULLET_PLUSMINUS,
-	prefs_showsize=1,
-	prefs_showaccsize=1,
-	prefs_showpercentage=1,
-	prefs_showdonesize;
-*/
-/*
-	prematter order?
-	syntax parser?
-	
-	
-	"+" "P%"|"[X]" S D/A
-*/
-
-/*
-	NB: the function below contains more advanced visualisation
-	possibilities than currently used in the application,
-	this will hopefully be amended in the applications later
-*/
-static int draw_prematter(int line, int colstart, Node *node,int drawmode){
-	int completion;
-	int space_used=0;
-
-	int asize;
-	int size=node_getsize(node);
-	int perc;
-
-	perc=calc_percentage_size(node, &asize);
-	{
-		ui_style(ui_style_bullet);
-
-		move(line,colstart+space_used);
-			switch(perc){
-				case -1:
-					if(drawmode!=drawmode_test)
-						switch(prefs.bulletmode){
-							case BULLET_NONE:
-								break;
-							case BULLET_PLUSMINUS:
-								addstr( (node_right(node)) ? "  +":"  -");
-								break;
-							case BULLET_STAR:
-								addstr("  *");
-								break;
-							case BULLET_MINUS:
-								addstr("  -");			
-								break;
-						}
-					space_used+=3;
-					break;
-				case -2:
-					space_used+=3;	
-					break;
-				case 0:
-					if(drawmode!=drawmode_test)
-						addstr ("[ ]");
-					space_used+=3;
-					break;
-				case 2000:
-					if(drawmode!=drawmode_test)
-						addstr ("[X]");
-					space_used+=3;
-					break;
-				default:{
-					char str[10];
-					sprintf (str, "%2i%%", perc);
-					if(drawmode!=drawmode_test)
-						addstr(str);
-					space_used+=strlen(str);
-					}
-			}
-	}
-
-	{
-		if(drawmode!=drawmode_test)
-			addstr(" ");
-		space_used+=1;
-	}
-/*	
-	{
-		char str[64];
-		sprintf(str,"(%i/%i)",(  
-		    perc==2000?100:perc
-			
-			
-			*asize)/100 ,asize);
-		if(drawmode!=drawmode_test)
-			addstr(str);
-		space_used+=strlen(str)+1;	
-	}
-*/
-	return space_used;
-
-	{
-		perc=calc_percentage_size(node, &asize);
-		attrset(A_NORMAL);
-		move(line,colstart);
-		{
-			char str[256];
-			sprintf (str, "size:%i a_size:%i %i%%", node_getsize(node),size,perc);
-			addstr(str);
-		}
-		return 25;
-	}
-	
-	if(drawmode!=drawmode_test){
-		ui_style(ui_style_bullet);
-
-		completion=done_status(node);
-
-		if(completion==-2);else
-		if(completion==-1){	
-			move(line,colstart+2);
-			switch(prefs.bulletmode){
-				case BULLET_NONE:
-					break;
-				case BULLET_PLUSMINUS:
-					addch( (node_right(node)) ? '+':'-');
-					break;
-				case BULLET_STAR:
-					addch('*');
-					break;
-				case BULLET_MINUS:
-					addch('-');			
-					break;
-			}
-		} else {
-			move(line,colstart);
-			switch(completion){
-				case 0:
-					addstr ("[ ]");
-					break;
-				case 2000:
-					addstr ("[X]");
-					break;
-				default:{
-					char str[10];
-					sprintf (str, "%2i%%", completion / 10);
-					addstr(str);
-					}
-			}
-		}
-		if(node_calc_size(node)!=-1){
-			char str[10];
-			move(line,colstart+3);
-			sprintf (str, "%4.1f", (float)node_calc_size(node)/10.0  );
-			addstr(str);			
-		}
-		space_used+=4;
-		space_used+=4;
-	} else {
-		space_used+=4;
-		space_used+=4;
-	} 
-	
-	return space_used;
-		return 1;
-}
-
-/*
- * @param line_start which line on the display the first line of the draw node is on
- * @param level      the indentation level of this item
- * @param node       the node to draw
- * @param cursor_pos different meanings in different modes, testmode: none
- *                   highlightmode: none, edit_mode: the position in the data
- *                   that should be highlighted,
- *                   completion: the number of matched chars in data
- *                   
- * @param draw_mode  1=draw, 0=test
+/* draws the actual node data with word wrapping, should be reengineered into a general
+ * linewrapping function.
  *
- * @return number of lines needed to draw item
- **/
-static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
-	int col_start      /* left margin of the actual text area, not the additional bullets and stuff */
-		=(nodes_left(node)-startlevel)*prefs.indent;
-	int col_end = COLS;
-	
+ *
+ */
+static int draw_textblock(int line_start, int col_start, int width, int cursor_pos, Node *node, int drawmode){
+	int col_end=col_start+width;
 	unsigned char word[200];    /* current word being rendered */
 	int wpos=0;        /* position in current word */
 	int dpos=0;        /* position in data*/
@@ -308,7 +130,6 @@ static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
 
 	unsigned char *data=(unsigned char*)node_getdata(node);
 
-	col_start+=draw_prematter(line_start,col_start,node,drawmode);
 	col=col_start;
 
 	word[0]=0;
@@ -344,7 +165,6 @@ static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
 			}
 			break;
 	}
-
 
 	while((dpos==0)||data[dpos-1]){ /* loop through data + \0 */
 		switch(data[dpos]){
@@ -415,7 +235,6 @@ static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
 						break;
 				}
 
-
 				col+=wpos+1;
 				word[wpos=0]=0;
 				break;
@@ -428,7 +247,6 @@ static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
 		}
 		dpos++;
 	}
-
 	/* draw the cursor */
 	if (drawmode==drawmode_edit) {
 		move (cy, cx);
@@ -448,6 +266,351 @@ static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
 }
 
 
+
+static int draw_dummy(int line, int col, int width, Node *node, int drawmode){
+	if(width==0)
+		width=1;
+	if(drawmode!=drawmode_test){
+		int j;
+		move(line,col);
+		ui_style(ui_style_bullet);
+		for(j=0;j<width;j++){
+			addch('X');
+		}
+	}
+	return width;
+}
+
+static int draw_spacing(int line, int col, int width, Node *node, int drawmode){
+	if(width==0)
+		width=1;
+		if(drawmode!=drawmode_test){
+		int j;
+		move(line,col);
+		ui_style(ui_style_background);
+		for(j=0;j<width;j++){
+			addch(' ');
+		}
+	}
+	return width;
+}
+
+
+
+static int draw_bullet(int line, int col, int width, Node *node,int drawmode){
+	int asize;
+	int perc;
+
+/*	if(width==0)*/
+	width=3;
+
+	perc=calc_percentage_size(node, &asize);
+	{
+		ui_style(ui_style_bullet);
+
+		move(line,col);
+			switch(perc){
+				case -1:
+					if(drawmode!=drawmode_test)
+						addstr( (node_right(node)) ? prefs.bullet_parent: prefs.bullet_leaf);
+					break;
+				case 0:
+					if(drawmode!=drawmode_test)
+						addstr ("[ ]");
+					break;
+				case 2000:
+					if(drawmode!=drawmode_test)
+						addstr ("[X]");
+					break;
+				default:{
+					char str[100];
+					snprintf (str, 4, "%2i%%", perc);
+					if(drawmode!=drawmode_test)
+						addstr(str);
+					}
+			}
+	}
+
+	return width;
+}
+
+
+static char *node2no_path (Node *node){
+	static char path[512];
+	int pos = 0;
+	int levels = nodes_left (node);
+	int cnt;
+	path[0]=0;
+
+	for (cnt = levels; cnt >= 0; cnt--) {
+		int cnt2;
+		Node *tnode = node;
+
+		for (cnt2 = 0; cnt2 < cnt; cnt2++)
+			tnode = node_left (tnode);
+
+		sprintf (&path[pos], "%i", nodes_up (tnode)+1);
+		pos = strlen (path);
+		path[pos] = '.';
+		path[++pos] = 0;
+	}
+
+	path[--pos] = 0;
+
+	return (path);
+}
+
+
+static int draw_nr(int line, int col, int width, Node *node,int drawmode){
+	char str[100]="";
+
+	if(width==0)
+		width=3;
+
+	ui_style(ui_style_bullet);
+	move(line,col);
+	snprintf (str, 5, "%3i", nodes_up(node)+ 1);
+	if(drawmode!=drawmode_test){
+		addstr(str);
+	}
+	
+	return width;
+}
+
+
+static int draw_anr(int line, int col, int width, Node *node,int drawmode){
+	char str[100]="";
+	char fstr[20];
+
+	if(width==0)
+		width=8;
+
+	ui_style(ui_style_bullet);
+	move(line,col);
+	snprintf(fstr,8,"%%%is",width);
+	snprintf (str, width+2, fstr, node2no_path(node));
+	if(drawmode!=drawmode_test){
+		addstr(str);
+	}
+	
+	return width;
+}
+
+static int draw_debug(int line,int col,int width,Node *node,int drawmode){
+	int asize;
+	int size=node_getsize(node);
+	int perc;
+	
+	width=40;
+
+	if(drawmode!=drawmode_test){
+	ui_style(ui_style_background);
+	move(line,col);
+	perc=calc_percentage_size(node, &asize);
+	
+	{
+		char str[64];
+		sprintf(str,"(%i/%i) ",(perc==2000?100:perc*asize)/100 ,asize);
+		if(drawmode!=drawmode_test)
+			addstr(str);
+	}
+	
+	{
+		perc=calc_percentage_size(node, &asize);
+		attrset(A_NORMAL);
+		{
+			char str[256];
+			sprintf (str, "size:%i a_size:%i %i%% ", node_getsize(node),size,perc);
+			addstr(str);
+		}
+	}
+
+		if(node_calc_size(node)!=-1){
+			char str[10];
+			sprintf (str, "%4.1f ", (float)node_calc_size(node)/10.0  );
+			addstr(str);			
+		}
+	}
+
+	return width;
+}
+
+#define MAX_COLUMNS 20
+
+static int draw_indent(int line, int col, int width, Node *node, int drawmode){
+	if(width==0)
+		width=4;
+
+	return width*nodes_left(node);
+}
+
+
+enum{
+	col_spacing=0,
+	col_indent,
+	col_nr,
+	col_anr,
+	col_bullet,
+	col_data,
+	col_debug,
+	col_percentage,
+	col_dummy,
+	col_terminate,
+};
+
+
+static int (*col_fun[col_terminate+1])  (int line, int col, int width, Node *node, int drawmode)={
+draw_spacing,
+draw_indent,
+draw_nr,
+draw_anr,
+draw_bullet,
+draw_spacing,
+draw_debug,
+draw_spacing,
+draw_dummy,
+draw_dummy};
+
+static struct {
+	int type;
+	int width;
+}col_def[MAX_COLUMNS]={
+	{col_indent, 4},
+	{col_spacing, 1},
+	{col_bullet, 3},
+	{col_spacing, 1},
+	{col_data, 0},
+	{col_spacing, 1},
+	{col_dummy, 10},
+	{col_spacing, 2},
+	{col_dummy, 10},
+	{col_spacing, 1},
+
+	{col_terminate, 0}
+};
+
+
+/* FIXME: make backup?,.. and make sure data is present,.. (or draw_node will crash) 
+*/
+int display_format_cmd(char *params, void *data){
+	char *p=params;
+	int width;
+	int type;
+	int col_no=0;
+
+	do{
+		width=0;
+		type=col_spacing;
+		switch(*p){
+			case 'i':type=col_indent;
+					if(isdigit(*(p+1))){
+						width=atoi(p+1);
+						while(isdigit(*(p+1)))p++;
+					}
+					break;
+			case 'd':type=col_data;
+					if(isdigit(*(p+1))){
+						width=atoi(p+1);
+						while(isdigit(*(p+1)))p++;	
+					}
+					break;
+			case 'D':type=col_debug;
+					if(isdigit(*(p+1))){
+						width=atoi(p+1);
+						while(isdigit(*(p+1)))p++;	
+					}
+					break;
+			case 'x':type=col_dummy;
+					if(isdigit(*(p+1))){
+						width=atoi(p+1);
+						while(isdigit(*(p+1)))p++;	
+					}
+					break;
+			case '1':type=col_nr;
+					if(*(p+1)=='.'){
+						type=col_anr;
+						p++;
+					}
+					if(isdigit(*(p+1))){
+						width=atoi(p+1);
+						while(isdigit(*(p+1)))p++;	
+					}
+					break;
+			case '-':type=col_bullet;
+					if(isdigit(*(p+1))){
+						width=atoi(p+1);
+						while(isdigit(*(p+1)))p++;	
+					}
+					break;
+			case ' ':type=col_spacing;
+					while(' '==(*(p+1))){
+						p++;
+						width++;
+					}
+					break;
+			default:
+					cli_outfunf("td not_parsed(%c)",*p);
+					break;
+		}
+		col_def[col_no].type=type;
+		col_def[col_no].width=width;
+		col_no++;
+	}while(*(++p));
+
+	col_def[col_no].type=col_terminate;
+
+	return (int)data;
+}
+
+
+
+
+
+/*
+ * @param line_start which line on the display the first line of the draw node is on
+ * @param level      the indentation level of this item
+ * @param node       the node to draw
+ * @param cursor_pos different meanings in different modes, testmode: none
+ *                   highlightmode: none, edit_mode: the position in the data
+ *                   that should be highlighted,
+ *                   completion: the number of matched chars in data
+ *                   
+ * @param draw_mode  1=draw, 0=test
+ *
+ * @return number of lines needed to draw item
+ **/
+static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
+	int col_no=0;
+	int lines_used=1;
+
+	int col_start =0;
+	int col_end   = COLS;
+	
+	col_start=0;
+	/* draw columns before col_data */
+
+	while(col_def[col_no].type != col_data && col_def[col_no].type != col_terminate){
+		col_start += col_fun[ col_def[ col_no ].type ]( line_start,col_start,col_def[col_no].width,node,drawmode);
+		col_no++;
+	}
+	
+	/* fastforward to end of col_def */
+	while(col_def[col_no].type != col_terminate)
+		col_no++;
+
+	col_no--;
+
+	/* draw columns after col_data */
+	while(col_no && col_def[col_no].type != col_data){
+			int width=col_fun[ col_def[ col_no].type ](line_start,col_end-col_def[col_no].width,col_def[col_no].width,node,drawmode_test);
+			col_end-=col_fun[ col_def[ col_no].type ](line_start,col_end-width,width,node,drawmode);
+			col_no--;
+	}
+
+	lines_used=draw_textblock(line_start, col_start, (col_end-col_start), cursor_pos, node, drawmode);
+		
+	return lines_used;
+}
 
 extern int hnb_nodes_up;
 extern int hnb_nodes_down;
@@ -576,3 +739,17 @@ void ui_draw (Node *node, Node *lastnode, char *input, int edit_mode)
 	hnb_nodes_down++;
 }
 
+/*
+!init_ui_draw();
+*/
+void init_ui_draw(){
+	cli_add_command ("display_format", display_format_cmd, "<format string>");
+	cli_add_help("display_format","\
+defines how each node is displayed, the display string syntax is \
+interpreted as follows: \
+spaces turn into real spaces, i means indentation, - means bullet, \
+d means the real data of the node, x is a temporary placeholder for \
+upcoming columntypes,. (for debugging only) \
+i and x can take an argument specifying how many characters wide \
+the field should be");
+}

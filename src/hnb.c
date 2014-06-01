@@ -43,7 +43,6 @@
 #include "file.h"
 #include "evilloop.h"
 
-
 static void usage (const char *av0)
 {
 	fprintf (stderr,
@@ -63,6 +62,7 @@ Options:\n\
 \n\
 \t-a --ascii    load ascii ascii\n\
 \t   --hnb      load hnb DTD\n\
+\t-o --opml     load OPML DTD\n\
 \t-x --xml      load general xml\n");
 #ifdef USE_LIBXML
 	fprintf (stderr, "\t-s --stylized load stylized xml (using libxml2)\n");
@@ -74,14 +74,8 @@ Options:\n\
 \n\n");
 }
 
+void init_subsystems();
 
-
-/* #including these, is the first step to seperate them out in own .c files 
- */
-
-void null_output(char *data){
-	/* printf("%s",data); */
-}
 
 int main (int argc, char **argv)
 {
@@ -127,6 +121,10 @@ int main (int argc, char **argv)
 			} else if (!strcmp (argv[argno], "-hnb")
 					   || !strcmp (argv[argno], "--hnb")) {
 				cmdline.format = format_hnb;
+			} else if (!strcmp (argv[argno], "-o")
+			 		   ||	!strcmp (argv[argno], "-opml")
+					   || !strcmp (argv[argno], "--opml")) {
+				cmdline.format = format_opml;
 			} else if (!strcmp (argv[argno], "-x")
 					   || !strcmp (argv[argno], "-gx")
 					   || !strcmp (argv[argno], "--xml")) {
@@ -178,8 +176,7 @@ int main (int argc, char **argv)
 		}
 	}
 
-	init_ui_cli ();
-	init_prefs ();
+	init_subsystems();
 
 	if (cmdline.usage) {
 		usage (argv[0]);
@@ -202,7 +199,11 @@ int main (int argc, char **argv)
 		sleep (1);
 	}
 
-	load_prefs("");
+	if(cmdline.ui==1)
+		ui_init ();
+
+	load_prefs();
+
 
 	/* ovveride the prefs with commandline specified options */
 	if (cmdline.debug)
@@ -212,7 +213,7 @@ int main (int argc, char **argv)
 	if (cmdline.format != -1) {	/* format specified */
 		prefs.format = cmdline.format;
 	} else {
-		prefs.format = format_hnb;	/*prefs.def_format; */
+		prefs.format = prefs.def_format; 
 	}
 
 	if (cmdline.def_db) {
@@ -259,9 +260,7 @@ int main (int argc, char **argv)
 
 	switch (cmdline.ui) {
 		case 1:
-			ui_init ();
-			load_prefs(NULL);
-			cli_outfun=null_output;			
+/*			load_prefs();*/
 			pos = evilloop (pos);
 			ui_end ();
 			break;

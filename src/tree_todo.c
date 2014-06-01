@@ -286,3 +286,26 @@ int calc_percentage_size(Node *node, int *retsize){
 	
 	return percentage;
 }
+
+#include "cli.h"
+
+static int toggle_todo_cmd(char *params,void *data){
+	Node *pos=(Node *)data;
+	node_toggleflag (pos, F_todo);
+	return (int)pos;
+}
+
+static int toggle_done_cmd(char *params,void *data){
+	Node *pos=(Node *)data;
+	node_toggleflag (pos, F_done);
+	return (int)pos;
+}
+/*
+!init_tree_todo();
+*/
+void init_tree_todo(){
+	cli_add_command ("toggle_todo", toggle_todo_cmd, "");
+	cli_add_help("toggle_todo","Toggles visiblity and usage of the checkbox for the currently active item.");
+	cli_add_command ("toggle_done", toggle_done_cmd, "");
+	cli_add_help("toggle_done","Toggles visiblity and usage of the checkbox for the currently active item.");
+}

@@ -29,12 +29,7 @@
 #include "evilloop.h"
 #include <stdlib.h>
 
-/*
-!cli cli_add_command ("edit", ui_edit_cmd, "");
-!clid int ui_edit_cmd ();
-*/
-
-int ui_edit_cmd (char *params, void *data)
+static int ui_edit_cmd (char *params, void *data)
 {
 	Tbinding *c;
 	int stop = 0;
@@ -290,6 +285,7 @@ int ui_getstr_loc(char *input, int x,int y, int maxlen){
 				strcpy (&input[0], data_backup);
 				input[strlen (input) - 1] = 0;
 				stop = 1;
+				input[0]=0;
 				break;
 			case ui_action_confirm:
 				input[strlen (input) - 1] = 0;
@@ -348,4 +344,13 @@ void ui_getstr(char *prompt, char *datastorage){
 	addch(' ');
 
 	ui_getstr_loc(datastorage, -1, -1, 80);
+}
+
+/*
+!init_ui_edit();
+*/
+
+void init_ui_edit(){
+	cli_add_command ("edit", ui_edit_cmd, "");
+	cli_add_help("edit","Invokes the node editor for the current node.");
 }

@@ -18,15 +18,6 @@
  * Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-/*
-!cli cli_add_command ("export_xml", export_xml, "<filename>");
-!cli cli_add_command ("import_xml", import_xml, "<filename>");
-
-!clid int import_xml ();
-!clid int export_xml ();
-*/
-
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -93,73 +84,6 @@ int findchar (char *haystack, char *needles)
 	}
 	return 0;
 }
-
-
-/* returns 1 if the first couple of lines of file contains 'xml' */
-int xml_check (char *filename)
-{
-	FILE *file;
-	char buf[bufsize];
-	int j;
-
-	file = fopen (filename, "r");
-	if (file == NULL)
-		return -1;
-
-	for (j = 0; j < 2; j++) {
-		if (fgets (buf, bufsize, file) == NULL) {
-			fclose (file);
-			return 0;
-		}
-		if (strstr (buf, "xml") != 0) {
-			fclose (file);
-			return 1;
-		}
-	}
-	fclose (file);
-	return 0;
-}
-
-/* returns the node number stored in the comment, if available  */
-int xml_getpos (char *filename)
-{
-	FILE *file;
-	char buf[bufsize];
-	char *s;
-	int j;
-
-	file = fopen (filename, "r");
-	if (file == NULL)
-		return -1;
-
-	for (j = 0; j < 2; j++) {
-		if (fgets (buf, bufsize, file) == NULL) {
-			fclose (file);
-			return 0;
-		}
-		if ((s = strstr (buf, "<!--pos:"))) {
-			fclose (file);
-
-			return atoi (&s[8]);
-		}
-	}
-	fclose (file);
-	return -1;
-}
-
-
-/*returns 1 if file exists*/
-int file_check (char *filename)
-{
-	FILE *file;
-
-	file = fopen (filename, "r");
-	if (file == NULL)
-		return 0;
-	fclose (file);
-	return 1;
-}
-
 
 static void xml_export_nodes (FILE * file, Node *node, int level)
 {
@@ -232,7 +156,7 @@ static void xml_export_nodes (FILE * file, Node *node, int level)
 	}
 }
 
-int export_xml (char *params, void *data)
+static int export_xml (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -288,7 +212,7 @@ static Node *xml_cuddle_nodes (Node *node)
 
 
 
-int import_xml (char *params, void *data)
+static int import_xml (char *params, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = params;
@@ -445,4 +369,15 @@ int import_xml (char *params, void *data)
 	cli_outfunf ("xml import - imported \"%s\"", filename);
 
 	return (int) node;
+}
+
+/*
+!init_file_xml();
+*/
+void init_file_xml(){
+	cli_add_command ("export_xml", export_xml, "<filename>");
+	cli_add_command ("import_xml", import_xml, "<filename>");
+	cli_add_help("export_xml","Exports the current node, it's siblings and all sublevels to 'filename' as if it was xml markup.\
+(load an xml file with import_xml or hnb -x file.xml to see how it should be inside hnb.");	
+	cli_add_help("import_xml","Imports 'filename' and inserts it's contents at the current level.");
 }

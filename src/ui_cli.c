@@ -23,7 +23,6 @@
 #endif
 
 #include "tree.h"
-#include "tree_sort.h"
 #include "file.h"
 #include "path.h"
 #include "prefs.h"
@@ -138,12 +137,6 @@ static int cd (char *params, void *data)
 	return (int) pos;
 }
 
-static int sort (char *params, void *data)
-{
-	Node *pos = (Node *) data;
-
-	return (int) node_sort_siblings (pos);
-}
 
 static int rm (char *params, void *data)
 {
@@ -280,10 +273,15 @@ static int ls (char *params, void *data)
 	return (int) pos;
 }
 
-#include "cli_decls.inc"
+#include <ctype.h>
 
 void pre_command(char *commandline){
-	if(commandline && commandline[0]=='#')commandline[0]='\0';
+	char *c=commandline;
+	if(commandline){ 
+		while(isspace(*c))c++;
+		if(*c=='#')commandline[0]='\0';
+		if(*c=='\0')commandline[0]='\0';
+	}
 }
 
 static int eCho(char *commandline, void *data){
@@ -291,10 +289,12 @@ static int eCho(char *commandline, void *data){
 	return (int)data;
 }
 
+/*
+!init_ui_cli();
+*/
 void init_ui_cli (void)
 {
 	static int inited = 0;
-
 	if (!inited) {
 		inited = 1;
 		cli_precmd=pre_command;
@@ -303,10 +303,9 @@ void init_ui_cli (void)
 		cli_add_command ("cd", cd, "<path>");
 		cli_add_command ("ls", ls, "[-Rst] [path]");
 		cli_add_command ("rm", rm, "[-f] path");
-		cli_add_command ("pwd", pwd, "returns the current path");
+		cli_add_command ("pwd", pwd,"");
+		cli_add_help("pwd", "echoes the current path");
 		cli_add_command ("q", eCho, "see the entry for 'quit'");
-		cli_add_command ("sort", sort, "");
-#include "cli_entries.inc"
 	}
 }
 
