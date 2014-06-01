@@ -3,23 +3,20 @@
 #include <stdlib.h>
 #include "node.h"
 
-void node_setdata (Node *node, char *data)
-{
+void node_setdata (Node *node, char *data){
 	free (node->data);
 	node->data = (char *) strdup (data);
 }
 
-char *node_getdata (Node *node)
-{
+char *node_getdata (Node *node){
 	if (node == NULL)
 		return ("");
 	return node->data;
 }
 
-Node *node_alloc ()
-{
+Node *node_alloc (){
 	Node *node = (Node *) malloc (sizeof (Node));
-
+	
 	node->up = 0;
 	node->down = 0;
 	node->right = 0;
@@ -29,8 +26,7 @@ Node *node_alloc ()
 	return node;
 }
 
-void node_free (Node *node)
-{
+void node_free (Node *node){
 	free (node->data);
 	free (node);
 }

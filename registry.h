@@ -27,3 +27,5 @@
 */	void reg_set(char *data);
 
 
+int reg_get_int (char *path);
+void reg_set_int (char *path, int data);

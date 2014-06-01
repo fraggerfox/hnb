@@ -11,7 +11,9 @@ INSTALLING hnb
 		the linux binary distribution is a .tar.gz file	containing the executable, this readme file, a an sample database, and the licence for hnb's use.
 		the binary is dynamically linked against ncurses just place it anywere in your path.. like /usr/bin, /usr/local/bin or /home/user/bin
 COMPILING hnb
-	I've only tried to compile hnb using linux, the only dependencies are ncurses so it should compile on most any unix by just typing make.
+	type make
+	
+	I'm developing hnb under linux, and have gotten reports that it compiles on FreeBSD as well. (guess it compiles on most unixes wihtout problems)
 	I cross compile the win32 binary using mingw32, the Makefile is probably a mess by most standards, but it works for me (tm), and will be replaced by something more appropriate at some other time.
 USAGE DOCUMENTATION
 	If you start hnb without any parameters and no default database, or with the -t or --tutorial option, hnb will load a special tutorial database.
@@ -118,13 +120,19 @@ CHANGELOG
 		added different collapse/view modes cycled with ctrl+v
 		various feedback changes
 		debug mode for my own sake
+	1.4 16 may 2001
+		added preferences saving/loading
+		replaced tab char in display with a space. kind of fixes bug reported by Andreas BALI
+		removal of temporary node, when issuing insert in a new leaf.
+		command line interface, for use in scripts etc.
+		rule to make README.html in Makefile, just to test the cli interface.
+		integrated patch for pipe export from Karsten Hilbert
 BUGS
 	as soon as I find them, and am able to fix them, I remove them from this file,.. so no bugs :P
+	slashes (/) inside nodes are not escaped correctly in cli mode
 TODO
 	buffer limits
 		they are high,.. but somebody typing a biiig node could crash it
-	gtk 2.0
-		there is a new interface to bind things so I can use my own codestructue :))
 	make default format xml, and move the current format into an text export/import filter thing.
 		perhaps the text filter should be kind of enhanced from the current format,.. but backwards compatible,.. add bullets, and ability to use newline within a node?
 	more entities on each node
@@ -142,18 +150,21 @@ TODO
 			cronological id
 	purge todo items on lower levels
 	shuffle action
-	tin like confirm mode
-		display [N] in bold,..
-		pressing Y returns Yes
-		pressing N returns N
-		up toggles Y
-		down toggles N
-		left cancels
-		right says yes
 	curses interface
+		tin like confirm mode
+			display [N] in bold,..
+			pressing Y returns Yes
+			pressing N returns N
+			up toggles Y
+			down toggles N
+			left cancels
+			right says yes
 		"context" menu for mouse mode
 		go away from centerline centric display approach
-		help system
-			refine input menu
-			refine help menu positioning of items
-author: Øyvind Kolås / pippin@users.sourceforge.net
+	cli interface
+		make '/' inside node names appear correctly in pwd, and prompt.
+		maybe avoiding static buffers is even more important here than in the curses version (due to possible scripted input),.. but then I'd have to fix path.c as well.. <g>
+	gtk 2.0
+		start
+		there is a new interface to bind things so I can use my own codestructue :))
+primary author: Øyvind Kolås / pippin@users.sourceforge.net

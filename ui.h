@@ -68,8 +68,18 @@
 #define UI_MODE_IMPORT 	 14
 #define UI_MODE_DEBUG 	 15
 
+#define COLLAPSE_ALL 0
+#define COLLAPSE_ALL_BUT_CHILD 1
+#define COLLAPSE_NONE 2
+#define COLLAPSE_PATH 3
+#define COLLAPSE_END 3
+#define COLLAPSE_ONLY_SIBLINGS 4
+
 
 void ui_init();
 void ui_draw(Node *node,char *input, int mode);
 void ui_end();
 int ui_input();
+
+extern int hnb_edit_posup;
+extern int hnb_edit_posdown;

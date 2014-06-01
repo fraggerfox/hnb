@@ -69,3 +69,8 @@ Node * node_recursive_match (char *match, Node * where);
 								/* returns the next node with a case insensitive 
 								substring match from where.
 								*/
+
+Node *node_raise(Node *node); /* makes the specified node and it's lower siblings children
+								of the node above, returns new pos of node*/
+								
+Node *node_lower(Node *node); /* opposite of above */								

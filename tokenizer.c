@@ -21,16 +21,15 @@ char token_seperator = '/';
 	(c) Øyvind Kolås 2000
 */
 
-char *tokenize (char *haystack)
-{
+char *tokenize (char *haystack){
 	static char token[TOKEN_MAXSIZE];
 	static char buffer[TOKEN_MAXSIZE];
 	static int pos = 0;
 	int tokenpos = 0;
-
+	
 	if (strlen (haystack) >= TOKEN_MAXSIZE)
 		return ("");			/* safety precaution */
-
+		
 	if (haystack[0] != 0) {		/* new tokenization */
 		pos = 0;
 		token[0] = 0;
@@ -39,14 +38,13 @@ char *tokenize (char *haystack)
 		if (pos == 0)
 			return ("");		/* we cannot start with an empty string */
 	};
-
+	
 	if (pos >= strlen (buffer))
 		return ("");			/* this is the end */
-
+		
 	while (buffer[pos] != 0) {
 		if (buffer[pos] == token_seperator) {
-			if (buffer[pos + 1] == token_seperator) {	/* escaped
-														   seperator char */
+			if (buffer[pos + 1] == token_seperator) {	/* escaped seperator char */
 				pos++;
 			} else {
 				pos++;
@@ -55,7 +53,7 @@ char *tokenize (char *haystack)
 					buffer[pos + 2] = 0;
 					buffer[pos] = token_seperator;
 				};
-
+				
 				if ((pos == 1)) {	/* "root" */
 					token[0] = token_seperator;
 					token[1] = 0;

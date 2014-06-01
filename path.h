@@ -31,7 +31,7 @@ Node * path2node_make (char *path, Node *root);
 	probably not the best way.. but..
 */
 
-char * node2path (Node * node, Node *root);
+char * node2path (Node * node);
 
 
 

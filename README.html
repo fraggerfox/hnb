@@ -29,7 +29,9 @@
 	  </UL>
 	<LI>COMPILING hnb
 	  <UL>
-		<LI>I've only tried to compile hnb using linux, the only dependencies are ncurses so it should compile on most any unix by just typing make.
+		<LI>type make
+		<BR><BR>
+		<LI>I'm developing hnb under linux, and have gotten reports that it compiles on FreeBSD as well. (guess it compiles on most unixes wihtout problems)
 		<LI>I cross compile the win32 binary using mingw32, the Makefile is probably a mess by most standards, but it works for me (tm), and will be replaced by something more appropriate at some other time.
 	  </UL>
 	<LI>USAGE DOCUMENTATION
@@ -174,20 +176,26 @@
 			<LI>various feedback changes
 			<LI>debug mode for my own sake
 		  </UL>
+		<LI>1.4 16 may 2001
+		  <UL>
+			<LI>added preferences saving/loading
+			<LI>replaced tab char in display with a space. kind of fixes bug reported by Andreas BALI
+			<LI>removal of temporary node, when issuing insert in a new leaf.
+			<LI>command line interface, for use in scripts etc.
+			<LI>rule to make README.html in Makefile, just to test the cli interface.
+			<LI>integrated patch for pipe export from Karsten Hilbert
+		  </UL>
 	  </UL>
 	<LI>BUGS
 	  <UL>
 		<LI>as soon as I find them, and am able to fix them, I remove them from this file,.. so no bugs :P
+		<LI>slashes (/) inside nodes are not escaped correctly in cli mode
 	  </UL>
 	<LI>TODO
 	  <UL>
 		<LI>buffer limits
 		  <UL>
 			<LI>they are high,.. but somebody typing a biiig node could crash it
-		  </UL>
-		<LI>gtk 2.0
-		  <UL>
-			<LI>there is a new interface to bind things so I can use my own codestructue :))
 		  </UL>
 		<LI>make default format xml, and move the current format into an text export/import filter thing.
 		  <UL>
@@ -214,27 +222,32 @@
 		  </UL>
 		<LI>purge todo items on lower levels
 		<LI>shuffle action
-		<LI>tin like confirm mode
-		  <UL>
-			<LI>display [N] in bold,..
-			<LI>pressing Y returns Yes
-			<LI>pressing N returns N
-			<LI>up toggles Y
-			<LI>down toggles N
-			<LI>left cancels
-			<LI>right says yes
-		  </UL>
 		<LI>curses interface
 		  <UL>
+			<LI>tin like confirm mode
+			  <UL>
+				<LI>display [N] in bold,..
+				<LI>pressing Y returns Yes
+				<LI>pressing N returns N
+				<LI>up toggles Y
+				<LI>down toggles N
+				<LI>left cancels
+				<LI>right says yes
+			  </UL>
 			<LI>"context" menu for mouse mode
 			<LI>go away from centerline centric display approach
-			<LI>help system
-			  <UL>
-				<LI>refine input menu
-				<LI>refine help menu positioning of items
-			  </UL>
+		  </UL>
+		<LI>cli interface
+		  <UL>
+			<LI>make '/' inside node names appear correctly in pwd, and prompt.
+			<LI>maybe avoiding static buffers is even more important here than in the curses version (due to possible scripted input),.. but then I'd have to fix path.c as well.. <g>
+		  </UL>
+		<LI>gtk 2.0
+		  <UL>
+			<LI>start
+			<LI>there is a new interface to bind things so I can use my own codestructue :))
 		  </UL>
 	  </UL>
-	<LI>author: Øyvind Kolås / pippin@users.sourceforge.net
+	<LI>primary author: Øyvind Kolås / pippin@users.sourceforge.net
 </UL>
 </BODY></HTML>
