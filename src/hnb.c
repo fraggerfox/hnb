@@ -227,6 +227,8 @@ int main (int argc, char **argv)
 
 			if (!xml_check (prefs.db_file)) {
 				fprintf (stderr, "%s does not seem to be a xml file, aborting.\n",prefs.db_file);
+				if(ui_inited)
+					ui_end();
 				exit (1);
 			}
 			if (prefs.savepos)

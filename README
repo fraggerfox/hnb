@@ -44,8 +44,12 @@ USAGE DOCUMENTATION
 	database.
 	
 CHANGELOG
+	1.9.13
+		Apparently I broke the nasty quick-sort I had implemented, when I changed the way the tree was stored. Implemented a Merge-sort which is faster anyways.
+		Improved the behavior of non fixed navigation when the whole tree is displayed.
+		Added a shuffle function (not currently bound), I used it while developing the new mergesort, but someone might find it useful.
 	1.9.12
-		Changed the datastructure to sue a "assosciation list" for storing the actual data. Will move all tags, like checkbox to this structure.
+		Changed the datastructure to use a "assosciation list" for storing the actual data. Will move all tags, like checkbox to this structure.
 			Should actually make it possible to do the addition of start end date and other "columns" a breeze, perhaps even automatic for some export/import formats
 		modified tree_duplicate to use the new node_duplicate function, and a modified version of the import_node which takes a single node with data set as input.
 		added import_node_text which disregards all other data items

@@ -1,7 +1,7 @@
 /*
  * tree_sort.c -- function to sort a level of nodes
  *
- * Copyright (C) 2001,2003 Øyvind Kolås <pippin@users.sourceforge.net>
+ * Copyright (C) 2001-2003 Øyvind Kolås <pippin@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free
@@ -26,6 +26,11 @@
 #include "cli.h"
 
 
+/*
+ FIXME: need to add options for the sort function,.. ascending/descending
+ with todo/without todo,.. case sensitive/insensitive,.
+
+*/
 #if 0
 static int cmp_ascdata (Node *a, Node *b)
 {
@@ -38,10 +43,14 @@ static int cmp_descdata (Node *a, Node *b)
 }
 #endif
 
+static int cmp_random(Node *b,Node *a){
+	return (random()%10)-5;
+}
+
 static int cmp_todo (Node *a, Node *b)
 {
 	if (!(a->flags) && !(b->flags))	
-		return (strcmp (fixnullstring(node_get(a,TEXT)), fixnullstring(node_get(b,TEXT))));
+		return (strcasecmp (fixnullstring(node_get(a,TEXT)), fixnullstring(node_get(b,TEXT))));
 
 	if ((a->flags & F_todo) < (b->flags & F_todo))
 		return 1;				/*  all todos at top */
@@ -56,77 +65,92 @@ static int cmp_todo (Node *a, Node *b)
 
 		}
 	}
-	return (strcmp (fixnullstring(node_get(a,TEXT)), fixnullstring(node_get(b,TEXT))));
+	return (strcasecmp (fixnullstring(node_get(a,TEXT)), fixnullstring(node_get(b,TEXT))));
 }
 
-/* this quicksort costs less cputime, but costed a hell of a lot more braintime
-   than the bubble sort */
+static Node *merge(Node *nodeA,Node *nodeB, int (*cmp) (Node *a, Node *b)){
+	Node *thead,*tnode;
 
-/* apparantly mergesort is more effective for a doublelinked list 
- * (which as set of siblings actually is),. I might change it
- * when I get the time,.. but until then it works quite flawlessly 
- *
- * needs even more fixing,.. the swp kludge after updating node_swap,..
- */
+	if(!nodeA)return nodeB;
+	if(!nodeB)return nodeA;
 
-#define swp(a,b) do{\
-	Node *swp_node=a;\
-	b=a;a=swp_node;\
-}while(0)
+	/* first move the smallest of the head nodes to our head */	
+	if(cmp(nodeA,nodeB)<=0){  /* a is smaller than or equal to b */
+		thead=nodeA;
+		nodeA=nodeA->down;
+		thead->down=NULL;
+	} else {		 /* b is smaller than or equal to a */
+		thead=nodeB;
+		nodeB=nodeB->down;
+		thead->down=NULL;
+	}
 
-static Node *quicksort (Node *Top, Node *Bottom,
-						int (*cmp) (Node *a, Node *b))
-{
-	Node *part, *j;
+	tnode=thead;
 
-	if (Bottom && Top && Bottom != Top
-		&& (Bottom != Top && node_down (Bottom) != Top)) {
-		j = node_up (Bottom);
-
-		if (j == Top) {
-			if (cmp (Top, Bottom) >= 0){
-				node_swap (Top, Bottom);
-				swp(Top,Bottom);
-			}
-		} else {
-			part = Top;
-			while (part != j) {
-				while (cmp (part, Bottom) < 0)
-					part = node_down (part);
-				while (j && j != part && cmp (j, Bottom) >= 0)
-					j = node_up (j);
-				if (!j || node_up (part) == j)
-					break;
-				node_swap (part, j);
-				swp(part,j);
-			}
-			if (part != Bottom){
-				node_swap (part, Bottom);
-				swp(part,Bottom);
-			}
-
-			quicksort (Top, node_up (part), cmp);	/* Sort  upper part */
-			if (node_down (part))
-				quicksort (node_down (part), Bottom, cmp);	/* sort lower part */
+	/* merge while we get data from both lists */
+	while(nodeA && nodeB){
+		if(cmp(nodeA,nodeB)<=0){  /* a is smaller than or equal to b */
+			tnode->down=nodeA;
+			nodeA->up=tnode;
+			tnode=nodeA;
+			nodeA=nodeA->down;
+		} else {		 /* b is smaller than or equal to a */
+			tnode->down=nodeB;
+			nodeB->up=tnode;
+			tnode=nodeB;
+			nodeB=nodeB->down;
 		}
 	}
-	return (Top);
+
+	/* add remainder of remaining list */
+	if(nodeA){
+		tnode->down=nodeA;
+		nodeA->up=tnode;
+	} else if(nodeB){
+		tnode->down=nodeB;
+		nodeB->up=tnode;
+	} else {
+		tnode->down=NULL;
+	}
+
+	return thead;
 }
 
-Node *node_sort_siblings (Node *node)
-{
-	return (quicksort (node_top (node), node_bottom (node), cmp_todo));
+
+static Node *mergesort ( Node *head, int size, int (*cmp) (Node *a, Node *b)){
+
+	if(size==1){ 
+		return head;
+	} else {
+		Node *top=head,*bottom=head;
+		int topsize=size/2,
+		    bottomsize=topsize+ (size%2);
+		int j=topsize;
+
+		while(j--) bottom=node_down(bottom);
+
+		node_up(bottom)->down=NULL;
+		bottom->up=NULL;
+
+		top=mergesort(top,topsize, cmp);
+		bottom=mergesort(bottom,bottomsize, cmp);
+
+		return merge(top,bottom, cmp);
+	}
 }
 
-/*
-	TODO: should add criteries for ascending/descending,.. 
-	usage of done status etc..
-*/
 static int sort_cmd (char *params, void *data)
 {
 	Node *pos = (Node *) data;
+	pos=mergesort(node_top(pos), nodes_down(node_top(pos))+1  , cmp_todo);
+	return (int) pos;
+}
 
-	return (int) node_sort_siblings (pos);
+static int shuffle_cmd (char *params, void *data)
+{
+	Node *pos = (Node *) data;
+	pos=mergesort(node_top(pos), nodes_down(node_top(pos))+1  , cmp_random);
+	return (int) pos;
 }
 
 /*
@@ -135,4 +159,7 @@ static int sort_cmd (char *params, void *data)
 void init_sort(){
 		cli_add_command ("sort", sort_cmd, "");
 		cli_add_help("sort","Sorts the siblings of the currently selected node");
+		cli_add_command ("shuffle", shuffle_cmd, "");
+		cli_add_help("shuffle","Randomizes the order of the siblings at the current level");
+
 }

@@ -66,7 +66,7 @@ static int restore_state_cmd (char *params, void *data)
 		temp=pos;
 		pos=savedtree;
 		savedtree=temp;
-		node_free(savedtree);
+		tree_free(savedtree);
 		savedtree=NULL;		
 	}
 	return (int)pos;

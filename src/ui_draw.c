@@ -655,6 +655,9 @@ static int draw_item(int line_start, int cursor_pos, Node *node, int drawmode){
 extern int hnb_nodes_up;
 extern int hnb_nodes_down;
 
+#define MAXLINES 512
+static int line_nodeno[MAXLINES]={0};
+
 void ui_draw (Node *node, char *input, int edit_mode)
 {
 	int lines;
@@ -669,35 +672,37 @@ void ui_draw (Node *node, char *input, int edit_mode)
 	} node_numb={1,1,1,1,1,1};
 	
 	if (!prefs.fixedfocus) {
+
 		node_numb.prev=node_numb.self;
 		node_numb.self=node_no(node);
-	
-		if(node_numb.self==node_numb.prev_up){
-			active_line--;
-		} else if(node_numb.self==node_numb.prev_down){
-			active_line++;
-		} else if(node_numb.self==node_numb.prev_right){
-			active_line++;
-		} else if(node_numb.self==node_numb.prev_left){
-			int skip_amt=1;
-			Node *tnode=node_right(node);
-			while(tnode && node_no(tnode)<node_numb.prev){
-				skip_amt++;
-				tnode=node_down(tnode);
-			}
-			active_line-=skip_amt;
-		} else if(node_numb.self==1){	/* jumped to root */
-			active_line=1;
-		} else if(node_numb.self>node_numb.prev){
+
+		if(node_numb.self>node_numb.prev){
 			active_line++;
 		} else if(node_numb.self<node_numb.prev){
 			active_line--;
+		}
+
+		{int i;
+		for(i=0;i<((LINES<MAXLINES)?LINES:MAXLINES);i++)
+			if(line_nodeno[i]==node_numb.self){
+				active_line=i;
+				break;
+			}
+		}
+
+		if(node_numb.self==1){	/* jumped to root, always bring nodes to top of screen*/
+			active_line=1;
 		}
 
 		node_numb.prev_down=node_no(node_down(node));
 		node_numb.prev_up=node_no(node_up(node));
 		node_numb.prev_left=node_no(node_left(node));
 		node_numb.prev_right=node_no(node_right(node));	
+
+		{int i;
+		for(i=0;i<((LINES<MAXLINES)?LINES:MAXLINES);i++)
+			line_nodeno[i]=0;
+		}
 		
 		#define KEEPLINES 3
 		{int maxline=LINES-KEEPLINES;		
@@ -724,7 +729,9 @@ void ui_draw (Node *node, char *input, int edit_mode)
 
 				while (tnode) {
 					draw_item (line -= draw_item (0, 0, tnode, drawmode_test), 0, tnode, drawmode_normal);
-
+					
+					line_nodeno[line]=node_no(tnode);
+					
 					if (node_down (tnode) == prev_down) {
 						hnb_nodes_up++;
 						prev_down = tnode;
@@ -736,6 +743,8 @@ void ui_draw (Node *node, char *input, int edit_mode)
 				}
 			}
 /* draw the currently selected item */
+
+			line_nodeno[active_line]=node_no(node);
 
 			if (edit_mode) {
 				lines =	draw_item (active_line, (int) input, node, drawmode_edit);
@@ -752,6 +761,7 @@ void ui_draw (Node *node, char *input, int edit_mode)
 				if (lines >= LINES)
 					tnode = 0;
 				while (tnode) {
+					line_nodeno[lines]=node_no(tnode);
 					lines += draw_item (lines, 0, tnode, drawmode_normal);
 
 					if (node_up (tnode) == prev_up) {

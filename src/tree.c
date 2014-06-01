@@ -385,6 +385,9 @@ void node_swap (Node *nodeA, Node *nodeB)
 	if((!nodeB) || (!nodeA))
 		return;
 
+	if(nodeB==nodeA)
+		return;
+
 	if(nodeB->right==nodeA || nodeA->right==nodeB){
 		return;				/* can't swap parent and child,.. (nor deeper levels actually) */
 	}

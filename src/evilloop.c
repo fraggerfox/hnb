@@ -228,10 +228,7 @@ Node *evilloop (Node *pos)
 				node_set (pos,TEXT, inputbuf);
 			} else {
 				if (node_match (inputbuf, pos)) {
-					if (!strcmp
-						(fixnullstring(node_get (node_match (inputbuf, pos),TEXT)),
-						 fixnullstring(node_get (pos,TEXT)) ))
-						pos = node_match (inputbuf, pos);
+					pos = node_match (inputbuf, pos);
 				} else {
 					pos = node_insert_down (node_bottom (pos));
 					node_setflag (pos, F_temp, 1);
