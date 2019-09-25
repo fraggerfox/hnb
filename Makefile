@@ -1,3 +1,4 @@
+all: src/hnb
 
 src/hnb: src/*.c src/*.h src/*.inc src/hnbrc.inc
 	(cd src;make)
