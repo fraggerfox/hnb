@@ -52,7 +52,7 @@ static char *htmlquote[]={
 /* *INDENT-ON* */
 
 
-static int export_html (int argc, char **argv, void *data)
+static uint64_t export_html (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = argc==2?argv[1]:"";
@@ -67,7 +67,7 @@ static int export_html (int argc, char **argv, void *data)
 		file = fopen (filename, "w");
 	if (!file) {
 		cli_outfunf ("html export, unable to open \"%s\"", filename);
-		return (int) node;
+		return PTR_TO_UINT64(node);
 	}
 
 	startlevel = nodes_left (node);
@@ -130,7 +130,7 @@ static int export_html (int argc, char **argv, void *data)
 		fclose (file);
 
 	cli_outfunf ("html export, saved output in \"%s\"", filename);
-	return (int) node;
+	return  PTR_TO_UINT64(node);
 }
 
 static void htmlcss_export_nodes (FILE * file, Node *node, int level)
@@ -162,7 +162,7 @@ static void htmlcss_export_nodes (FILE * file, Node *node, int level)
 }
 
 
-static int export_htmlcss (int argc, char **argv, void *data)
+static uint64_t export_htmlcss (int argc, char **argv, void *data)
 {
 	Node *node = (Node *) data;
 	char *filename = argc==2?argv[1]:"";
@@ -174,7 +174,7 @@ static int export_htmlcss (int argc, char **argv, void *data)
 		file = fopen (filename, "w");
 	if (!file) {
 		cli_outfunf ("html export, unable to open \"%s\"", filename);
-		return (int) node;
+		return PTR_TO_UINT64(node);
 	}
 
 	fprintf (file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
@@ -224,7 +224,7 @@ div.level2 {\n\
 		fclose (file);
 
 	cli_outfunf ("html css export, saved output in \"%s\"", filename);
-	return (int) node;
+	return PTR_TO_UINT64(node);
 }
 
 /*

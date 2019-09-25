@@ -150,7 +150,7 @@ int file_check (char *filename)
 }
 
 
-static int cmd_save (int argc,char **argv, void *data)
+static uint64_t cmd_save (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
@@ -167,10 +167,10 @@ static int cmd_save (int argc,char **argv, void *data)
 			docmd (node_root (pos), buf);
 		}
 	}
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
-static int cmd_revert (int argc,char **argv, void *data)
+static uint64_t cmd_revert (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
@@ -185,7 +185,7 @@ static int cmd_revert (int argc,char **argv, void *data)
 			pos=docmd (pos, buf);
 		}
 	}
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
 

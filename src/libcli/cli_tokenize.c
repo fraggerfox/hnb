@@ -68,14 +68,14 @@ typedef struct {
 
 #ifdef TESTit
 #define cli_getstring dummy_get_variable
-static char * dummy_get_variable(char *name){
+static char * dummy_get_variable(unsigned char *name){
 	static char *dummy="<variable expansion not implemented yet>";
 	return dummy;
 }
 #endif
 
 #ifndef TESTit
-char *cli_getstring(char *variable);
+char *cli_getstring(unsigned char *variable);
 #endif
 
 static rule_entry state_table[s_end][max_rules];

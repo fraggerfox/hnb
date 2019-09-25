@@ -68,7 +68,7 @@ static void spell_node (Node *node)
 		ui_init ();
 }
 
-static int spell_cmd (int argc, char **argv, void *data)
+static uint64_t spell_cmd (int argc, char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
@@ -85,7 +85,7 @@ static int spell_cmd (int argc, char **argv, void *data)
 	} else {
 		spell_node (pos);
 	}
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
 /*

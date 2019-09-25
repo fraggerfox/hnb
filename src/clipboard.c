@@ -29,7 +29,7 @@
 
 static Node *clipboard = NULL;
 
-static int copy_cmd (int argc,char **argv, void *data)
+static uint64_t copy_cmd (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
@@ -39,10 +39,10 @@ static int copy_cmd (int argc,char **argv, void *data)
 	clipboard = node_new ();
 
 	clipboard = tree_duplicate (pos, clipboard);
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
-static int cut_cmd (int argc,char **argv, void *data)
+static uint64_t cut_cmd (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
@@ -53,10 +53,10 @@ static int cut_cmd (int argc,char **argv, void *data)
 
 	clipboard = tree_duplicate (pos, clipboard);
 	pos = node_remove (pos);
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
-static int paste_cmd (int argc,char **argv, void *data)
+static uint64_t paste_cmd (int argc,char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
@@ -68,7 +68,7 @@ static int paste_cmd (int argc,char **argv, void *data)
 		temp = node_insert_down (pos);
 		tree_duplicate (clipboard, temp);
 	}
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
 /*

@@ -1,48 +1,50 @@
 HIERARCHICAL NOTEBOOK
-	
+
 	hierarchical notebook (hnb) is program to organise, many kinds of data
 	in one place, for example addresses, to-do lists, ideas, book "reviews",
-	brainstorming, organising a speech, making a  structured packing list 
+	brainstorming, organising a speech, making a  structured packing list
 	random notes, and probably many more I  haven't thought of yet..
-	
+
 
 HOW TO GET hnb?
 	new releases and information about hnb will appear at hnb's home page
-	
+
 	http://sourceforge.net/projects/hnb/
-	
+
 INSTALLING hnb
 	if you've got a source release you must first compile hnb,..
 	see further down in this file for instructions.
-	
+
 	Windows
 		the windows binary distribution, is a .zip file	containing the
-		executable, this README file, an sample database, and the 
-		license for hnb's use. the binary is stand alone, so you can 
+		executable, this README file, an sample database, and the
+		license for hnb's use. the binary is stand alone, so you can
 		just copy it wherever you'd like it to reside.
-	Linux 
+	Linux
 		the Linux binary distribution is a .tar.gz file	containing the
 		executable, this README file, a an sample database, and the
-		license for hnb's use. The binary is dynamically linked 
+		license for hnb's use. The binary is dynamically linked
 		against ncurses just place it anywhere in your path.. like
 		/usr/bin, /usr/local/bin or /home/user/bin
-		
+
 COMPILING hnb
-	
+
 	hnb uses a custom Makefile, that should work on most unix'ish systems with a curses library.
-	
+
 	make
 	su
 	(enter root password)
 	make install
-	
-	
+
+
 USAGE DOCUMENTATION
 	If you start hnb without any parameters and no default database, or
 	with the -t or --tutorial option, hnb will load a special tutorial
 	database.
-	
+
 CHANGELOG
+	1.9.18
+		fixes crashes when trying to run in amd64 systems
 	1.9.17
 		bug fix, when saving hnb DTD, I also saved the text attribute
 		removed the format names from prefs.c,.. now the string specified is used instead, (makes extending easier)
@@ -62,7 +64,7 @@ CHANGELOG
 		created an utility function for string replacements, that I inserted into all the various import/export filters.
 		added a function "insert_cal <month> <year>" which inserts the specified month/year in a fashion that makes hnb useable as a simple timeplanner as well. (when I get around to adding support for clones, this might be interesting)
 		allowing the user to use <,>,+ and - when typing in new data without erratic behavior, and not the need to enter edit mode. (except if it is the first char of the data)
-		fixed an issue with creating the first child, and pressing insert, and various other commands,.. 
+		fixed an issue with creating the first child, and pressing insert, and various other commands,..
 		added rpm spec file from Asgeir Nilsen
 		made file_opml and file_hnb interpret all attributes
 		implemented buffered reading for the xml tokenizer
@@ -175,7 +177,7 @@ CHANGELOG
 		improved pgup/pgdn
 	1.1 10 may 2001
 		ran all the files through indent
-			indent -bad -bap -br -ts4 -ce -ci4 -i4 -cli4 -cbi0 -ss -di0 -nbc -npsl -T Node -brs -ip4 -bbo --line-length78 
+			indent -bad -bap -br -ts4 -ce -ci4 -i4 -cli4 -cbi0 -ss -di0 -nbc -npsl -T Node -brs -ip4 -bbo --line-length78
 		changed the editor cursor
 		minor code tweaks and cleanups
 		added manpage by Andras BALI
@@ -216,12 +218,12 @@ CHANGELOG
 		refined search control interface
 	0.6b 11 april 2001
 		the guadec hacked fixes on strics computer
-		
+
 		worked on search ability
 		fixed the display of confirm mode in curses ui.
 		added reparenting
 		cleaned up node_remove
-		 
+
 		added load,save and display of todo in standard file format
 		changed to bz2 format on distribution file
 	0.5
@@ -241,7 +243,7 @@ CHANGELOG
 		changes to help/confirming interface
 AUTHORS
 	hnb authors
-	
+
 	Øyvind Kolås       <pippin@users.sourceforge.net>
 		project maintainer
 	Andras BALI        <drewie@bigfoot.com>
@@ -253,6 +255,10 @@ AUTHORS
 		various todo/done issues in the code
 	Andrew J Weber     <orang@imonk.com>
 		libxml2 import/export
+	Guillermo A. Amaral     <g@maral.me>
+		Import sourceforge repository into github
+	Santhosh Raju     <santhosh.raju@gmail.com>
+		Fixes crashes when running in amd64 systems
 BUGS
 	slashes (/) inside nodes are not escaped correctly in cli mode
 	bullets/todo boxes, doesn't check that the line is writable (top of screen on multi-line nodes)

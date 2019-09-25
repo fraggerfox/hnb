@@ -260,7 +260,7 @@ int calc_percentage_size (Node *node, int *retsize)
 
 #include "cli.h"
 
-static int toggle_todo_cmd (int argc, char **argv, void *data)
+static uint64_t toggle_todo_cmd (int argc, char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
@@ -271,15 +271,15 @@ static int toggle_todo_cmd (int argc, char **argv, void *data)
 		node_unset(pos,"type");
 	}
 
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
-static int toggle_done_cmd (int argc, char **argv, void *data)
+static uint64_t toggle_done_cmd (int argc, char **argv, void *data)
 {
 	Node *pos = (Node *) data;
 
 	if (strcmp(fixnullstring(node_get(pos,"type")),"todo")) {	/* bail out if not todo info set */
-		return (int) pos;
+		return PTR_TO_UINT64(pos);
 	}
 
 	if (!strcmp(fixnullstring(node_get(pos,"done")),"yes")) {	/* bail out if not todo info set */
@@ -288,7 +288,7 @@ static int toggle_done_cmd (int argc, char **argv, void *data)
 		node_set(pos,"done","yes");
 	}
 
-	return (int) pos;
+	return PTR_TO_UINT64(pos);
 }
 
 /*

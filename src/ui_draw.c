@@ -525,7 +525,7 @@ static struct {
 
 /* FIXME: make backup?,.. and make sure data is present,.., make possiblity to write back? */
 
-int display_format_cmd (int argc, char **argv, void *data)
+uint64_t display_format_cmd (int argc, char **argv, void *data)
 {
 	char *p = argv[1];
 	int width;
@@ -533,7 +533,7 @@ int display_format_cmd (int argc, char **argv, void *data)
 	int col_no = 0;
 
 	if(argc<2){
-		return (int)data;
+		return PTR_TO_UINT64(data);
 	}
 
 	do {
@@ -618,7 +618,7 @@ int display_format_cmd (int argc, char **argv, void *data)
 
 	col_def[col_no].type = col_terminate;
 
-	return (int) data;
+	return PTR_TO_UINT64(data);
 }
 
 

@@ -122,10 +122,10 @@ static char *keep_inputbuf[]={
 
 int quit_hnb=0;
 
-static int cmd_quit(int argc,char **argv,void *data){
+static uint64_t cmd_quit(int argc,char **argv,void *data){
 	Node *pos=(Node *)data;
 	quit_hnb=1;
-	return (int)pos;
+	return PTR_TO_UINT64(pos);
 }
 
 /*

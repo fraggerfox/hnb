@@ -28,7 +28,7 @@
 #include "evilloop.h"
 #include <stdlib.h>
 
-static int ui_edit_cmd (int argc, char **argv, void *data)
+static uint64_t ui_edit_cmd (int argc, char **argv, void *data)
 {
 	Tbinding *c;
 	int stop = 0;
@@ -61,7 +61,7 @@ static int ui_edit_cmd (int argc, char **argv, void *data)
 			}
 		}
 		ui_current_scope = tempscope;
-		return (int) pos;
+		return PTR_TO_UINT64(pos);
 	}
 
 	node_backup = node_duplicate (pos);
@@ -208,7 +208,7 @@ static int ui_edit_cmd (int argc, char **argv, void *data)
 	}
 	node_free (node_backup);
 	ui_current_scope = tempscope;
-	return (int) data;
+	return PTR_TO_UINT64(data);
 }
 
 int ui_getstr_loc (char *input, int x, int y, int maxlen)

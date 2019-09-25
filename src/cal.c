@@ -19,14 +19,14 @@
  */
 
 /**************/
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
 #include "tree.h"
 #include "cli.h"
 #include "ui.h"
 #include "file.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
 
 static char *const wday[] = 
 	{ "Sun", "Mon", "Tue",  "Wed", "Thu", "Fri", "Sat", "   "};
@@ -35,7 +35,7 @@ static char *const mname[] = {
 	  "", "January", "February", "March", "April", "May" ,"June", "July",
 	  "August", "September", "October", "November" , "December"};
 
-static int insert_cal(int argc, char **argv, void *data){
+static uint64_t insert_cal(int argc, char **argv, void *data){
 	Node *pos=(void *)data;
 
 	int year;
@@ -44,7 +44,7 @@ static int insert_cal(int argc, char **argv, void *data){
 	
 	if( (argc!=3) || (atoi(argv[1])>12 )){
 		cli_outfunf("usage: %s <month> <year>", argv[0]);
-		return (int)data;
+		return PTR_TO_UINT64(data);
 	}
 
 	month=atoi(argv[1]);
@@ -96,7 +96,7 @@ static int insert_cal(int argc, char **argv, void *data){
 		}
 	}	
 
-	return (int)pos;
+	return PTR_TO_UINT64(pos);
 }
 
 /*
