@@ -57,7 +57,7 @@ static void default_output(char *data){
 				wp=word;
 				*wp='\0';
 			} else {
-				printf(tbuf);printf("\n");
+				printf("%s\n",tbuf);
 				bp=tbuf;
 				*bp='\0';
 				strcpy(bp,word);
