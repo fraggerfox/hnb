@@ -22,7 +22,6 @@
 
 #include "tree.h"
 #include "cli.h"
-//#define NULL 0
 
 #include "evilloop.h"
 #include "ctype.h"
