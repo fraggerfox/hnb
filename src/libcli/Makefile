@@ -1,4 +1,3 @@
-CFLAGS = -Wall
 
 OBJS = cli.o cli_history.o cli_tokenize.o
 
